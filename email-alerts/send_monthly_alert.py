@@ -3,24 +3,9 @@ import resend
 resend.api_key = ""RESEND_API_KEY""
 RECIPIENT_EMAIL = "jiteeshdeo@gmail.com"
 
-DATE_RANGE = "01/01/2024 - 07/01/2024"
-TRAPS_TRIGGERED = 2
-PENDING_RESET = 1
-AVG_TIME_TO_RESET = "1d"
+DATE_RANGE = "24/08 - 31/08"
+TRAPS_TRIGGERED = 6
 
-
-def stat_box(number, label):
-    return f"""
-    <td width="33%" style="padding:6px;">
-        <table width="100%" cellpadding="0" cellspacing="0"
-            style="border:1px solid #fff; border-radius:14px; background:rgba(0,0,0,0.55);">
-        <tr><td align="center" style="padding:18px 8px; font-family:Arial,sans-serif; color:#fff;">
-           <div style="font-size:34px; font-weight:bold;">{number}</div>
-           <div style="font-size:13px; margin-top:4px;">{label}</div>
-        </td></tr>
-        </table>
-    </td>
-    """
 html = f"""
 <html>
 <head>
@@ -41,7 +26,7 @@ html = f"""
             TrapWatch
             </td>
             <td align="right" style="font-family:Arial,sans-serif; font-size:15px; color:#fff; white-space:nowrap;">
-            {DATE_RANGE}
+            Monthly Report {DATE_RANGE}
             </td>
         </tr>
         </table>
@@ -55,21 +40,17 @@ html = f"""
         <tr><td style="padding:24px;">
 
             <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td align="center" style="padding:14px; text-align:center;">
-             <span style="font-family:Arial,sans-serif; font-size:16px; color:#8e2a4a;
-                          background:#f7d9e4; padding:4px 12px; border-radius:4px;">
-              Week at a glance
-              </span>
+                <tr><td style="padding:8px 0 16px 0;">
+                    <table width="100%" cellpadding="0" cellspacing="0"
+                        style="border:1px solid #fff; border-radius:14px; background:rgba(0,0,0,0.55);">
+                    <tr><td align="center" style="padding:30px 8px; font-family:Arial,sans-serif; color:#fff;">
+                        <div style="font-size:48px; font-weight:bold;">{TRAPS_TRIGGERED}</div>
+                        <div style="font-size:16px; font-weight:bold; margin-top:6px;">Traps Triggered</div>
+                    </td></tr>
+                </table>
             </td></tr>
         </table>
 
-        <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-            {stat_box(TRAPS_TRIGGERED, "Traps Triggered")}
-            {stat_box(PENDING_RESET, "Pending Reset")}
-            {stat_box(AVG_TIME_TO_RESET, "Avg Time to Reset")}
-        </tr>
-        </table>
 
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
                 <tr><td align="center" style="padding:10px 0;">
@@ -117,7 +98,7 @@ with open("assets/background.jpg", "rb") as f:
 resend.Emails.send({
     "from": "onboarding@resend.dev",
     "to" : [RECIPIENT_EMAIL],
-    "subject": f"Trapwatch Weekly Report: {DATE_RANGE}",
+    "subject": f"Trapwatch Monthly Report: {DATE_RANGE}",
     "html": html,
     "attachments": [
         {"filename": "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
@@ -125,5 +106,5 @@ resend.Emails.send({
     ],
 })
 
-print("Weekly alert sent")
+print("Monthly alert sent")
         
