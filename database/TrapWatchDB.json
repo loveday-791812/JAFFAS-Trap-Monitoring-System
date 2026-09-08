@@ -1,0 +1,27 @@
+{
+  "Traps": {
+    "placeholder": {
+      "placeholder": "placeholder"
+    }
+  },
+  "Transmitters": {
+    "placeholder": {
+      "placeholder": "placeholder"
+    }
+  },
+  "Users": {
+    "placeholder": {
+      "placeholder": "placeholder"
+    }
+  },
+  "Events": {
+    "placeholder": {
+      "placeholder": "placeholder"
+    }
+  },
+  "TrapTransmitter": {
+    "placeholder": {
+      "placeholder": "placeholder"
+    }
+  }
+}
