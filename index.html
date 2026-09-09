@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TrapWatch | Create Account</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>    
+
+<body>
+
+    <main class="page">
+
+        <!- Background elements ->
+        <div class="leaf-decoration leaf-top"></div>
+        <div class="leaf-decoration leaf-bottom"></div>
+
+        <section class="signup-card">
+
+            <!- Brand ->
+            <header class="brand">
+
+                <div class="logo">
+                    <img src="logo.png" alt="TrapWatch logo">
+                </div>
+
+                <h1>TrapWatch</h1>
+
+                <p>
+                    Smarter trap monitoring. Healthier environments.
+                </p>
+
+
+            </header>
+
+
+            <div class="divider"></div>
+
+
+            <!- Heading ->
+            <div class="heading">
+
+                <h2>Create your account</h2>
+
+                <p>
+                    Get started with TrapWatch in just a few steps.
+                </p>
+
+            </div>
+
+
+
+            <!- Signup Form ->
+            <form id="signupForm">
+
+                <!- Email ->
+                <div class="form-group">
+
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">✉</span>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Enter your email"
+                            required
+                        >
+                        
+                    </div>
+
+                </div>
+
+                <!- Password ->
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">🔒</span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('password', this)"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!- Confirm Password ->
+                <div class="form-group">
+
+                    <label for="confirmPassword">
+                        Confirm Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">🔒</span>
+
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            placeholder="Re-enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('confirmPassword', this)"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!- Role ->
+                <div class="form-group">
+
+                    <label>
+                        Select Role
+                    </label>
+
+                    <div class="roles">
+
+                        <label class="role-option">
+
+                            <input
+                                type="radio"
+                                name="role"
+                                value="manager"
+                                required
+                            >
+
+                            <div class="role-content">
+
+                                <span class="radio-circle"></span>
+
+                                <div>
+                                    <strong>Trap Manager</strong>
+
+                                    <small>
+                                        Manage traps and monitor activity
+                                    </small>
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                        <label class="role-option">
+
+                            <input
+                                type="radio"
+                                name="role"
+                                value="worker"
+                            >
+
+                            <div class="role-content">
+
+                                <span class="radio-circle"></span>
+
+                                <div>
+                                    <strong>Field Worker</strong>
+
+                                    <small>
+                                        Check and reset traps in the field
+                                    </small>
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                        <label class="role-option">
+
+                            <input
+                            type="radio"
+                            name="role"
+                            value="admin"
+                            >
+
+                            <div class="role-content">
+
+                                <span class="radio-circle"></span>
+
+                                <div>
+                                    <strong>Admin</strong>
+
+                                    <small>
+                                        Full system access and management
+                                    </small>
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!- Terms ->
+                <label class="terms">
+
+                    <input
+                        type="checkbox"
+                        id="terms"
+                        required
+                    >
+
+                    <span>
+                        I agree to the
+                        <a href="#">Terms of Service</a>
+                        and
+                        <a href="#">Privacy Policy</a>
+                    </span>
+
+                </label>
+
+
+                <!- Submit ->
+                <button
+                    type="submit"
+                    class="create-button"
+                >
+                    Create Account
+                    <span>→</span>
+                </button>
+
+
+                <!- Login ->
+                <p class="login-link">
+                    Already have an account?
+                    <a href="login.html">Log in</a>
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

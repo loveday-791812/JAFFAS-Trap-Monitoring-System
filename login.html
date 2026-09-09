@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TrapWatch | Login</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="page">
+
+        <!-- Decorative Background -->
+        <div class="leaf-decoration leaf-top"></div>
+        <div class="leaf-decoration leaf-bottom"></div>
+
+        <section class="login-card">
+
+            <!-- Brand -->
+            <header class="brand">
+
+                <div class="logo">
+                    <img src="logo.png" alt="TrapWatch logo">
+                </div>
+
+                <h1>TrapWatch</h1>
+
+                <p>
+                    Smarter trap monitoring. Healthier environments.
+                </p>
+
+            </header>
+
+            <div class="divider"></div>
+
+            <!-- Login Heading -->
+            <div class="heading">
+
+                <h2>Welcome back</h2>
+
+                <p>
+                    Sign in to continue to your TrapWatch account.
+                </p>
+
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+
+
+                <!-- Email -->
+                <div class="form-group">
+
+                    <label for="loginEmail">
+                        Email
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">✉</span>
+
+                        <input
+                            type="email"
+                            id="loginEmail"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Password -->
+                <div class="form-group">
+
+                    <label for="loginPassword">
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">🔒</span>
+
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('loginPassword', this)"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Remember me / forgot password -->
+                <div class="login-options">
+
+                    <label class="remember">
+
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                        >
+
+                        <span>Remember me</span>
+
+                    </label>
+
+                    <a href="#" class="forgot-password">
+                        Forgot password?
+                    </a>
+
+                </div>
+
+
+                <!-- Login Button -->
+                <button
+                    type="submit"
+                    class="create-button login-button"
+                >
+                    Log in
+                    <span>→</span>
+                </button>
+
+
+                <!-- Signup -->
+                <p class="login-link">
+                    Don't have an account?
+                    <a href="index.html">Create one</a>
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
