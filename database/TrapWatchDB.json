@@ -1,7 +1,289 @@
 {
   "Traps": {
-    "placeholder": {
-      "placeholder": "placeholder"
+    "17579861": {
+      "trap_num": 2,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17786061": {
+      "trap_num": 6,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17578583": {
+      "trap_num": 7,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17578419": {
+      "trap_num": 10,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17583324": {
+      "trap_num": 11,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17583319": {
+      "trap_num": 12,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17583326": {
+      "trap_num": 13,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17583318": {
+      "trap_num": 14,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17600928": {
+      "trap_num": 16,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17585305": {
+      "trap_num": 17,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17583346": {
+      "trap_num": 18,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17779571": {
+      "trap_num": 21,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17576236": {
+      "trap_num": 22,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17783568": {
+      "trap_num": 25,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17577593": {
+      "trap_num": 29,
+      "trap_location": "TBA",
+      "trap_type": "SA Cat"
+    },
+    "17782991": {
+      "trap_num": 34,
+      "trap_location": "TBA",
+      "trap_type": "SA Possum"
+    },
+    "22468660": {
+      "trap_num": 35,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "22468655": {
+      "trap_num": 36,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17577577": {
+      "trap_num": 37,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17577578": {
+      "trap_num": 38,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17786065": {
+      "trap_num": 39,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17786097": {
+      "trap_num": 40,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17578610": {
+      "trap_num": 41,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583325": {
+      "trap_num": 41,
+      "trap_location": "TBA",
+      "trap_type": "SA Ferret"
+    },
+    "17578619": {
+      "trap_num": 42,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17783595": {
+      "trap_num": 43,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17783585": {
+      "trap_num": 44,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17575931": {
+      "trap_num": 45,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17601168": {
+      "trap_num": 46,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17575937": {
+      "trap_num": 46,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17601283": {
+      "trap_num": 47,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17579866": {
+      "trap_num": 49,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17579872": {
+      "trap_num": 50,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583772": {
+      "trap_num": 51,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583779": {
+      "trap_num": 52,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17599765": {
+      "trap_num": 53,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17599732": {
+      "trap_num": 54,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583327": {
+      "trap_num": 55,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583328": {
+      "trap_num": 56,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "22468973": {
+      "trap_num": 57,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "22468972": {
+      "trap_num": 58,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17585306": {
+      "trap_num": 59,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17585308": {
+      "trap_num": 60,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17591625": {
+      "trap_num": 61,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17591626": {
+      "trap_num": 62,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17585488": {
+      "trap_num": 63,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17585493": {
+      "trap_num": 64,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583322": {
+      "trap_num": 65,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583323": {
+      "trap_num": 66,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583320": {
+      "trap_num": 67,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17583321": {
+      "trap_num": 68,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17577584": {
+      "trap_num": 69,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17577591": {
+      "trap_num": 70,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17783115": {
+      "trap_num": 71,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17783102": {
+      "trap_num": 72,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17578420": {
+      "trap_num": 73,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
+    },
+    "17578421": {
+      "trap_num": 74,
+      "trap_location": "TBA",
+      "trap_type": "DOC 200"
     }
   },
   "Transmitters": {
