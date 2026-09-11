@@ -287,8 +287,50 @@
     }
   },
   "Transmitters": {
-    "placeholder": {
-      "placeholder": "placeholder"
+    "08 DB 40 00 88 02 32 01": {
+      "transmitter_num": "13"
+    },
+    "11 8E 42 00 88 02 32 01": {
+      "transmitter_num": "27"
+    },
+    "15 8D 40 00 88 02 32 01": {
+      "transmitter_num": "31"
+    },
+    "17 94 40 00 88 02 32 01": {
+      "transmitter_num": "29"
+    },
+    "1E 9F 40 00 88 02 32 01": {
+      "transmitter_num": "20"
+    },
+    "20 84 40 00 88 02 32 01": {
+      "transmitter_num": "11"
+    },
+    "25 91 42 00 88 02 32 01": {
+      "transmitter_num": "10"
+    },
+    "25 9B 42 00 88 02 32 01": {
+      "transmitter_num": "28"
+    },
+    "27 DE 40 00 88 02 32 01": {
+      "transmitter_num": "15"
+    },
+    "29 9A 42 00 88 02 32 01": {
+      "transmitter_num": "12"
+    },
+    "35 D1 40 00 88 02 32 01": {
+      "transmitter_num": "3"
+    },
+    "3D D3 44 00 88 02 32 01": {
+      "transmitter_num": "24"
+    },
+    "3E 51 45 00 88 02 32 01": {
+      "transmitter_num": "2"
+    },
+    "42 DA 44 00 88 02 32 01": {
+      "transmitter_num": "18"
+    },
+    "45 91 45 00 88 02 32 01": {
+      "transmitter_num": "17"
     }
   },
   "Users": {
