@@ -22,7 +22,11 @@ Install the dependency
 
 pip install resend
 
-#How to run (.\ on windows first)
+Enter your email in the top
+
+And API KEY found on drive/development/frontend/things to keep in mind
+
+#How to run (\.send_daily_alert.py on windows first)
 
 python send_daily_alert.py
 python send_weekly_alert.py
