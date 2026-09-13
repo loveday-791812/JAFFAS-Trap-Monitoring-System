@@ -2,8 +2,11 @@ import firebase_admin
 import json
 from firebase_admin import credentials
 from firebase_admin import db
+from pathlib import Path
 
-cred = credentials.Certificate("trap-watch-firebase-adminsdk-fbsvc-871883791d.json")
+script_location = Path(__file__).resolve().parent
+pkey_location = script_location / "trap-watch-firebase-adminsdk-fbsvc-f9b08f048c.json"
+cred = credentials.Certificate(str(pkey_location))
 
 default_app = firebase_admin.initialize_app(cred, {
     "databaseURL": "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -12,7 +15,8 @@ default_app = firebase_admin.initialize_app(cred, {
 
 ref = db.reference("/")
 
+json_location = script_location / "TrapWatchDB.json"
 import json
-with open("TrapWatchDB.json", "r") as f:
+with open(str(json_location), "r") as f:
     file_contents = json.load(f)
 ref.set(file_contents)
