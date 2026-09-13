@@ -331,11 +331,72 @@
     },
     "45 91 45 00 88 02 32 01": {
       "transmitter_num": "17"
+    },
+    "4A C6 44 00 88 02 32 01": {
+      "transmitter_num": "19"
+    },
+    "91 C7 40 00 88 02 32 01": {
+      "transmitter_num": "22"
+    },
+    "93 4B 43 00 88 02 32 01": {
+      "transmitter_num": "4"
+    },
+    "94 8D 40 00 88 02 32 01": {
+      "transmitter_num": "23"
+    },
+    "94 91 42 00 88 02 32 01": {
+      "transmitter_num": "1"
+    },
+    "98 52 45 00 88 02 32 01": {
+      "transmitter_num": "14"
+    },
+    "98 86 40 00 88 02 32 01": {
+      "transmitter_num": "8"
+    },
+    "9C 90 40 00 88 02 32 01": {
+      "transmitter_num": "21"
+    },
+    "9D 8E 40 00 88 02 32 01": {
+      "transmitter_num": "25"
+    },
+    "9E D9 40 00 88 02 32 01": {
+      "transmitter_num": "7"
+    },
+    "A4 95 40 00 88 02 32 01": {
+      "transmitter_num": "6"
+    },
+    "A7 5A 43 00 88 02 32 01": {
+      "transmitter_num": "30"
+    },
+    "A9 80 42 00 88 02 32 01": {
+      "transmitter_num": "32"
+    },
+    "BA DD 44 00 88 02 32 01": {
+      "transmitter_num": "26"
+    },
+    "BC D6 44 00 88 02 32 01": {
+      "transmitter_num": "33"
+    },
+    "BE 91 45 00 88 02 32 01": {
+      "transmitter_num": "16"
+    },
+    "C5 1A 28 82 6B 03 32 01": {
+      "transmitter_num": "34"
+    },
+    "C5 1C 43 00 88 02 32 01": {
+      "transmitter_num": "5"
+    },
+    "C7 04 43 00 88 02 32 01": {
+      "transmitter_num": "9"
     }
   },
   "Users": {
-    "placeholder": {
-      "placeholder": "placeholder"
+    "admin": {
+      "full_name": "Admin1",
+      "email": "aaronsbrinkley@gmail.com",
+      "password": "TrapWatchJAFFAS",
+      "role": "admin",
+      "report_type": "daily"
     }
   },
   "Events": {
@@ -344,8 +405,73 @@
     }
   },
   "TrapTransmitter": {
-    "placeholder": {
-      "placeholder": "placeholder"
+    "TT1": {
+      "transmitter_ID": "08 DB 40 00 88 02 32 01",
+      "trap_ID": "17579861"
+    },
+    "TT2": {
+      "transmitter_ID": "11 8E 42 00 88 02 32 01",
+      "trap_ID": "17782991/17577577 #multiple traps"
+    },
+    "TT3": {
+      "transmitter_ID": "20 84 40 00 88 02 32 01",
+      "trap_ID": "17578610/17583325 #multiple traps"
+    },
+    "TT4": {
+      "transmitter_ID": "25 91 42 00 88 02 32 01",
+      "trap_ID": "17783115"
+    },
+    "TT5": {
+      "transmitter_ID": "25 9B 42 00 88 02 32 01",
+      "trap_ID": "17601168/17575937/17601283 #multiple traps, some share trap number"
+    },
+    "TT6": {
+      "transmitter_ID": "27 DE 40 00 88 02 32 01",
+      "trap_ID": "17583318"
+    },
+    "TT7": {
+      "transmitter_ID": "29 9A 42 00 88 02 32 01",
+      "trap_ID": "17578583"
+    },
+    "TT8": {
+      "transmitter_ID": "35 D1 40 00 88 02 32 01",
+      "trap_ID": "17575931"
+    },
+    "TT9": {
+      "transmitter_ID": "93 4B 43 00 88 02 32 01",
+      "trap_ID": "17600928"
+    },
+    "TT10": {
+      "transmitter_ID": "94 91 42 00 88 02 32 01",
+      "trap_ID": "17583320/17583321 #multiple traps"
+    },
+    "TT11": {
+      "transmitter_ID": "98 52 45 00 88 02 32 01",
+      "trap_ID": "17579866"
+    },
+    "TT12": {
+      "transmitter_ID": "98 86 40 00 88 02 32 01",
+      "trap_ID": "17577593"
+    },
+    "TT13": {
+      "transmitter_ID": "9E D9 40 00 88 02 32 01",
+      "trap_ID": "17577584/17577591 #multiple traps"
+    },
+    "TT14": {
+      "transmitter_ID": "A4 95 40 00 88 02 32 01",
+      "trap_ID": "Could not find"
+    },
+    "TT15": {
+      "transmitter_ID": "BA DD 44 00 88 02 32 01",
+      "trap_ID": "17599765/17599732"
+    },
+    "TT16": {
+      "transmitter_ID": "C5 1C 43 00 88 02 32 01",
+      "trap_ID": "17576236"
+    },
+    "TT17": {
+      "transmitter_ID": "C7 04 43 00 88 02 32 01",
+      "trap_ID": "17578419"
     }
   }
 }
