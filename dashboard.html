@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrapWatch - Admin Dashboard</title>
+<link rel="stylesheet" href="dashboard-style.css" />
+</head>
+<body>
+
+<div class="page">
+
+    <header class="tw-header">
+        <div class="tw-header-left">
+            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <h1 class="tw-title">Admin Dashboard</h1>
+        </div>
+
+        <div class="tw-header-right">
+            <div class="filter-bar">
+                <label for="date-range-select">Date Range:</label>
+                <select id="date-range-select">
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="all">All time</option>
+                </select>
+            </div>
+
+            <button id="download-json-btn" class="btn btn-outline" type="button">
+                ⬇ Download JSON
+            </button>
+        </div>
+    </header>
+
+    <nav class="tw-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+    </nav>
+
+    <section class="kpi-grid">
+        <div class="card kpi-card">
+            <div class="kpi-label">TOTAL CATCHES [PERIOD]</div>
+            <div class="kpi-value" id="kpi-total-catches">-</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-label">AVG TIME TO RESET</div>
+            <div class="kpi-value" id="kpi-avg-reset">-</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-label">TRAPS OVERDUE</div>
+            <div class="kpi-value" id="kpi-overdue">-</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-label">CURRENT TRIGGERED TRAPS</div>
+            <div class="kpi-value" id="kpi-triggered">-</div>
+        </div>
+    </section>
+
+    <section class="card table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th data-sort="trapNo">Trap no <span class="sort-arrow">↕</span></th>
+                    <th data-sort="catchDate">Catch date/time <span class="sort-arrow">↕</span></th>
+                    <th data-sort="resetDate">Reset date/time <span class="sort-arrow">↕</span></th>
+                    <th data-sort="daysToReset">Days to reset <span class="sort-arrow">↕</span></th>
+                    <th data-sort="status">Status <span class="sort-arrow">↕</span></th>
+                </tr>
+            </thead>
+            <tbody id="traps-tbody">
+                <!- rows injected by dashboard.js -!>
+            </tbody>
+        </table>
+    </section>
+</div>
+<script src="dashboard.js"></script>
+</body>
+</html>

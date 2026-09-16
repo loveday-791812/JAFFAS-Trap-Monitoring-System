@@ -1,0 +1,325 @@
+/* Dashboard style CSS for dashboard.html and recipients.html */
+
+/* Colors are centralized here. Changing the colors here updates it everywhere */
+:root {
+    --tw-bg: #b9dc9e;       /* light green page background */
+    --tw-surface: #ffffff;  /* white card background */
+    --tw-surface-alt: #e7f0df; /* table/modal headers */
+    --tw-text: #1f2a1f;     /* text color */
+    --tw-text-muted: #5b6b5b;   /* label text color */
+    --tw-green-dark: #2d4a2b;   /* primary green (buttons) */
+    --tw-green-darker: #223a20; /* hover state green */
+    --tw-border: #d5e3ca;       /* border color */
+    --tw-status-pending: #6b6b6b;   /* grey badge */
+    --tw-status-overdue: #a3352b;   /* red badge */
+    --tw-status-active: #2d4a2b;    /* green reset status badge */
+    --tw-radius: 10px;                /* corner rounding on cards */
+    --tw-radius-sm: 6px;        /* corner rounding on buttons */
+    --tw-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* shadow */
+    --tw-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif; /*font*/
+}
+
+/* includes padding + border on buttons */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--tw-font);
+    background: var(--tw-bg);
+    color: var(--tw-text);
+    min-height: 100vh;
+}
+
+/* .page wraps all page content w/ 1100px max width */
+.page {
+    max-width: 1100px; 
+    margin: 0 auto;    /* automatically keeps it at 0 margin */
+    padding: 28px 20px 60px;
+}
+
+/* header */
+.tw-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;  /* for responsive web changing */
+}
+
+/* left header */
+.tw-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* logo */
+.tw-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f6ecc9;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    flex-shrink: 0; /* stops logo from squashing */
+}
+
+/* logo image properties */
+.tw-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;  /* keeps logo aspect ratio */
+}
+
+/* title */
+.tw-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--tw-text);
+}
+
+/* right header */
+.tw-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* nav bar */
+.tw-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+
+.tw-nav a {
+    text-decoration: none;
+    color: var(--tw-green-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border-radius: var(--tw-radius-sm);
+    background: var(--tw-surface);
+    border: 1px solid var(--tw-border);
+}
+
+/* this is added or removed in dashbaord.js for automatically matching whatever page you are on */
+.tw-nav a.active {
+    background: var(--tw-green-dark);
+    color: #fff;
+    border-color: var(--tw-green-dark);
+}
+
+/* buttons */
+.btn {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: var(--tw-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/*  primary button - overrides colors */
+.btn-primary {
+    background: var(--tw-green-dark);
+    color: #fff;
+}
+
+/* button color when hover mouse */
+.btn-primary:hover {
+    background: var(--tw-green-darker);
+}
+
+/* button outline */
+.btn-outline {
+    background: var(--tw-surface);
+    color: var(--tw-text);
+    border-color: var(--tw-border);
+}
+
+.btn-outline:hover {
+    background: var(--tw-surface-alt);
+}
+
+/* visible outline when tabbing */
+ .btn:focus-visible, select:focus-visible {
+    outline: 3px solid #1a5fb4;
+    outline-offset: 2px;
+ }
+
+ /* KPI card backgound/table wrapper */
+ .card {
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius);
+    box-shadow: var(--tw-shadow);
+ }
+
+/* 4 KPI cards */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.kpi-card {
+    padding: 20px;
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--tw-text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--tw-text);
+}
+
+/* trap table */
+.table-card {
+    padding: 0;
+    overflow: hidden; /*keeps corners rounded*/
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* removes gaps between cell borders */
+}
+
+thead th {
+    background: var(--tw-surface-alt);
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer; /* headers are clickable */
+    user-select: none;
+    white-space: nowrap;
+}
+
+/* arrow sort */
+.sort-arrow {
+    color: var(--tw-text-muted);
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+/* data row of the table */
+tbody td {
+    padding: 14px 20px;
+    border-top: 1px solid var(--tw-border);
+    font-size: 0.92rem;
+}
+
+/* highlight over hover */
+tbody tr:hover {
+    background: #f7fbf3;
+}
+
+/* status badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px; /* makes it as round as possible */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* colored dot added */
+.badge::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor; /*uses whatever color is set */
+}
+
+/* pending badge */
+.badge-pending {
+    background: var(--tw-status-pending);
+}
+
+/* overdue badge */
+.badge-overdue {
+    background-color: var(--tw-status-overdue);
+}
+
+/* reset badge */
+.badge-reset {
+    background: var(--tw-status-active);
+}
+
+/* filter bar/ date range dropdown */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius-sm);
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--tw-text-muted);
+    box-shadow: var(--tw-shadow);
+}
+
+.filter-bar select {
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--tw-text);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Repsonsive tweaks - Adjust KPI grid column as screen gets narrower and let table scroll sideways instead of squashing on mobile */
+@media (max-width: 780px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tw-header-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: non !important;
+    }
+}
