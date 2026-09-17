@@ -9,17 +9,21 @@
     --tw-text-muted: #5b6b5b;   /* label text color */
     --tw-green-dark: #2d4a2b;   /* primary green (buttons) */
     --tw-green-darker: #223a20; /* hover state green */
+    --tw-green-mid: #3f6b3a;    /* input focus/hover on recipients page */
     --tw-border: #d5e3ca;       /* border color */
     --tw-status-pending: #6b6b6b;   /* grey badge */
     --tw-status-overdue: #a3352b;   /* red badge */
     --tw-status-active: #2d4a2b;    /* green reset status badge */
+    --tw-status-paused: #9aa39a;    /* green badge for pause recipients */
+    --tw-danger: #a3352b;           /* red used for remove + warning box */
+    --tw-danger-dark: #832a22;      /* hover state for red remove button */
     --tw-radius: 10px;                /* corner rounding on cards */
     --tw-radius-sm: 6px;        /* corner rounding on buttons */
     --tw-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* shadow */
     --tw-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif; /*font*/
 }
 
-/* includes padding + border on buttons */
+/* makes width and heigh calculations includes padding + border on buttons */
 * {
     box-sizing: border-box;
 }
@@ -64,6 +68,7 @@ body {
     background: #f6ecc9;
     display: flex;
     align-items: center;
+    justify-content: center;
     overflow: hidden;
     flex-shrink: 0; /* stops logo from squashing */
 }
@@ -154,8 +159,18 @@ body {
     background: var(--tw-surface-alt);
 }
 
+/* used only by the rmove button inside the remove recipient modal */
+.btn-danger {
+    background: var(--tw-danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: var(--tw-danger-dark);
+}
+
 /* visible outline when tabbing */
- .btn:focus-visible, select:focus-visible {
+ .btn:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
     outline: 3px solid #1a5fb4;
     outline-offset: 2px;
  }
@@ -270,6 +285,169 @@ tbody tr:hover {
     background: var(--tw-status-active);
 }
 
+/* used on recipients page onlt */
+.badge-active {
+    background: var(--tw-status-active)
+}
+
+.badge-paused {
+    background: var(--tw-status-paused);
+    color: #2a2a2a;
+}
+
+/* Recipients table - dropdown sits inside a table cell from recipient.html letting staff change it without opening the edit modal */
+.report-select {
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 8px 12px;
+    border-radius: var(--tw-radius-sm);
+    border: 1p solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text);
+    min-width: 140px;
+    cursor: pointer;
+}
+
+/* mid green for hover */
+.report-select:hover {
+    border-color: var(--tw-green-mid);
+}
+
+.action-link {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 14px;
+}
+
+.action-link.edit {
+    color: var(--tw-green-dark);
+}
+
+.action-link.remove {
+    color: var(--tw-danger);
+}
+
+/* Add/Edit/Remove modals */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 35, 20, 0.45);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    z-index: 100; /* sits above all else on page */
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal {
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    background: var(--tw-surface-alt);
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.modal-body {
+    padding: 22px 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    background: var(--tw-surface-alt);
+    border-top: 1px solid var(--tw-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.field .required {
+    color: var(--tw-danger);    /* ;ittle red asterisk for required fields */
+}
+
+.field input[type="text"],
+.field input[type="email"],
+.field select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.92rem;
+    padding: 10px 12px;
+    border-radius: var(--tw-radius-sm);
+    border: 1px solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text);
+}
+
+.field input:hover,
+.field select:hover {
+    border-color: var(--tw-green-mid);
+}
+
+/* active/paused radio buttons in the edit modal */
+.radio-row{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+/* red warning banner in the remove recipient modal */
+.warning-box {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fbe9e7;
+    border: 1px solid #f0c4bd;
+    border-radius: var(--tw-radius-sm);
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    color: #6e2018;
+    margin-bottom: 16px;
+}
+
+.hint-text {
+    font-size: 0.0rem;
+    color:  var(--tw-text-muted);
+    margin-top: 10px;
+}
+
 /* filter bar/ date range dropdown */
 .filter-bar {
     display: flex;
@@ -315,11 +493,15 @@ tbody tr:hover {
         width: 100%;
         justify-content: flex-start;
     }
+
+    .modal-overlay {
+        padding: 24px 16px;
+    }
 }
 
 /* reduce motion */
 @media (prefers-reduced-motion: reduce) {
     * {
-        transition: non !important;
+        transition: none !important;
     }
 }
