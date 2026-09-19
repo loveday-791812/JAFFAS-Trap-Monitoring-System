@@ -14,13 +14,13 @@
 
     <main class="page">
 
-        <!- Background elements ->
+        <!-- Background elements -->
         <div class="leaf-decoration leaf-top"></div>
         <div class="leaf-decoration leaf-bottom"></div>
 
         <section class="signup-card">
 
-            <!- Brand ->
+            <!-- Brand -->
             <header class="brand">
 
                 <div class="logo">
@@ -40,7 +40,7 @@
             <div class="divider"></div>
 
 
-            <!- Heading ->
+            <!-- Heading -->
             <div class="heading">
 
                 <h2>Create your account</h2>
@@ -53,10 +53,10 @@
 
 
 
-            <!- Signup Form ->
+            <!-- Signup Form -->
             <form id="signupForm">
 
-                <!- Email ->
+                <!-- Email -->
                 <div class="form-group">
 
                     <label for="email">
@@ -78,7 +78,7 @@
 
                 </div>
 
-                <!- Password ->
+                <!-- Password -->
                 <div class="form-group">
 
                     <label for="password">
@@ -94,6 +94,7 @@
                             id="password"
                             placeholder="Enter your password"
                             required
+                            minlength="8"
                         >
 
                         <button
@@ -108,7 +109,7 @@
 
                 </div>
 
-                <!- Confirm Password ->
+                <!-- Confirm Password -->
                 <div class="form-group">
 
                     <label for="confirmPassword">
@@ -139,7 +140,7 @@
                 </div>
 
 
-                <!- Role ->
+                <!-- Role -->
                 <div class="form-group">
 
                     <label>
@@ -228,7 +229,7 @@
                 </div>
 
 
-                <!- Terms ->
+                <!-- Terms -->
                 <label class="terms">
 
                     <input
@@ -247,17 +248,18 @@
                 </label>
 
 
-                <!- Submit ->
+                <!-- Submit -->
                 <button
                     type="submit"
                     class="create-button"
+                    id="signupSubmitBtn"
                 >
                     Create Account
                     <span>→</span>
                 </button>
 
 
-                <!- Login ->
+                <!-- Login -->
                 <p class="login-link">
                     Already have an account?
                     <a href="login.html">Log in</a>
@@ -265,11 +267,61 @@
 
             </form>
 
+                <form id="verifyForm" style="display:none;">
+
+            <input type="hidden" id="verifyUid">
+
+            <div class="form-group">
+
+                <label for="verifyCode">
+                    We emailed you a verification code
+                </label>
+
+                <div class="input-wrapper">
+                    
+                    <span class="input-icon">✉</span>
+
+                    <input 
+                    type="text"
+                    id="verifyCode"
+                    placeholder="Enter 6-digit code"
+                    required
+                    inputmode="numeric"
+                    maxlength="6"
+                    autocomplete="one-time-code"
+                    >
+
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                class="create-button"
+                id="verifySubmitBtn"
+            >
+                Confirm
+                <span>→</span>
+            </button>
+
+        <p class="login-link">
+            Didn't get a code?
+            <a href="#" id="resendCodeLink">Resend</a>
+        </p>
+
+
+    </form>
+
+
+
         </section>
 
     </main>
 
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <script src="../Login Back-End/firebase-config.js"></script>
     <script src="script.js"></script>
 
 </body>
