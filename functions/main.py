@@ -539,7 +539,7 @@ def _send_with_images(html_body, subject):
         bg_bytes = list(f.read())
 
     resend.Emails.send({
-        "from": "onboarding@resend.dev",
+        "from": "alerts@trapwatch.co.nz",
         "to": [RECIPIENT_EMAIL],
         "subject": subject,
         "html": html_body,
