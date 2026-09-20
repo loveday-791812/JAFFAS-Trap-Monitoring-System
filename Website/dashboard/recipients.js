@@ -45,7 +45,7 @@ function renderRecipients() {
     twRecipients.forEach((recipient) => {
         const row = document.createElement("tr");
 
-        row.innerHTML = '<td>${recipient.name}</td> <td>${recipient.email}</td> <td> <select class="report-select" data-id="${recipient.id}"> <option value="Daily">Daily</option> <option value="Weekly">Weekly</option> <option value="Monthly">Monthly</option> </select> </td> <td> <span class="badge badge-${recipient.status}"> ${recipient.status === "active" ? "Active" : "Paused"} </span> </td> <td> <button type="button" class="action-link edit" data-id="${recipient.id}">Edit</button> <button type="button" class="action-link remove" data-id="${recipient.id}">Remove</button> </td>';
+        row.innerHTML = `<td>${recipient.name}</td> <td>${recipient.email}</td> <td> <select class="report-select" data-id="${recipient.id}"> <option value="Daily">Daily</option> <option value="Weekly">Weekly</option> <option value="Monthly">Monthly</option> </select> </td> <td> <span class="badge badge-${recipient.status}"> ${recipient.status === "active" ? "Active" : "Paused"} </span> </td> <td> <button type="button" class="action-link edit" data-id="${recipient.id}">Edit</button> <button type="button" class="action-link remove" data-id="${recipient.id}">Remove</button> </td>`;
 
         /* set the dropdown to show this recipient's current frequency. Done here rather than a selected attribute above becuase the value needs to match exactly */
         row.querySelector(".report-select").value = recipient.report;
