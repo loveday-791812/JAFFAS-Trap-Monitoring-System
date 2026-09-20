@@ -77,7 +77,7 @@ const twMockData = {
 
 const statusLabels = {
     pending: "Pending",
-    overdue: "Overue",
+    overdue: "Overdue",
     reset: "Reset",
 };
 
@@ -98,7 +98,7 @@ function renderKpis(range) {
 
 /* renderTable builds the table rows for the given date range, applies the current sort if any, and inserts them into the table body. This function will rerun every time the date range or the sort changes, so the table is always rebuilt from scratch rather than patching individual rows */
 function renderTable(range) {
-    const traps = []    /* copy the mock data array with [....] */
+    const traps = [...twMockData[range].traps];   // copy the mock data array so sorting doesn't affect the original
 
     if (currentSort.column) {
         traps.sort((a, b) => {
@@ -146,7 +146,7 @@ function downloadJson() {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = 'trapwatch-report-${currentRange}.json';
+    link.download = `trapwatch-report-${currentRange}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
