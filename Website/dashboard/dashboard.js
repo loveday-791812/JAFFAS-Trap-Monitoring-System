@@ -120,7 +120,7 @@ function renderTable(range) {
 
     traps.forEach((trap) => {
         const row = document.createElement("tr"); /* the badge-${trap.status} class picks up the right color from dashboard-stye.css (reset = green, overdue = red) */
-        row.innerHTML = '<td>${trap.trapNo}</td> <td>${trap.catchDate}</td> <td>${trap.resetDate}</td> <td>${trap.daysToReset}</td> <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>';
+        row.innerHTML = `<td>${trap.trapNo}</td> <td>${trap.catchDate}</td> <td>${trap.resetDate}</td> <td>${trap.daysToReset}</td> <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>`;
         tbody.appendChild(row);
     });
 }
