@@ -9,37 +9,40 @@ timeout = 0 #timeout variable
 
 ##MP version of WiFi.h
 #Wifi connection fucntion
-nic = network.WLAN(network.WALN.IF_STA) #Creates station interface object
+nic = network.WLAN(network.WLAN.IF_STA) #Creates station interface object
 nic.active(False) #deactivtes interface
 time.sleep(0.5) #wait 5 mili seconds
 nic.active(True) #activtes interface, ^whole process restarts wifi
 nic.connect('B_DECO', 'JJEXXRRE') #connect to router
-ip = nic.ifconfig()[0]
 
 #If wifi not connecting
 if not nic.isconnected():
     print('Connecting to Wifi...')
-    while (not wifi.isconnected() and timeout < 5): #Leaves while loop if timeout more than 5 or wifi connects
+    while (not nic.isconnected() and timeout < 5): #Leaves while loop if timeout more than 5 or wifi connects
         print(5 - timeout)
         timeout = timeout + 1
         time.sleep(1)
 #If/when wifi connects
-if(wifi.isconnected()):
+if(nic.isconnected()):
+    ip = nic.ifconfig()[0]
     print(f'Connected to {ip}')
     ##MP version of HTTPClient.h
     req = urequests.get('https://www.example.com') #sends request to inputted URL
-    print(req.status.code) #prints status code. 200 = success code
+    print(req.status_code) #prints status code. 200 = success code
     print(req.text) #prints response in text formatting
 else:
     print('Time Out') #if timeout goes to 0
 
 ##MP version of WiFiClientSecure.h
-addr = socket.getaddrinfro('example.com', 80) [0] [-1] #connects to URL (host, port, af=0, type=0, proto=0, flags=0, /)
+addr = socket.getaddrinfo('example.com', 443) [0] [-1] #connects to URL (host, port, af=0, type=0, proto=0, flags=0, /)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates normal TCP socket
-secure_s = tls.warp_socket(s, server_hostname="example.com") #puts socket in TCP encryption
-secure_s.connect(addr) #securely connects to URL
-secure_s.send(b'GET / GTTP/1.1\r\nHost: example.com\r\n\r\n')
-data = s.recv(1000)
+s.connect(addr) #tcp connect first
+ctx = tls.SSLContext(tls.PROTOCOL_TLS_CLIENT) #current version of MP doesnt have wrap_socket, need to make SSL first
+ctx.verify_mode = tls.CERT_NONE
+
+secure_s = ctx.wrap_socket(s, server_hostname="example.com") #puts socket in TCP encryption
+secure_s.send(b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
+data = secure_s.recv(1000)
 secure_s.close()
 
 ##UART settings
@@ -52,3 +55,5 @@ data_uart = UART(1) #creates second serial connection?
 received_bytes = bytearray(MESSAGE_LENGTH)
 byte_index = 0
 packet_too_long = False
+
+print('Works')
