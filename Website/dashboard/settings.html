@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrapWatch - Settings</title>
+
+<link rel="stylesheet" href="dashboard-style.css" />
+</head>
+<body>
+
+<div class="page">
+
+    <!-- header -->
+    <header class="tw-header">
+        <div class="tw-header-left">
+            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <h1 class="tw-title">Settings</h1>
+        </div>
+    </header>
+
+    <!-- nav -->
+    <nav class="tw-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+        <a href="Traps.html">Traps</a>
+        <a href="settings.html">Settings</a>
+    </nav>
+
+    <!-- setting form -->
+    <form id="settings-form">
+        <section class="card">
+
+            <!-- overdue threshold -->
+            <div class="settings-section">
+                <h2>Overdue threshold</h2>
+                <p class="settings-description">
+                    How many days without a reset before a trap counts as "overdue" on the dashboard.
+                </p>
+                <div class="field">
+                    <label for="overdue-threshold">Days</label>
+                    <input type="text" id="overdue-threshold" inputmode="numeric" />
+                </div>
+            </div>
+
+            <!-- default dashboard view -->
+            <div class="settings-section">
+                <h2>Default dashboard view</h2>
+                <p class="settings-description">
+                    Which date range the Admin Dashboard opens to by default.
+                </p>
+                <div class="field">
+                    <label for="default-date-range">Date range</label>
+                    <select id="default-date-range">
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- default report frequency -->
+            <div class="settings-section">
+                <h2>Default report frequency</h2>
+                <p class="settings-description">
+                    Pre-selected report frequency when adding a new recipient.
+                </p>
+                <div class="field">
+                    <label for="default-report-frequency">Frequency</label>
+                    <select id="default-report-frequency">
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- save button -->
+        <section class="card settings-actions-card">
+            <div class="settings-footer">
+                <span id="save-confirmation" class="save-confirmation">Settings saved</span>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </section> 
+    </form>
+
+</div>
+
+<!-- settings script -->
+<script src="settings.js"></script>
+</body>
+</html>

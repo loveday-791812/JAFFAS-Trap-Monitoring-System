@@ -93,6 +93,7 @@ function renderKpis(range) {
     document.getElementById("kpi-total-catches").textContent = kpis.totalCatches;
     document.getElementById("kpi-avg-reset").textContent = kpis.avgTimeToReset;
     document.getElementById("kpi-overdue").textContent = kpis.trapsOverdue;
+    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${twGetSettings().overdueThreshold} DAYS)`;
     document.getElementById("kpi-triggered").textContent = kpis.currentTriggered;
 }
 
@@ -156,6 +157,9 @@ function downloadJson() {
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", () => {
     twHighlightNav();
+    const settings = twGetSettings();
+    currentRange = settings.defaultDateRange;
+    document.getElementById("date-range-select").value = currentRange;
     refreshDashboard();     /* draw the "last 7 days" view */
 
     /* date range dropdown changed -> update which mock dataset is shown */
