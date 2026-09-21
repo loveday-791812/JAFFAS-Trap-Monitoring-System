@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrapWatch - Manage Traps</title>
+
+<!-- using stylesheet -->
+<link rel="stylesheet" href="dashboard-style.css" />
+</head>
+<body>
+
+<div class="page">
+
+    <!-- header -->
+    <header class="tw-header">
+        <div class="tw-header-left">
+            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <h1 class="tw-title">Admin</h1>
+        </div>
+
+        <div class="tw-header-right">
+            <!-- add trap button -->
+            <button id="add-trap-btn" class="btn btn-primary" type="button">
+                + Add Trap
+            </button>
+        </div>
+    </header>
+
+    <!-- nav for the 4 pages -->
+    <nav class="tw-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+        <a href="Traps.html">Traps</a>
+        <a href="settings.html">Settings</a>
+    </nav>
+
+    <!-- traps table - this is a DIFFERENT dataset from the trap table on
+       dashboard.html. The dashboard shows CATCH EVENTS (who got caught,
+       when, reset status). This page manages the physical TRAP UNITS
+       themselves — the inventory of trap devices in the field. A trap
+       could exist here with no catch history yet, or have years of
+       catch history on the dashboard even after being marked "Removed"
+       here.-->
+    <section class="card table-card">
+        <table>
+            <!-- column headers -->
+            <thead>
+                <tr>
+                    <th>Trap no</th>
+                    <th>Location</th>
+                    <th>Date installed</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <!-- starts empty then traps.js fills it -->
+            <tbody id="traps-inventory-tbody">
+                <!-- rows injected here by renderTraps() in traps.js -->
+            </tbody>
+        </table>
+    </section>
+
+</div>
+
+<!-- Add trap modal -->
+<div class="modal-overlay" id="add-trap-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add Trap</h2>
+        </div>
+
+        <form id="add-trap-form">
+            <div class="modal-body">
+                <div class="field">
+                    <label for="add-trap-no">Trap no <span class="required">*</span></label>
+                    <input type="text" id="add-trap-no" required />
+                </div>
+                <div class="field">
+                    <label for="add-trap-location">Location <span class="required">*</span></label>
+                    <input type="text" id="add-trap-location" required placeholder="e.g. North ridge, track marker 4" />
+                </div>
+                <div class="field">
+                    <label for="add-trap-date">Date installed <span class="required">*</span></label>
+                    <input type="text" id="add-trap-date" required placeholder="DD/MM/YYYY" />
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <!-- cancel button -->
+                <button type="button" class="btn btn-outline" onclick="twCloseModal('add-trap-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit trap modal -->
+<div class="modal-overlay" id="edit-trap-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Edit Trap</h2>
+        </div>
+
+        <form id="edit-trap-form">
+            <input type="hidden" id="edit-trap-id" />
+
+            <div class="modal-body">
+                <div class="field">
+                    <label for="edit-trap-no">Trap no <span class="required">*</span></label>
+                    <input type="text" id="edit-trap-no" required />
+                </div>
+                <div class="field">
+                    <label for="edit-trap-location">Loaction <span class="required">*</span></label>
+                    <input type="text" id="edit-trap-location" required />
+                </div>
+                <div class="field">
+                    <label for="edit-trap-date">Date installed <span class="required">*</span></label>
+                    <input type="text" id="edit-trap-location" required />
+                </div>
+                
+                <!-- radio buttons -->
+                <div class="field">
+                    <label>Status</label>
+                    <div class="radio-row">
+                        <label class="radio-option">
+                            <input type="radio" name="edit-trap-status" value="active" />Active
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edit-trap-status" value="removed" />Removed
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="twCloseModal('edit-trap-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Remove trap modal -->
+<div class="modal-overlay" id="remove-trap-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Remove Trap</h2>
+        </div>
+
+        <div class="modal-body">
+            <!-- red warning banner for removing -->
+            <div class="warning-box">
+                <span aria-hidden="true">⚠️</span>
+                <span>
+                    WARNING: This will permanently remove trap <strong id="remove-trap-name-inline">this trap</strong>
+                    from the network and stop tracking its catches. This cannot be undone.
+                </span>
+            </div>
+
+            <!-- populated by openRemoveModal() in traps.js -->
+            <div class="field">
+                <label for="remove-trap-select">Trap</label>
+                <select id="remove-trap-select"></select>
+            </div>
+
+            <div class="hint-text">Tip: mark it <strong>Removed</strong> via Edit instead if it's just temporarily offline</div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="twCloseModal('remove-trap-modal')">Cancel</button>
+            <button type="button" id="confirm-remove-trap-btn" class="btn btn-danger">Remove</button>
+        </div>
+    </div>
+</div>
+
+<script src="Traps.js"></script>
+</body>
+</html>

@@ -77,7 +77,7 @@ const twMockData = {
 
 const statusLabels = {
     pending: "Pending",
-    overdue: "Overue",
+    overdue: "Overdue",
     reset: "Reset",
 };
 
@@ -93,12 +93,13 @@ function renderKpis(range) {
     document.getElementById("kpi-total-catches").textContent = kpis.totalCatches;
     document.getElementById("kpi-avg-reset").textContent = kpis.avgTimeToReset;
     document.getElementById("kpi-overdue").textContent = kpis.trapsOverdue;
+    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${twGetSettings().overdueThreshold} DAYS)`;
     document.getElementById("kpi-triggered").textContent = kpis.currentTriggered;
 }
 
 /* renderTable builds the table rows for the given date range, applies the current sort if any, and inserts them into the table body. This function will rerun every time the date range or the sort changes, so the table is always rebuilt from scratch rather than patching individual rows */
 function renderTable(range) {
-    const traps = []    /* copy the mock data array with [....] */
+    const traps = [...twMockData[range].traps];   // copy the mock data array so sorting doesn't affect the original
 
     if (currentSort.column) {
         traps.sort((a, b) => {
@@ -120,7 +121,7 @@ function renderTable(range) {
 
     traps.forEach((trap) => {
         const row = document.createElement("tr"); /* the badge-${trap.status} class picks up the right color from dashboard-stye.css (reset = green, overdue = red) */
-        row.innerHTML = '<td>${trap.trapNo}</td> <td>${trap.catchDate}</td> <td>${trap.resetDate}</td> <td>${trap.daysToReset}</td> <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>';
+        row.innerHTML = `<td>${trap.trapNo}</td> <td>${trap.catchDate}</td> <td>${trap.resetDate}</td> <td>${trap.daysToReset}</td> <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>`;
         tbody.appendChild(row);
     });
 }
@@ -146,7 +147,7 @@ function downloadJson() {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = 'trapwatch-report-${currentRange}.json';
+    link.download = `trapwatch-report-${currentRange}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -156,6 +157,9 @@ function downloadJson() {
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", () => {
     twHighlightNav();
+    const settings = twGetSettings();
+    currentRange = settings.defaultDateRange;
+    document.getElementById("date-range-select").value = currentRange;
     refreshDashboard();     /* draw the "last 7 days" view */
 
     /* date range dropdown changed -> update which mock dataset is shown */

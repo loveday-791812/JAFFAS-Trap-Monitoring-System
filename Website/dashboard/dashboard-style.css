@@ -505,3 +505,65 @@ tbody tr:hover {
         transition: none !important;
     }
 }
+
+/* trap status removed badge */
+.badge-removed {
+    background: var(--tw-status-paused);
+    color: #2a2a2a;
+}
+
+/* settings page */
+.settings-section {
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+/* removes divider at end */
+.settings-section:last-of-type {
+    border-bottom: none;
+}
+
+/* heading text */
+.settings-section h2 {
+    font-size: 1rem;
+    margin: 0 0 4px;
+    color: var(--tw-text);
+}
+
+/* settings descriptions */
+.settings-section .settings-description {
+    font-size: 0.85rem;
+    color: var(--tw-text-muted);
+    margin: 0 0 16px;
+}
+
+/* gap between save button and settings window */
+.settings-actions-card {
+    margin-top: 16px;
+}
+
+/* footer bar */
+.settings-footer {
+    padding: 16px 24px;
+    background: var(--tw-surface-alt);
+    border-top: 1px solid var(--tw-border);
+    display: flex;
+    justify-content: flex-end; /* save button on the right */
+    gap: 10px
+}
+
+/* settings saved confirmation msg */
+.save-confirmation {
+    font-size: 0.85rem;
+    color: var(--tw-green-dark);
+    font-weight: 600;
+    margin-right: auto;
+    align-self: center;
+    opacity: 0;
+    transition: opacity 0.2s ease; /* fades in and out */
+}
+
+/* shows save confirmation */
+.save-confirmation.show {
+    opacity: 1;
+}
