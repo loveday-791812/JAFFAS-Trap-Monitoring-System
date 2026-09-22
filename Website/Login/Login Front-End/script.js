@@ -92,7 +92,7 @@ if (verifyForm) {
 
         try {
             const data = await twPost("verifyCode", {uid, code});
-            window.location.href = `../../dashboard/dashboard.html?token=${encodeURIComponent(data.token)}`;
+            window.location.href = `../../dashboard.html?token=${encodeURIComponent(data.token)}`; 
         } catch (err) {
             alert(err.message);
             submitBtn.disabled = false;
@@ -130,7 +130,7 @@ if(loginForm) {
 
         try {
             await twAuth.signInWithEmailAndPassword(email, password);
-            window.location.href = "../../dashboard/dashboard.html";
+            window.location.href = "../../dashboard.html";
         }   catch (err) {
             alert("Login failed: " + err.message);
         }   finally {

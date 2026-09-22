@@ -31,7 +31,7 @@
     <nav class="tw-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
-        <a href="Traps.html">Traps</a>
+        <a href="traps.html">Traps</a>
         <a href="settings.html">Settings</a>
     </nav>
 
@@ -116,7 +116,7 @@
                 </div>
                 <div class="field">
                     <label for="edit-trap-date">Date installed <span class="required">*</span></label>
-                    <input type="text" id="edit-trap-location" required />
+                    <input type="text" id="edit-trap-date" required />
                 </div>
                 
                 <!-- radio buttons -->
@@ -173,7 +173,12 @@
         </div>
     </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-<script src="Traps.js"></script>
+<script src="Website-backEnd/firebase-config.js"></script>
+<script src="dashboard-auth.js"></script>
+<script src="traps.js"></script>
 </body>
 </html>

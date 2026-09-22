@@ -4,7 +4,6 @@
     2. Store and render mock data (KPI and trap table)
     3. Handle the date-range dropdown and column sorting
     4. Build and download a JSON report of what's currently shown
-    NOTE: twMockData is fake data. Only use for front-end development.
 */
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "dashboard.html";
@@ -20,60 +19,77 @@ function twHighlightNav() {
 }
 
 /* Mock Data */
-const twMockData = {
-    
-    "7d": {
-        kpis: {
-            totalCatches: 12,
-            avgTimeToReset: "3.2 days",
-            trapsOverdue: 1,
-            currentTriggered: 6
-        },
-        traps: [
-            { trapNo: "23", catchDate: "18/08 11:45", resetDate: "-", daysToReset: 6, status: "pending" },
-            { trapNo: "41", catchDate: "17/08 19:10", resetDate: "-", daysToReset: 7, status: "overdue" },
-            { trapNo: "17", catchDate: "13/08 08:14", resetDate: "14/08 09:00", daysToReset: 1, status: "reset" },
-            { trapNo: "08", catchDate: "13/08 15:02", resetDate: "14/08 09:00", daysToReset: 1, status: "reset" },
-        ],
-    },
+let twData = { "7d": null, "30d": null, "all": null};
 
-    "30d": {
-        kpis: {
-            totalCatches: 41,
-            avgTimeToReset: "2.8 days",
-            trapsOverdue: 3,
-            currentTriggered: 6,
-        },
-        traps: [
-            { trapNo: "23", catchDate: "18/08 11:45", resetDate: "-", daysToReset: 6, status: "pending"},
-            { trapNo: "41", catchDate: "17/08 19:10", resetDate: "-", daysToReset: 7, status: "pending"},
-            { trapNo: "17", catchDate: "13/08 08:14", resetDate: "14/08 09:00", daysToReset: 1, status: "reset"},
-            { trapNo: "08", catchDate: "13/08 15:02", resetDate: "14/08 09:00", daysToReset: 1, status: "reset"},
-            { trapNo: "12", catchDate: "02/08 07:30", resetDate: "10/08 09:00", daysToReset: 8, status: "overdue"},
-            { trapNo: "05", catchDate: "28/07 14:20", resetDate: "29/07 09:00", daysToReset: 1, status: "reset"},
-            { trapNo: "36", catchDate: "22/07 09:05", resetDate: "-", daysToReset: 8, status: "overdue"},
-        ],
-    },
-    "all": {
-        kpis: {
-            totalCatches: 96,
-            avgTimeToReset: "3.0 days",
-            trapsOverdue: 5,
-            currentTriggered: 6,
-        },
-        traps: [
-            { trapNo: "23", catchDate: "18/08 11:45", resetDate: "-", daysToReset: 6, status: "pending" },
-            { trapNo: "41", catchDate: "17/08 19:10", resetDate: "-", daysToReset: 7, status: "overdue" },
-            { trapNo: "17", catchDate: "13/08 08:14", resetDate: "14/08 09:00", daysToReset: 1, status: "reset" },
-            { trapNo: "08", catchDate: "13/08 15:02", resetDate: "14/08 09:00", daysToReset: 1, status: "reset" },
-            { trapNo: "12", catchDate: "02/08 07:30", resetDate: "10/08 09:00", daysToReset: 8, status: "overdue" },
-            { trapNo: "05", catchDate: "28/07 14:20", resetDate: "29/07 09:00", daysToReset: 1, status: "reset" },
-            { trapNo: "36", catchDate: "22/07 09:05", resetDate: "-", daysToReset: 8, status: "overdue" },
-            { trapNo: "29", catchDate: "14/07 10:00", resetDate: "15/07 09:00", daysToReset: 1, status: "reset" },
-            { trapNo: "03", catchDate: "01/07 06:40", resetDate: "-", daysToReset: 9, status: "overdue" },
-        ],
-    },
+async function loadData() {
+    const [trapsSnap, eventsSnap] = await Promise.all([
+        rtdb.ref("Traps").once("value"),
+        rtdb.ref("Events").once("value"),
+    ]);
+
+    const traps = trapsSnap.val() || {};
+    const events = eventsSnap.val() || {};
+
+    const trapsByNum = {};
+    Object.values(traps).forEach((t) => {
+        trapsByNum[String(t.trap_num)] = t;
+    });
+
+    const eventList = Object.values(events)
+        .filter((e) => e.trap_ID != null && e.timeStamp)
+        .map((e) => ({
+            trapNum: String(e.trap_ID),
+            date: new Date(e.timeStamp),
+        }));
+    
+    twData["7d"] = buildRangeData(eventList, trapsByNum, 7);
+    twData["30d"] = buildRangeData(eventList, trapsByNum, 30);
+    twData["all"] = buildRangeData(eventList, trapsByNum, null);
+
 };
+
+function buildRangeData(eventList, trapsByNum, days) {
+    const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
+    const filtered = cutoff ? eventList.filter((e) => e.date >= cutoff) : eventList;
+
+    const latestByTrap = {};
+    filtered.forEach((e) => {
+        if (!latestByTrap[e.trapNum] || e.date > latestByTrap[e.trapNum].date) {
+            latestByTrap[e.trapNum] = e;
+        }
+    });
+
+    const trapRows = Object.entries(latestByTrap).map(([trapNum, catchEvent]) => {
+        const trapInfo = trapsByNum[trapNum] || {};
+        const resetAt = trapInfo.reset_at ? new Date(trapInfo.reset_at) : null;
+        const daysToReset = resetAt
+            ? Math.round((resetAt - catchEvent.date) / 86400000)
+            : null;
+        
+        return {
+            trapNo: trapNum,
+            catchDate: catchEvent.date.toLocaleString(),
+            resetDate: resetAt ? resetAt.toLocaleString() : "-",
+            daysToReset: daysToReset ?? "-",
+            status: trapInfo.status || "pending", 
+        };
+    });
+
+    const overdue = trapRows.filter((t) => t.status === "overdue").length;
+    const resetTimes = trapRows.map((t) => t.daysToReset).filter((d) => typeof d === "number");
+    const  avg = resetTimes.length
+        ? (resetTimes.reduce((a, b) => a + b, 0) / resetTimes.length).toFixed(1) + " days"
+        : "-";
+    return {
+        kpis: {
+            totalCatches: filtered.length,
+            avgTimeToReset: avg,
+            trapsOverdue: overdue,
+            currentTriggered: trapRows.filter((t) => t.status === "pending").length,
+        },
+        traps: trapRows,
+    };
+}
 
 const statusLabels = {
     pending: "Pending",
@@ -89,17 +105,16 @@ let currentSort = { column: null, direction: 1 };
 
 /* Fills in 4 card values on the KPI for the given date range */
 function renderKpis(range) {
-    const kpis = twMockData[range].kpis;
+    const kpis = twData[range].kpis;
     document.getElementById("kpi-total-catches").textContent = kpis.totalCatches;
     document.getElementById("kpi-avg-reset").textContent = kpis.avgTimeToReset;
     document.getElementById("kpi-overdue").textContent = kpis.trapsOverdue;
-    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${twGetSettings().overdueThreshold} DAYS)`;
     document.getElementById("kpi-triggered").textContent = kpis.currentTriggered;
 }
 
 /* renderTable builds the table rows for the given date range, applies the current sort if any, and inserts them into the table body. This function will rerun every time the date range or the sort changes, so the table is always rebuilt from scratch rather than patching individual rows */
 function renderTable(range) {
-    const traps = [...twMockData[range].traps];   // copy the mock data array so sorting doesn't affect the original
+    const traps = [...twData[range].traps];    /* copy the mock data array with [....] */
 
     if (currentSort.column) {
         traps.sort((a, b) => {
@@ -121,10 +136,17 @@ function renderTable(range) {
 
     traps.forEach((trap) => {
         const row = document.createElement("tr"); /* the badge-${trap.status} class picks up the right color from dashboard-stye.css (reset = green, overdue = red) */
-        row.innerHTML = `<td>${trap.trapNo}</td> <td>${trap.catchDate}</td> <td>${trap.resetDate}</td> <td>${trap.daysToReset}</td> <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>`;
+        row.innerHTML = `
+            <td>${trap.trapNo}</td>
+            <td>${trap.catchDate}</td>
+            <td>${trap.resetDate}</td>
+            <td>${trap.daysToReset}</td>
+            <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>
+        `;
         tbody.appendChild(row);
     });
 }
+
 
 /* Re-renders both KPI cards and table for whatever selected range. This gets called anytime currentRange changes */
 function refreshDashboard() {
@@ -137,8 +159,8 @@ function downloadJson() {
     const payload = {
         dateRange: currentRange,
         generatedAt: new Date().toISOString(),
-        kpis: twMockData[currentRange].kpis,
-        traps: twMockData[currentRange].traps,
+        kpis: twData[currentRange].kpis,
+        traps: twData[currentRange].traps,
     };
 
     /* turn the JS object into a downloadable file */
@@ -155,11 +177,9 @@ function downloadJson() {
 }
 
 /* Event listeners setup once page has loaded */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
-    const settings = twGetSettings();
-    currentRange = settings.defaultDateRange;
-    document.getElementById("date-range-select").value = currentRange;
+    await loadData();
     refreshDashboard();     /* draw the "last 7 days" view */
 
     /* date range dropdown changed -> update which mock dataset is shown */

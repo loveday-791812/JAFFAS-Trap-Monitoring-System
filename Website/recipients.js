@@ -27,12 +27,12 @@ function twCloseModal(modalId) {
 
 /* Mock Data */
 /* Each recipient has a unique "id" (separate from their name) so we can find/update/remove the right one even if two people happened to share a name. status is either "active" or "paused" — matches the badge-active / badge-paused CSS classes in dashboard-style.css. */
-let twRecipients = [
-    { id: 1, name: "Clint", email: "cllint@kahikatea.com", report: "Weekly", status: "active" },
-    { id: 2, name: "Jessie", email: "jessie@kahikatea.com", report: "Daily", status: "active" },
-    { id: 3, name: "Jenna", email: "jenna@kahikatea.com", report: "Monthly", status: "active" },
-    { id: 4, name: "Dave", email: "dave@kahikatea.com", report: "Weekly", status: "paused" },
-];
+let twRecipients = {};
+
+async function loadRecipients() {
+    const snap = await rtdb.ref("Recipients").once("value");
+    twRecipients = snap.val() || {};
+}
 
 /* keeps track of the next id to hand out when someone click "Add" and starts above the highest id already used in the mock data */
 let twNextId = 5;
@@ -42,18 +42,32 @@ function renderRecipients() {
     const tbody = document.getElementById("recipients-tbody");
     tbody.innerHTML = "";
 
-    twRecipients.forEach((recipient) => {
+    Object.entries(twRecipients).forEach(([id, recipient]) => {
         const row = document.createElement("tr");
-
-        row.innerHTML = `<td>${recipient.name}</td> <td>${recipient.email}</td> <td> <select class="report-select" data-id="${recipient.id}"> <option value="Daily">Daily</option> <option value="Weekly">Weekly</option> <option value="Monthly">Monthly</option> </select> </td> <td> <span class="badge badge-${recipient.status}"> ${recipient.status === "active" ? "Active" : "Paused"} </span> </td> <td> <button type="button" class="action-link edit" data-id="${recipient.id}">Edit</button> <button type="button" class="action-link remove" data-id="${recipient.id}">Remove</button> </td>`;
-
-        /* set the dropdown to show this recipient's current frequency. Done here rather than a selected attribute above becuase the value needs to match exactly */
+        row.innerHTML = `
+        <td>${recipient.name}</td>
+        <td>${recipient.email}</td>
+        <td>
+            <select class="report-select" data-id="${id}">
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+            </select>
+        </td>
+        <td>
+            <span class="badge badge-${recipient.status}">
+                ${recipient.status === "active" ? "Active" : "Paused"}
+            </span>
+        </td>
+        <td>
+            <button type="button" class="action-link edit" data-id="${id}">Edit</button>
+            <button type="button" class="action-link remove" data-id="${id}">Remove</button>
+        </td>
+        `;
         row.querySelector(".report-select").value = recipient.report;
-
         tbody.appendChild(row);
     });
 
-    /* reattach click/change listeners every time, since the buttons and dropdowns above were just recreated from scratch */
     attachRowListeners();
 }
 
@@ -61,25 +75,23 @@ function renderRecipients() {
 function attachRowListeners() {
     /* changing frequency directly in the table updates that recipient immediately without needing to open the Edit modal */
     document.querySelectorAll(".report-select").forEach((select) => {
-        select.addEventListener("change", (e) => {
-            const id = Number(e.target.dataset.id);
-            const recipient = twRecipients.find((r) => r.id === id);
-            recipient.report = e.target.value;
+        select.addEventListener("change", async (e) => {
+            const id = (e.target.dataset.id);
+            twRecipients[id].report = e.target.value;
+            await rtdb.ref(`Recipients/${id}`).update({ report: e.target.value});
             /* no need to rerender here as the dropdown already shows the new value */
         });
     });
 
     document.querySelectorAll(".action-link.edit").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-            const id = Number(e.target.dataset.id);
-            openEditModal(id);
+            openEditModal(e.target.dataset.id);
         });
     });
 
     document.querySelectorAll(".action-link.remove").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-            const id = Number(e.target.dataset.id);
-            openRemoveModal(id);
+            openRemoveModal(e.target.dataset.id);
         });
     });
 }
@@ -91,21 +103,18 @@ function openAddModal() {
     twOpenModal("add-modal");
 }
 
-function handleAddSubmit(e) {
+async function handleAddSubmit(e) {
     e.preventDefault();
 
     const name = document.getElementById("add-name").value.trim();
     const email = document.getElementById("add-email").value.trim();
     const report = document.getElementById("add-report").value;
 
-    twRecipients.push({
-        id: twNextId,
-        name,
-        email,
-        report,
-        status: "active",   /*new recipients start active by default */
-    });
-    twNextId += 1;
+    const newRef = rtdb.ref("Recipients").push();
+    const newRecipient = { name, email, report, status: "active" };
+    await newRef.set(newRecipient);
+
+    twRecipients[newRef.key] = newRecipient;
 
     renderRecipients();
     twCloseModal("add-modal");
@@ -113,34 +122,38 @@ function handleAddSubmit(e) {
 
 /* Edit Recipient modal - opens the Edit modal pre-filled with one recipient's current details. The hidden edit-id field remembers which recipient we're editing so handleEditSubmit() knows what to update when Save is clicked */
 function openEditModal(id) {
-    const recipient = twRecipients.find((r) => r.id === id);
+    const recipient = twRecipients[id];
+    if (!recipient) return;
 
-    document.getElementById("edit-id").value = recipient.id;
+    document.getElementById("edit-id").value = id;
     document.getElementById("edit-name").value = recipient.name;
     document.getElementById("edit-email").value = recipient.email;
     document.getElementById("edit-report").value = recipient.report;
 
     /* check the radio button matching this recipient's current status */
     const radio = document.querySelector(
-        'input[name="edit-status"][value="${recipient.status}"]'
+        `input[name="edit-status"][value="${recipient.status}"]`
     );
     if (radio) radio.checked = true;
 
     twOpenModal("edit-modal");
 }
 
-function handleEditSubmit(e) {
+async function handleEditSubmit(e) {
     e.preventDefault();
 
-    const id = Number(document.getElementById("edit-id").value);
-    const recipient = twRecipients.find((r) => r.id === id);
-
-    recipient.name = document.getElementById("edit-name").value.trim();
-    recipient.email = document.getElementById("edit-email").value.trim();
-    recipient.report = document.getElementById("edit-report").value;
+    const id = document.getElementById("edit-id").value;
+    const updated  = {
+        name: document.getElementById("edit-name").value.trim(),
+        email: document.getElementById("edit-email").value.trim(),
+        report: document.getElementById("edit-report").value,
+    }
 
     const checkedRadio = document.querySelector('input[name="edit-status"]:checked');
-    if (checkedRadio) recipient.status = checkedRadio.value;
+    if (checkedRadio) updated.status = checkedRadio.value;
+
+    await rtdb.ref(`Recipients/${id}`).update(updated);
+    twRecipients[id] = { ...twRecipients[id], ...updated };
 
     renderRecipients();
     twCloseModal("edit-modal");
@@ -151,9 +164,9 @@ function openRemoveModal(id) {
     const select = document.getElementById("remove-select");
     select.innerHTML = "";
 
-    twRecipients.forEach((recipient) => {
-        const option = document. createElement("option");
-        option.value = recipient.id;
+        Object.entries(twRecipients).forEach(([key, recipient]) => {
+        const option = document.createElement("option");
+        option.value = key;
         option.textContent = recipient.name;
         select.appendChild(option);
     });
@@ -166,23 +179,25 @@ function openRemoveModal(id) {
 /* updates this recipient in the warning box to the selected name */
 function updateRemoveWarningText() {
     const select = document.getElementById("remove-select");
-    const recipient = twRecipients.find((r) => r.id === Number(select.value));
+    const recipient = twRecipients[select.value];
     document.getElementById("remove-name-inline").textContent = recipient ? recipient.name : "this recipient";
 }
 
-function handleRemoveConfirm() {
+async function handleRemoveConfirm() {
     const select = document.getElementById("remove-select");
-    const id = Number(select.value);
+    const id = (select.value);
 
-    twRecipients = twRecipients.filter((r) => r.id !== id);
+    await rtdb.ref(`Recipients/${id}`).remove();
+    delete twRecipients[id];
 
     renderRecipients();
     twCloseModal("remove-modal");
 }
 
 /* Setup Event Listeners once the page has loaded */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
+    await loadRecipients();
     renderRecipients();
 
     document.getElementById("add-recipient-btn").addEventListener("click", openAddModal);
