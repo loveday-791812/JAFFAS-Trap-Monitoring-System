@@ -10,6 +10,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const twAuth = firebase.auth();
+const rtdb = firebase.database();
 
 const TW_FUNCTIONS = {
     signup: "https://us-central1-trap-watch.cloudfunctions.net/signup",

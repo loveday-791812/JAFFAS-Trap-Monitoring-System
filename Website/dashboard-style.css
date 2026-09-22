@@ -506,64 +506,48 @@ tbody tr:hover {
     }
 }
 
-/* trap status removed badge */
-.badge-removed {
-    background: var(--tw-status-paused);
-    color: #2a2a2a;
-}
-
-/* settings page */
 .settings-section {
-    padding: 22px 24px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--tw-border);
 }
 
-/* removes divider at end */
-.settings-section:last-of-type {
+.settings-section:last-child {
     border-bottom: none;
 }
 
-/* heading text */
 .settings-section h2 {
-    font-size: 1rem;
-    margin: 0 0 4px;
+    font-size: 0.88rem;
+    margin: 0 0 6px;
     color: var(--tw-text);
 }
 
-/* settings descriptions */
-.settings-section .settings-description {
-    font-size: 0.85rem;
+.settings-description {
+    font-size: 0.88rem;
     color: var(--tw-text-muted);
-    margin: 0 0 16px;
+    margin: 0 0 14px;
 }
 
-/* gap between save button and settings window */
 .settings-actions-card {
-    margin-top: 16px;
+    margin-top: 20px;
 }
 
-/* footer bar */
-.settings-footer {
+.setting-footer {
+    display:flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
     padding: 16px 24px;
-    background: var(--tw-surface-alt);
-    border-top: 1px solid var(--tw-border);
-    display: flex;
-    justify-content: flex-end; /* save button on the right */
-    gap: 10px
 }
 
-/* settings saved confirmation msg */
 .save-confirmation {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     color: var(--tw-green-dark);
     font-weight: 600;
-    margin-right: auto;
-    align-self: center;
     opacity: 0;
-    transition: opacity 0.2s ease; /* fades in and out */
+    transition: opacity 0.2s ease;
 }
 
-/* shows save confirmation */
 .save-confirmation.show {
     opacity: 1;
 }
+
