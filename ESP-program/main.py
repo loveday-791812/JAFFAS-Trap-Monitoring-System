@@ -3,9 +3,19 @@ import time
 import socket
 import tls
 import urequests
+import ujson
+import gc
 from machine import UART
 
 timeout = 0 #timeout variable
+
+#Firebase login info
+FIREBASE_URL = "https://test-a1ebe-default-rtdb.asia-southeast1.firebasedatabase.app"
+FIREBASE_API_KEY = "AIzaSyB9IxN0UE0thEFSu5RpelDWnWbmeFFhyV0"
+FIREBASE_EMAIL = "esp32-device@test.com"
+FIREBASE_PASSWORD = "Esp32Test!2026"
+
+firebase_id_token = "" #will hold token after loggin in to firebase
 
 ##MP version of WiFi.h
 #Wifi connection fucntion
@@ -55,5 +65,48 @@ data_uart = UART(1) #creates second serial connection?
 received_bytes = bytearray(MESSAGE_LENGTH)
 byte_index = 0
 packet_too_long = False
+
+##Convert Byte to hex
+data = bytes([0x12, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11]) #byte data, will need to change to receive from receiver
+hex = ' '.join(f'{b:02x}' for b in data) #converts to hex, with spaces
+print(hex)  #prints hex
+
+
+##Firebase sign in
+def firebase_sign_in():
+    global firebase_id_token
+
+    auth_url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FIREBASE_API_KEY
+    auth_payload = {"email": FIREBASE_EMAIL, "password": FIREBASE_PASSWORD, "returnSecureToken": True}
+
+    gc.collect()
+    auth_response = urequests.post(auth_url, data=ujson.dumps(auth_payload), headers={'Content-Type': 'application/json'})
+    auth_result = ujson.loads(auth_response.text)
+    auth_response.close()
+    return auth_result
+
+#hard coded data for test
+event_data = {"AB_TEST1": {"transmitter_ID": "15 11 11 11 11 11 11 11", "timestamp": "12"}}
+
+auth_result = firebase_sign_in() #checks if login works
+
+#check if login works
+if "idToken" not in auth_result:
+    print("Login failed:", auth_result)
+else:
+    id_token = auth_result["idToken"]
+    refresh_token = auth_result["refreshToken"]
+    print("Login Successful")
+    URL = FIREBASE_URL + "/Events.json?auth=" + id_token
+
+    gc.collect()
+    response = urequests.patch(URL, data=ujson.dumps(event_data), headers={"Content-Type": "application/json"})
+
+    if response.status_code == 200:
+        print("Data added successfully!")
+    else:
+        print("Data failed to merge:", response.status_code)
+
+#response.close()
 
 print('Works')
