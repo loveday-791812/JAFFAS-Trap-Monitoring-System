@@ -5,6 +5,7 @@ import tls
 import urequests
 import ujson
 import gc
+import os #for testing purposes, creating random hex values
 from machine import UART
 
 timeout = 0 #timeout variable
@@ -16,6 +17,14 @@ FIREBASE_EMAIL = "esp32-device@test.com"
 FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase
+
+#UART settings
+UART_RX_PIN = "20"
+UART_TX_PIN = "21"
+UART_BAUD = "9600"
+
+#for event_ID
+event_ID_counter = 0
 
 ##MP version of WiFi.h
 #Wifi connection fucntion
@@ -44,30 +53,29 @@ else:
     print('Time Out') #if timeout goes to 0
 
 ##MP version of WiFiClientSecure.h
-addr = socket.getaddrinfo('example.com', 443) [0] [-1] #connects to URL (host, port, af=0, type=0, proto=0, flags=0, /)
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates normal TCP socket
-s.connect(addr) #tcp connect first
-ctx = tls.SSLContext(tls.PROTOCOL_TLS_CLIENT) #current version of MP doesnt have wrap_socket, need to make SSL first
-ctx.verify_mode = tls.CERT_NONE
+#addr = socket.getaddrinfo('example.com', 443) [0] [-1] #connects to URL (host, port, af=0, type=0, proto=0, flags=0, /)
+#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates normal TCP socket
+#s.connect(addr) #tcp connect first
+#ctx = tls.SSLContext(tls.PROTOCOL_TLS_CLIENT) #current version of MP doesnt have wrap_socket, need to make SSL first
+#ctx.verify_mode = tls.CERT_NONE
 
-secure_s = ctx.wrap_socket(s, server_hostname="example.com") #puts socket in TCP encryption
-secure_s.send(b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
-data = secure_s.recv(1000)
-secure_s.close()
+#secure_s = ctx.wrap_socket(s, server_hostname="example.com") #puts socket in TCP encryption
+#secure_s.send(b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
+#data = secure_s.recv(1000)
+#secure_s.close()
 
-##UART settings
+##UART setup
 uart = UART(1, 9600)
 uart.init(9600, rx=20, tx=21, bits=8, parity=None, stop=1)
 
 MESSAGE_LENGTH = 8
 
-data_uart = UART(1) #creates second serial connection?
 received_bytes = bytearray(MESSAGE_LENGTH)
 byte_index = 0
 packet_too_long = False
 
 ##Convert Byte to hex
-data = bytes([0x12, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11]) #byte data, will need to change to receive from receiver
+data = os.urandom(8) #byte data, will need to change to receive from receiver
 hex = ' '.join(f'{b:02x}' for b in data) #converts to hex, with spaces
 print(hex)  #prints hex
 
@@ -85,28 +93,73 @@ def firebase_sign_in():
     auth_response.close()
     return auth_result
 
-#hard coded data for test
-event_data = {"AB_TEST1": {"transmitter_ID": "15 11 11 11 11 11 11 11", "timestamp": "12"}}
+##Firebase send
+def send_to_firebase(hex_data):
+    global firebase_id_token, event_ID_counter
 
-auth_result = firebase_sign_in() #checks if login works
+    event_ID = f"EVENT_ +{event_ID_counter}" #HERE WHEN YOU STOPPED, MIGHT HAVE TO TAKE A STEP BACK
+    event_ID_counter += 1
 
-#check if login works
-if "idToken" not in auth_result:
-    print("Login failed:", auth_result)
-else:
-    id_token = auth_result["idToken"]
-    refresh_token = auth_result["refreshToken"]
-    print("Login Successful")
-    URL = FIREBASE_URL + "/Events.json?auth=" + id_token
+    #hard coded data for test
+    event_data = {event_ID: {"transmitter_ID": hex_data, "timestamp": "10"}}
+
+    if not nic.isconnected():
+        print('WiFi disconnected; attempting to reconnect')
+        nic.connect('Wokwi-GUEST', '')
+
+    if firebase_id_token == "":
+        auth_result = firebase_sign_in()
+        if "idToken" not in auth_result:
+            print("Login failed:", auth_result)
+        firebase_id_token = auth_result["idToken"]
+        print("Login Successful")
+    
+    URL = FIREBASE_URL + "/Events.json?auth=" + firebase_id_token
 
     gc.collect()
-    response = urequests.patch(URL, data=ujson.dumps(event_data), headers={"Content-Type": "application/json"})
+    response = urequests.post(URL, data=ujson.dumps(event_data), headers={"Content-Type": "application/json"})
 
     if response.status_code == 200:
-        print("Data added successfully!")
+        print("Data added successfully!", response.text)
+    elif response.status_code == 401:
+        firebase_id_token = ""
+        print("Auth expired, will re-sign-in next packet")
     else:
         print("Data failed to merge:", response.status_code)
 
-#response.close()
+    response.close()
+
+##Loop to keep script going
+def loop():
+    global byte_index, packet_too_long
+    while True:
+        while uart.any():
+            incoming_byte = uart.read(1)[0]
+
+            if incoming_byte == 0x0D:
+                if not packet_too_long and byte_index > 0:
+                    hex_data = ' '.join(f'{b:02x}' for b in received_bytes[:byte_index])
+                    print('Received:', hex_data)
+                    send_to_firebase(hex_data)
+                else:
+                    print('Ignored empty or oversized packet')
+                
+                byte_index = 0
+                packet_too_long = False
+                continue
+            
+            if incoming_byte == 0x0A:
+                continue
+
+            if incoming_byte == 0x00:
+                continue
+
+            if byte_index < MESSAGE_LENGTH:
+                received_bytes[byte_index] = incoming_byte;
+                byte_index += 1
+            else:
+                packet_too_long = True
 
 print('Works')
+
+loop()
