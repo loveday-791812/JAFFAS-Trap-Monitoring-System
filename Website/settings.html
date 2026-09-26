@@ -9,18 +9,42 @@
 </head>
 <body>
 
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Settings Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">Control default behaviour across the dashboard</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>Overdue threshold</strong> — how many days a trap can go without a reset before it's flagged overdue.</li>
+                <li><strong>Default dashboard view</strong> — which date range the Dashboard opens to when you visit it. </li>
+                <li><strong>Default report frequency</strong> — the frequency pre-selected when adding a new recipient.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
+
 <div class="page">
 
     <!-- header -->
     <header class="tw-header">
         <div class="tw-header-left">
-            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <div class="tw-logo">
+                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+            </div>
             <h1 class="tw-title">Settings</h1>
+            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
         </div>
     </header>
 
     <!-- nav -->
-    <nav class="tw-nav">
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav" id="tw-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

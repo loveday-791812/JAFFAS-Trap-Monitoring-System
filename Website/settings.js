@@ -11,6 +11,17 @@ function twHighlightNav() {
     });
 }
 
+function twOpenModal(modalId) {
+    document.getElementById(modalId).classList.add("open");
+}
+
+// hides modal overlay
+function twCloseModal(modalId) {
+    document.getElementById(modalId).classList.remove("open");
+}
+
+
+
 //default settings for before anything starts
 const DEFAULT_SETTINGS = {
     overdueThreshold: 7,    //matches 7 days
@@ -66,5 +77,16 @@ async function handleSettingsSubmit(e) {
 document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
     await loadSettingsIntoForm();   //shows what has been saved already
+
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const nav = document.getElementById("tw-nav");
+        const isOpen = nav.classList.toggle("open");
+        e.target.setAttribute("aria-expanded", isOpen);
+    });
+
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
+
     document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit); 
 });
