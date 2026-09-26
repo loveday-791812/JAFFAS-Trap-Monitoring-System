@@ -8,12 +8,35 @@
 </head>
 <body>
 
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Dashboard Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">This page shows catch activity across all traps</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>Date Range</strong> — switch between last 7 days, Last 30 days, or All time.</li>
+                <li><strong>KPI cards</strong> — quick totals for the selected range. </li>
+                <li><strong>Table headers</strong> — click any column (Trap no, catch date, etc.) tp sprt by it. Click again to reverse the order.</li>
+                <li><strong>Download JSON</strong> — saves the currently shown data as a file.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
+
 <div class="page">
 
     <header class="tw-header">
         <div class="tw-header-left">
-            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <div class="tw-logo">
+                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+            </div>
             <h1 class="tw-title">Admin Dashboard</h1>
+            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
         </div>
 
         <div class="tw-header-right">
@@ -32,7 +55,9 @@
         </div>
     </header>
 
-    <nav class="tw-nav">
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav" id="tw-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

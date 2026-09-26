@@ -10,13 +10,35 @@
 </head>
 <body>
 
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Traps Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">This page shows catch activity across all traps</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>+ Add Trap</strong> — register a new trap with its number, location, and install date.</li>
+                <li><strong>Edit</strong> — update a trap's details or mark it Active/Removed.</li>
+                <li><strong>Remove</strong> — permanently delete a trap from the inventory. Its past catch history on the dashboard is unaffected.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
+
 <div class="page">
 
     <!-- header -->
     <header class="tw-header">
         <div class="tw-header-left">
-            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <div class="tw-logo">
+                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+            </div>
             <h1 class="tw-title">Admin</h1>
+            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
         </div>
 
         <div class="tw-header-right">
@@ -28,7 +50,9 @@
     </header>
 
     <!-- nav for the 4 pages -->
-    <nav class="tw-nav">
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav" id="tw-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

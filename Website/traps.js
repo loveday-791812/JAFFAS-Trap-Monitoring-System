@@ -34,8 +34,8 @@ async function loadTraps() {
 let twNextTrapId = 5; // after the 4 mock data points
 
 const trapStatusLabels = {
-    active: "Active",
-    removed: "Removed",
+    active: "✅ Active",
+    removed: "🗑️ Removed",
 };
 
 
@@ -184,6 +184,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
     await loadTraps();
     renderTraps();
+
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
+
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const nav = document.getElementById("tw-nav");
+        const isOpen = nav.classList.toggle("open");
+        e.target.setAttribute("aria-expanded", isOpen);
+    });
 
     //add trap button click opens Add modal
     document.getElementById("add-trap-btn").addEventListener("click", openAddModal);

@@ -6,18 +6,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TrapWatch - Recipient Management</title>
 
+
+
 <!--using dashboard-style.css stylesheet -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
 <body>
+
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Recipients Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">Manage who recieves trap catch report emails.</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>+ Add Recipient </strong> — add a new person to recieve reports.</li>
+                <li><strong>Report dropdown</strong> — change how often that person gets emailed (Daily, Weekly, Monthly). </li>
+                <li><strong>Edit</strong> — update the recipient's name, email, and report frequency.</li>
+                <li><strong>Remove</strong> — permanetly delete a recipient. Use Pause via Edit instead if its temporary.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
 
 <div class="page">
 
     <!--header -->
     <header class="tw-header">
         <div class="tw-header-left">
-            <div class="tw-logo" aria-hidden="true">🌳</div>
+            <div class="tw-logo">
+                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+            </div>
             <h1 class="tw-title">Admin</h1>
+            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
         </div>
 
         <div class="tw-header-right">
@@ -28,8 +53,9 @@
         </div>
     </header>
 
-    <!--nav -->
-    <nav class="tw-nav">
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav" id="tw-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

@@ -18,6 +18,14 @@ function twHighlightNav() {
     });
 }
 
+function twOpenModal(modalId) {
+    document.getElementById(modalId).classList.add("open");
+}
+
+function twCloseModal(modalId) {
+    document.getElementById(modalId).classList.remove("open");
+}
+
 /* Mock Data */
 let twData = { "7d": null, "30d": null, "all": null};
 
@@ -92,9 +100,9 @@ function buildRangeData(eventList, trapsByNum, days) {
 }
 
 const statusLabels = {
-    pending: "Pending",
-    overdue: "Overdue",
-    reset: "Reset",
+    pending: "⏳ Pending",
+    overdue: "⚠️ Overdue",
+    reset: "✅ Reset",
 };
 
 /* currentRange is for which dropdown option is currently selected (7d, 30d, all).
@@ -130,6 +138,16 @@ function renderTable(range) {
             return 0;
         });
     }
+
+    document.querySelectorAll("th[data-sort]").forEach((th) => {
+        const arrow = th.querySelector(".sort-arrow");
+        const column = th.getAttribute("data-sort");
+        if (column === currentSort.column) {
+            arrow.textContent = currentSort.direction === 1 ? "↑" : "↓";
+        } else {
+            arrow.textContent = "↕";
+        }
+    });
 
     const tbody = document.getElementById("traps-tbody");
     tbody.innerHTML = "";   //clears existing rows before rebuilding
@@ -182,6 +200,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadData();
     refreshDashboard();     /* draw the "last 7 days" view */
 
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const nav = document.getElementById("tw-nav");
+        const isOpen = nav.classList.toggle("open");
+        e.target.setAttribute("aria-expanded", isOpen);
+    })
+
     /* date range dropdown changed -> update which mock dataset is shown */
     document.getElementById("date-range-select").addEventListener("change", (e) => {
         currentRange = e.target.value;
@@ -190,6 +214,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     /* download button clicked */
     document.getElementById("download-json-btn").addEventListener("click", downloadJson);
+
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
 
     /* every sortable column header gets a click listener. Clicking the same column twice flips the direction so from ascending to descending and vice versa */
     document.querySelectorAll("th[data-sort]").forEach((th) => {

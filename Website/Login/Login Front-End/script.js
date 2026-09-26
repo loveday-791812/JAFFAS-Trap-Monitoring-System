@@ -7,7 +7,7 @@ function togglePassword(fieldID, button) {
         button.textContent = "◉";
     } else {
         field.type = "password";
-        button.textContent = "◉";
+        button.textContent = "👁";
     }
 }
 

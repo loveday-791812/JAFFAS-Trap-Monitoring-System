@@ -40,7 +40,7 @@ body {
 .page {
     max-width: 1100px; 
     margin: 0 auto;    /* automatically keeps it at 0 margin */
-    padding: 28px 20px 60px;
+    padding: 20px 12px 40px;
 }
 
 /* header */
@@ -99,6 +99,7 @@ body {
 /* nav bar */
 .tw-nav {
     display: flex;
+    justify-content: center;
     gap: 8px;
     margin-bottom: 20px;
 }
@@ -113,6 +114,11 @@ body {
     border-radius: var(--tw-radius-sm);
     background: var(--tw-surface);
     border: 1px solid var(--tw-border);
+}
+
+.tw-nav a:hover {
+    background: var(--tw-surface-alt);
+    background-color: var(--tw-green-mid);
 }
 
 /* this is added or removed in dashbaord.js for automatically matching whatever page you are on */
@@ -237,6 +243,10 @@ thead th {
     margin-left: 4px;
 }
 
+thead th[data-sort]:hover {
+    background: var(--tw-border);
+}
+
 /* data row of the table */
 tbody td {
     padding: 14px 20px;
@@ -259,15 +269,12 @@ tbody tr:hover {
     font-size: 0.8rem;
     font-weight: 600;
     color: #fff;
+    white-space: nowrap;
 }
 
 /* colored dot added */
 .badge::before {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: currentColor; /*uses whatever color is set */
+    display: none;
 }
 
 /* pending badge */
@@ -330,6 +337,16 @@ tbody tr:hover {
 
 .action-link.remove {
     color: var(--tw-danger);
+}
+
+.action-link.edit:hover {
+    color: var(--tw-green-dark);
+    text-decoration: underline;
+}
+
+.action-link.remove:hover {
+    color: var(--tw-danger-dark);
+    text-decoration: underline;
 }
 
 /* Add/Edit/Remove modals */
@@ -472,6 +489,10 @@ tbody tr:hover {
     cursor: pointer;
 }
 
+.filter-bar select:hover {
+    color: var(--tw-green-dark);
+}
+
 /* Repsonsive tweaks - Adjust KPI grid column as screen gets narrower and let table scroll sideways instead of squashing on mobile */
 @media (max-width: 780px) {
     .kpi-grid {
@@ -485,17 +506,25 @@ tbody tr:hover {
 }
 
 @media (max-width: 480px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
+    .tw-nav {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
-    .tw-header-right {
-        width: 100%;
+    .tw-header {
+        flex-direction: column;
         justify-content: flex-start;
     }
 
-    .modal-overlay {
-        padding: 24px 16px;
+    .filter-bar {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .tw-header-right {
+        justify-content: center;
+        width: 100%;
     }
 }
 
@@ -531,14 +560,6 @@ tbody tr:hover {
     margin-top: 20px;
 }
 
-.setting-footer {
-    display:flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 16px;
-    padding: 16px 24px;
-}
-
 .save-confirmation {
     font-size: 0.88rem;
     color: var(--tw-green-dark);
@@ -549,5 +570,88 @@ tbody tr:hover {
 
 .save-confirmation.show {
     opacity: 1;
+}
+
+.table-card {
+    position: relative;
+}
+
+.tw-nav-toggle {
+    display: none;
+    font-size: 1.4rem;
+    background: var(--tw-surface);
+    border: 1px solid var(--tw-border);
+    border-radius: var(--tw-radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.tw-nav-toggle:hover {
+    background: var(--tw-surface-alt);
+    border-color: var(--tw-green-mid);
+}
+
+@media (max-width: 480px) {
+    .settings-footer {
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #download-json-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-card::after {
+        content: "→ scroll for more";
+        display: block;
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--tw-text-muted);
+        padding: 6px;
+    }
+
+    .tw-nav-toggle {
+        display: block;
+        width: 100%;
+    }
+
+    .tw-nav {
+        display:none;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .tw-nav.open {
+        display: flex;
+    }
+
+    .tw-nav a {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+.tw-help-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--tw-border);
+    background: var(--tw-surface);
+    color: var(--tw-green-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+}
+
+.tw-help-btn:hover {
+    background: var(--tw-surface-alt);
+    border-color: var(--tw-green-mid);
 }
 

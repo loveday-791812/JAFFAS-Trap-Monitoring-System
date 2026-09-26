@@ -15,6 +15,8 @@ function twHighlightNav() {
     });
 }
 
+
+
 /* Adds the open class to a modal overlay so its CSS makes it visible */
 function twOpenModal(modalId) {
     document.getElementById(modalId).classList.add("open");
@@ -56,7 +58,7 @@ function renderRecipients() {
         </td>
         <td>
             <span class="badge badge-${recipient.status}">
-                ${recipient.status === "active" ? "Active" : "Paused"}
+                ${recipient.status === "active" ? "✅ Active" : "⏸️ Paused"}
             </span>
         </td>
         <td>
@@ -199,6 +201,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
     await loadRecipients();
     renderRecipients();
+
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
+
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const nav = document.getElementById("tw-nav");
+        const isOpen = nav.classList.toggle("open");
+        e.target.setAttribute("aria-expanded", isOpen);
+    });
 
     document.getElementById("add-recipient-btn").addEventListener("click", openAddModal);
     document.getElementById("add-form").addEventListener("submit", handleAddSubmit);
