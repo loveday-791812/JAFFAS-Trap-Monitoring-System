@@ -59,7 +59,7 @@ exports.signup = onRequest((req, res) => {
             });
 
             await resend.emails.send({
-                from: "onboarding@resend.dev",
+                from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [email],
                 subject: "Your TrapWatch verification code",
                 html: codeEmailHtml(code),
@@ -96,7 +96,7 @@ exports.resendCode = onRequest((req, res) => {
             await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});
 
             await resend.emails.send({
-                from: "onboarding@resend.dev",
+                from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [user.email],
                 subject: "Your TrapWatch verification code",
                 html: codeEmailHtml(code),

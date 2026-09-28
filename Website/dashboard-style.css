@@ -655,3 +655,10 @@ tbody tr:hover {
     border-color: var(--tw-green-mid);
 }
 
+.tw-nav.role-gated {
+    visibility: hidden;
+}
+
+.tw-nav.role-gated.ready {
+    visibility: visible;
+}

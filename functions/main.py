@@ -8,7 +8,7 @@ set_global_options(max_instances=10)
 initialize_app()
 
 resend.api_key = ""
-RECIPIENT_EMAIL = ""
+
 
 def build_email_html(trap_id, time_str, date_str):
     return f"""
@@ -160,11 +160,23 @@ def build_email_html(trap_id, time_str, date_str):
     </body>
     </html>
 """
+def get_recipients(report_type):
+    recipients = db.reference("/Recipients").get() or {}
+    return [
+        r["email"] for r in recipients.values() # type: ignore
+        if isinstance(r, dict)
+        and r.get("status") == "active"
+        and r.get("report") == report_type
+        and r.get("email")
+    ]
+
 
 @db_fn.on_value_created(
     reference="/Events/{event_id}",
     region="asia-southeast1"
     )
+
+
 def send_trap_alert(event: db_fn.Event) -> None:
     """
     Fires when a new entry is written to /Events
@@ -199,15 +211,21 @@ def send_trap_alert(event: db_fn.Event) -> None:
         {"filename": "background.jpg", "content": bg_bytes, "content_id": "background"},
     ]
 
-    resend.Emails.send({
-        "from": "onboarding@resend.dev",
-        "to": [RECIPIENT_EMAIL],
-        "subject": f"TrapWatch: Trap {trap_id} Triggered",
-        "html": html_body,
-        "attachments": attachments, # type: ignore
-    })
+    recipients = get_recipients("Daily")
+    if not recipients:
+        print("No active daily recipients - skipping email")
+        return
 
-    print(f"Alert email sent")
+    for email in recipients:
+        resend.Emails.send({
+            "from": "TrapWatch Alerts <alerts@trapwatch.fft.kiwi>",
+             "to": [email],
+            "subject": f"TrapWatch: Trap {trap_id} Triggered",
+            "html": html_body,
+            "attachments": attachments, # type: ignore
+        })
+
+    print(f"Alert email sent to {len(recipients)} recipient(s)")
 
 def stat_box(number, label):
     return f"""
@@ -532,22 +550,23 @@ def build_monthly_html(date_range, traps_triggered):
 """
 
 
-def _send_with_images(html_body, subject):
+def _send_with_images(html_body, subject, recipients):
     with open("assets/trapwatch_logo.png", "rb") as f:
         logo_bytes = list(f.read())
     with open("assets/background.jpg", "rb") as f:
         bg_bytes = list(f.read())
 
-    resend.Emails.send({
-        "from": "alerts@trapwatch.co.nz",
-        "to": [RECIPIENT_EMAIL],
-        "subject": subject,
-        "html": html_body,
-        "attachments": [
-            {"filename": "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
-            {"filename": "background.jpg", "content": bg_bytes, "content_id": "background"},
-        ],
-    })
+    for email in recipients:
+        resend.Emails.send({
+            "from": "TrapWatch Alerts <alerts@trapwatch.fft.kiwi>",
+            "to": [email],
+            "subject": subject,
+            "html": html_body,
+            "attachments": [
+                {"filename": "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
+                {"filename": "background.jpg", "content": bg_bytes, "content_id": "background"},
+            ],
+        })
 
 @scheduler_fn.on_schedule(
     schedule="every monday 09:00",
@@ -559,7 +578,11 @@ def send_weekly_report(event: scheduler_fn.ScheduledEvent) -> None:
     date_range = f"{start_of_week.strftime('%d/%m/%y')} - {now.strftime('%d/%m/%y')}"
     traps_triggered, pending_reset, avg_time_to_reset, overdue_count = compute_stats(start_of_week, now)
     html_body = build_weekly_html(date_range, traps_triggered, pending_reset, avg_time_to_reset)
-    _send_with_images(html_body, f"TrapWatch Weekly Report: {date_range}")
+    recipients = get_recipients("Weekly")
+    if recipients:
+        _send_with_images(html_body, f"TrapWatch Weekly Report: {date_range}", recipients)
+    else:
+        print("No active Weekly recipients")
     print(f"Weekly report sent - {traps_triggered} triggered, {pending_reset} pending ({overdue_count} overdue)")
 
 @scheduler_fn.on_schedule(
@@ -572,7 +595,11 @@ def send_monthly_report(event: scheduler_fn.ScheduledEvent) -> None:
     date_range = f"{start_of_month.strftime('%d/%m/%y')} - {now.strftime('%d/%m/%y')}"
     traps_triggered, _, _, _ = compute_stats(start_of_month, now)
     html_body = build_monthly_html(date_range, traps_triggered)
-    _send_with_images(html_body, f"TrapWatch Monthly Report: {date_range}")
+    recipients = get_recipients("Monthly")
+    if recipients:
+        _send_with_images(html_body, f"TrapWatch Monthly Report: {date_range}", recipients)
+    else:
+        print("No active Monthly recipients")
     print(f"Monthly report sent - {traps_triggered} traps triggered")
 
 def get_trap_streaks():
