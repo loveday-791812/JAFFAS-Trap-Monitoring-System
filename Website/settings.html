@@ -7,7 +7,7 @@
 
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body>
+<body data-required-role="admin,manager,worker">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -44,7 +44,7 @@
     <!-- nav -->
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
-    <nav class="tw-nav" id="tw-nav">
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

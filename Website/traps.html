@@ -8,7 +8,7 @@
 <!-- using stylesheet -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body>
+<body data-required-role="admin,manager">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -16,7 +16,7 @@
             <h2>Traps Help</h2>
         </div>
         <div class="modal-body">
-            <p style="margin-bottom:12px;">This page shows catch activity across all traps</p>
+            <p style="margin-bottom:12px;">Manage the physical trap devices in the field.</p>
             <ul style="padding-left:18px; line-height:1.6;">
                 <li><strong>+ Add Trap</strong> — register a new trap with its number, location, and install date.</li>
                 <li><strong>Edit</strong> — update a trap's details or mark it Active/Removed.</li>
@@ -52,7 +52,7 @@
     <!-- nav for the 4 pages -->
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
-    <nav class="tw-nav" id="tw-nav">
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>

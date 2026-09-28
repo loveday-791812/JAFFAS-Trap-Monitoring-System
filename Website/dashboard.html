@@ -6,7 +6,7 @@
 <title>TrapWatch - Admin Dashboard</title>
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body>
+<body data-required-role="admin,manager,worker">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -18,7 +18,7 @@
             <ul style="padding-left:18px; line-height:1.6;">
                 <li><strong>Date Range</strong> — switch between last 7 days, Last 30 days, or All time.</li>
                 <li><strong>KPI cards</strong> — quick totals for the selected range. </li>
-                <li><strong>Table headers</strong> — click any column (Trap no, catch date, etc.) tp sprt by it. Click again to reverse the order.</li>
+                <li><strong>Table headers</strong> — click any column (Trap no, catch date, etc.) to sort by it. Click again to reverse the order.</li>
                 <li><strong>Download JSON</strong> — saves the currently shown data as a file.</li>
             </ul>
         </div>
@@ -57,7 +57,7 @@
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
-    <nav class="tw-nav" id="tw-nav">
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
         <a href="dashboard.html">Dashboard</a>
         <a href="recipients.html">Recipients</a>
         <a href="traps.html">Traps</a>
