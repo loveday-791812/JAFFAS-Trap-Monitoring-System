@@ -3,11 +3,12 @@ from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app, db
 from datetime import datetime, timedelta
 import resend
+import os
 
 set_global_options(max_instances=10)
 initialize_app()
 
-resend.api_key = ""
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
 def build_email_html(trap_id, time_str, date_str):
@@ -563,8 +564,8 @@ def _send_with_images(html_body, subject, recipients):
             "subject": subject,
             "html": html_body,
             "attachments": [
-                {"filename": "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
-                {"filename": "background.jpg", "content": bg_bytes, "content_id": "background"},
+                {"filename": "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"}, # type: ignore
+                {"filename": "background.jpg", "content": bg_bytes, "content_id": "background"}, # type: ignore
             ],
         })
 

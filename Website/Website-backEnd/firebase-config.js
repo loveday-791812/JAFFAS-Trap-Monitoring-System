@@ -17,4 +17,6 @@ const TW_FUNCTIONS = {
     resendCode: "https://us-central1-trap-watch.cloudfunctions.net/resendCode",
     verifyCode: "https://us-central1-trap-watch.cloudfunctions.net/verifyCode",
     magicLogin: "https://us-central1-trap-watch.cloudfunctions.net/magicLogin",
+    requestPasswordReset: "https://us-central1-trap-watch.cloudfunctions.net/requestPasswordReset",
+    resetPassword: "https://us-central1-trap-watch.cloudfunctions.net/resetPassword",
 };
