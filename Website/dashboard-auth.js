@@ -2,7 +2,7 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    const LOGIN_URL = "/Login/Login Front-End/login.html";
+    const LOGIN_URL = "/Website/Login/Login Front-End/login.html";
 
     function goToLogin() {
         window.location.href = LOGIN_URL;
@@ -22,7 +22,7 @@
 
         if (!allowed.includes(role)) {
             alert("You don't have permission to view that page.");
-            window.location.href = "/dashboard.html";
+            window.location.href = "/Website/dashboard.html";
             return false;
         }
         return true;
