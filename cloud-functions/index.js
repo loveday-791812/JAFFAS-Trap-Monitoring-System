@@ -188,3 +188,112 @@ exports.magicLogin = onRequest((req, res) => {
         }
     });
 });
+
+const MAX_ATTEMPTS = 5;
+
+function hashCode(code) {
+    return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+function resetEmailHtml(code) {
+    return `
+    <div style="font-family:Arial, Helvetica, sans-serif; background:#1a1a1a; padding:30px;">
+        <div style="max-width:420px; margin:0 auto; background:#000; border:2px solid #fff; border-radius:16px; padding:28px; text-align:center;">
+            <h2 style="color:#fff; margin-bottom:4px;">TrapWatch</h2>
+            <p style="color:#ccc; font-size:14px; margin-top:0;">Use this code to reset your password</p>
+            <div style="font-size:32px; letter-spacing:8px; font-weight:bold; color:#fff; background:rgba(255,255,255,0.08); padding:16px; border-radius:10px; margin:20px 0;">
+                ${code}
+            </div>
+            <p style="color:#999; font-size:12px;">This code expires in 10 minutes.</p>
+        </div>
+    </div>`;
+}
+
+exports.requestPasswordReset = onRequest((req, res) => {
+    cors(req, res, async () => {
+        try {
+            const { email } = req.body || {};
+            if (!email) return res.status(400).json({ error: "Missing email."});
+
+            let userRecord;
+            try {
+                userRecord = await admin.auth().getUserByEmail(email);
+            } catch (err) {
+                if (err.code === "auth/user-not-found") {
+                    return res.status(200).json({ success: true });
+                }
+                throw err;
+            }
+
+            const code = crypto.randomInt(100000, 1000000).toString();
+
+            await rtdb.ref(`passwordResets/${userRecord.uid}`).set({
+                codeHash: hashCode(code),
+                expiresAt: Date.now() + CODE_TTL_MS,
+                attempts: 0,
+            });
+
+            await resend.emails.send({
+                from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
+                to: [email],
+                subject: "Reset your TrapWatch password",
+                html: resetEmailHtml(code),
+            });
+
+            return res.status(200).json({ success: true});
+        } catch (err) {
+            console.error("requestPasswordReset error:", err);
+            return res.status(500).json({ error: "Could not send reset code. Please try again." });
+        }
+    });
+});
+
+exports.resetPassword = onRequest((req, res) => {
+    cors(req, res, async () => {
+        try {
+            const { email, code, newPassword } = req.body || {};
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({ error: "Missing Email, code, or new password"});
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: "Password must be atleast 8 charcters."});
+        }
+
+        const genericError = { error: "Invalid or expired."};
+
+        let userRecord;
+        try {
+            userRecord = await admin.auth().getUserByEmail(email);
+        } catch {
+            return res.status(400).json(genericError);
+        }
+        const ref = rtdb.ref(`passwordResets/${userRecord.uid}`);
+        const snap = await ref.get();
+        if (!snap.exists()) return res.status(400).json(genericError);
+
+        const reset = snap.val();
+
+        if (Date.now() > reset.expiresAt || reset.attempts >= MAX_ATTEMPTS) {
+            await ref.remove();
+            return res.status(400).json(genericError);
+        }
+
+        const given = Buffer.from(hashCode(String(code)));
+        const stored = Buffer.from(reset.codeHash);
+        if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)){
+            await ref.update({ attempts: reset.attempts + 1 });
+            return res.status(400).json(genericError);
+        }
+
+        await admin.auth().updateUser(userRecord.uid, { password: newPassword});
+        await admin.auth().revokeRefreshTokens(userRecord.uid);
+        await ref.remove();
+
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("resetPassword error:", err);
+        return res.status(500).json({ error: "Could not reset password. Please try again."});
+    }
+        
+    });
+});

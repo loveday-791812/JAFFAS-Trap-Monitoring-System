@@ -92,7 +92,7 @@ if (verifyForm) {
 
         try {
             const data = await twPost("verifyCode", {uid, code});
-            window.location.href = `../../dashboard.html?token=${encodeURIComponent(data.token)}`; 
+            window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
         } catch (err) {
             alert(err.message);
             submitBtn.disabled = false;
@@ -130,11 +130,71 @@ if(loginForm) {
 
         try {
             await twAuth.signInWithEmailAndPassword(email, password);
-            window.location.href = "../../dashboard.html";
+            window.location.href = "/dashboard.html";
         }   catch (err) {
             alert("Login failed: " + err.message);
         }   finally {
             submitBtn.disabled = false;
+        }
+    });
+}
+
+const forgotLink = document.getElementById("forgotLink");
+if (forgotLink) {
+    const forgotForm = document.getElementById("forgotForm");
+    const resetForm = document.getElementById("resetForm");
+    let resetEmail= "";
+
+    const showOnly = (form) => {
+        [loginForm, forgotForm, resetForm].forEach(f => f.style.display = "none");
+        form.style.display = "block";
+    };
+
+    forgotLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        showOnly(forgotForm);
+    });
+    ["backToLogin1", "backToLogin2"].forEach(id => {
+        document.getElementById(id).addEventListener("click", (e) => {
+            e.preventDefault();
+            showOnly(loginForm);
+        });
+    });
+
+    forgotForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("forgotSubmitBtn");
+        resetEmail = document.getElementById("forgotEmail").value.trim();
+        btn.disabled = true;
+        try {
+            await twPost("requestPasswordReset", { email: resetEmail });
+            showOnly(resetForm);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    resetForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const code = document.getElementById("resetCode").value.trim();
+        const newPassword = document.getElementById("resetPassword").value;
+        const confirm = document.getElementById("resetConfirm").value;
+        const btn = document.getElementById("resetSubmitBtn");
+
+        if (newPassword !== confirm) return alert("Your passwords do not match.");
+
+        btn.disabled = true;
+        try {
+            await twPost("resetPassword", { email: resetEmail, code, newPassword });
+            alert("Password updated. You can now log in.");
+            resetForm.reset();
+            showOnly(loginForm);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
         }
     });
 }
