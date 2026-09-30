@@ -197,6 +197,10 @@ function downloadJson() {
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
     twHighlightNav();
+    const settings = await twGetSettings();
+    currentRange = settings.defaultDateRange;
+    document.getElementById("date-range-select").value = currentRange;
+    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${settings.overdueThreshold} DAYS)`
     await loadData();
     refreshDashboard();     /* draw the "last 7 days" view */
 
