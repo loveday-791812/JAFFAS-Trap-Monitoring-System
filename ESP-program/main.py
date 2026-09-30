@@ -3,7 +3,9 @@ import time
 import urequests
 import ujson
 import gc
+import ntptime
 from machine import UART
+from machine import RTC
 from signal import transmitter   
 
 timeout = 0 #timeout variable
@@ -77,8 +79,14 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
         firebase_id_token = auth_result["idToken"] #Puts token into the global variable, letting future attempts skip signing in again, might be security risk
         print("Login Successful")
 
+    #timestamp
+    ntptime.settime() #syncs to local time
+    now = time.localtime() #assigns local time to object
+    print("{:02d}/{:02d}/{:04d} {:02d}:{:02d}:{:02d}".format(now[2], now[1], now[0], now[3], now[4], now[5])) #prints the time in formatted way with 0 infront of each digit
+    timestamp = "{:02d}/{:02d}/{:04d} {:02d}:{:02d}:{:02d}".format(now[2], now[1], now[0], now[3], now[4], now[5]) #assigns time to timestamp
+
     #building event
-    event_data = {"transmitter_ID": hex_data}
+    event_data = {"transmitter_ID": hex_data, "time": timestamp}
     url = FIREBASE_URL + "/Events.json?auth=" + firebase_id_token #puts together location in database where the data will go
     
     #sending event
