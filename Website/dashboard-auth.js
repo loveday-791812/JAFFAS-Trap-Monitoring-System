@@ -3,15 +3,26 @@
     const token = params.get("token");
 
     const LOGIN_URL = "/Website/Login/Login Front-End/login.html";
+    const DENIED_URL = "/unauthorized.html"; //Aaron: unautorized redirect page
+    const KNOWN_ROLES = ["admin", "manager", "worker"];//Aaron: known roles for the dashboard
 
-    function goToLogin() {
-        window.location.href = LOGIN_URL;
-    }
+    let resolveReady;
+    window.twAuthReady = new Promise((resolve) => { resolveReady = resolve; }); //Aaron: make sure the auth is ready before doing anything witth the database
 
-    async function enforceRole(user) {
-        const required = document.body.getAttribute("data-required-role");
-        if (!required) return true;
-    
+    function goToLogin() { window.location.replace(LOGIN_URL); } //Aaron: redirect to login page
+       function goToDenied(reason) { window.location.replace(`${DENIED_URL}?reason=${reason}`); } //Aaron: redirect to denied page with reason
+
+    //function goToLogin() {
+    //    window.location.href = LOGIN_URL;
+    //} Aaron: redirect to login page old
+
+    //async function enforceRole(user) {
+    //    const required = document.body.getAttribute("data-required-role");
+    //    if (!required) return true; Aaron: if no required role is specified it allow access old
+
+    async function getrole(user) { //Aaron: get the role of the user from the database
+        const snap = await rtdb.ref(`users/${user.uid}/role`).get(); //Aaron: get the role of the user from the database
+        return String(snap.val() || "").toLowerCase(); //Aaron: return the role of the user in lowercase
 
     const allowed = required.split(",").map((r) => r.trim().toLowerCase());
 
