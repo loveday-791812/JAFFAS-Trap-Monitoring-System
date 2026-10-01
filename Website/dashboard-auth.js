@@ -10,7 +10,7 @@
     window.twAuthReady = new Promise((resolve) => { resolveReady = resolve; }); //Aaron: make sure the auth is ready before doing anything witth the database
 
     function goToLogin() { window.location.replace(LOGIN_URL); } //Aaron: redirect to login page
-       function goToDenied(reason) { window.location.replace(`${DENIED_URL}?reason=${reason}`); } //Aaron: redirect to denied page with reason
+    function goToDenied(reason) { window.location.replace(`${DENIED_URL}?reason=${reason}`); } //Aaron: redirect to denied page with reason
 
     //function goToLogin() {
     //    window.location.href = LOGIN_URL;
@@ -23,6 +23,29 @@
     async function getrole(user) { //Aaron: get the role of the user from the database
         const snap = await rtdb.ref(`users/${user.uid}/role`).get(); //Aaron: get the role of the user from the database
         return String(snap.val() || "").toLowerCase(); //Aaron: return the role of the user in lowercase
+    }
+
+    async function afterLogin(user) { //Aaron: after the user is logged in, check if they have the required role and filter the navigation links
+        let role;
+        try {//Aaron: try to get the role of the user
+            role = await getrole(user);
+        } catch (err) {
+            console.error("Failed to validate user role:", err);
+            alert("Could not verify your role.");
+            return goToDenied("role check failed");
+        }
+
+        const required = document.body.getAttribute("data-required-role");//Aaron: get the required role from the data attribute of the body element
+        if (required) {
+            const allowed = required.split(",").map((r) => r.trim().toLowerCase()); //Aaron: split the required roles by comma and trim whitespace and convert to lowercase
+            if (!allowed.includes(role)) {
+                alert("You don't have permission to view that page.");
+                return goToDenied(KNOWN_ROLES.includes(role) ?"role" : "no role");
+            }
+        }
+
+
+
 
     const allowed = required.split(",").map((r) => r.trim().toLowerCase());
 
