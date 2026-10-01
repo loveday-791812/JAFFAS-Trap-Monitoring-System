@@ -3,20 +3,42 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Access Denied</title> // Aaron: I changed the title to "Access Denied" to reflect the purpose of this page.
+<title>TrapWatch - Access Denied</title> <!-- Aaron: I changed the title to "Access Denied" to reflect the purpose of this page. -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
 <body>
-   <main class="page" style="max-width:480px;margin:80px auto;text-align:center;">
-     <section class="card" style="padding:32px;">
+<main class="page" style="max-width:480px;margin:80px auto;text-align:center;">
+    <section class="card" style="padding:32px;">
        <img src="assets/trapwatch_logo.png" alt="TrapWatch logo" style="width:64px;">
        <h1 class="tw-title" style="margin:16px 0 8px;">Access denied</h1>
        <p id="deny-reason">Your role does not allow access to this page.</p>
        <p>If you want access to this page, it has to be approved by a TrapWatch admin. That can change your role.</p>
-       <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
-         <a class="btn btn-outline" href="dashboard.html" id="deny-dashboard">Go to dashboard</a>
-         <a class="btn btn-primary" href="Login/Login Front-End/login.html" id="deny-logout">Log in as someone else</a>
+       <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;"> <!-- Aaron: I added a flex container to hold the buttons and make them responsive. -->
+         <a class="btn btn-outline" href="dashboard.html" id="deny-dashboard">Go to dashboard</a><!-- Aaron: I changed the href to point to the dashboard page so that users can go back to the dashboard. -->
+         <a class="btn btn-primary" href="Login/Login Front-End/login.html" id="deny-logout">Log in as someone else</a> <!-- Aaron: I changed the href to point to the login page so that users can log in as a different user and log out. -->
        </div>
      </section>
-   </main> 
-</body>
+</main> 
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script> <!-- Aaron: Creates a global Firebase app capability -->
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script> <!-- Aaron: Creates a global Firebase auth capability-->
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script> <!-- Aaron: Creates a global Firebase realtime database capability -->
+   <script src="Website-backEnd/firebase-config.js"></script> <!-- Aaron: This script contains the Firebase configuration and initialization code. -->
+   <script>
+    const reason = new URLSearchParams(location.search).get("reason");// Aaron: I added a check to get the reason for the access denial from the URL query parameters. This allows us to display different messages based on the reason for the denial.
+     const messages = {
+       role: "Your role doesn't include access to that page.",
+       norole: "Your account hasn't been given a role yet.",
+       error: "We couldn't check your permissions right now.",
+     };
+     document.getElementById("deny-reason").textContent = messages[reason] || messages.role;// Aaron: I added a check to hide the "Go to dashboard" button if the reason is not "role". This is because if the user doesn't have a role, they shouldn't be able to go to the dashboard.
+     if (reason !== "role") document.getElementById("deny-dashboard").style.display = "none";
+
+     document.getElementById("deny-logout").addEventListener("click", async (e) => { // Aaron: I added an event listener to the "Log in as someone else" button that signs the user out and redirects them to the login page. This allows users to log in as a different user if they don't have access to the current page.
+       e.preventDefault();
+       const target = e.currentTarget.href;
+       await twAuth.signOut();
+       window.location.href = target;
+     });
+   </script>
+   </body>
+   </html>
