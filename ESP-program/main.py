@@ -11,9 +11,9 @@ from signal import transmitter
 timeout = 0 #timeout variable
 
 #Firebase login info
-FIREBASE_URL = "https://test-a1ebe-default-rtdb.asia-southeast1.firebasedatabase.app"
-FIREBASE_API_KEY = "AIzaSyB9IxN0UE0thEFSu5RpelDWnWbmeFFhyV0"
-FIREBASE_EMAIL = "esp32-device@test.com"
+FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
+FIREBASE_API_KEY = "AIzaSyClXxRuzYNSg54oPuM5V-ONfqqK3vE2TWs"
+FIREBASE_EMAIL = "trapwatchesp32@gmail.com"
 FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase
@@ -24,7 +24,7 @@ nic = network.WLAN(network.WLAN.IF_STA) #Creates station interface object
 nic.active(False) #deactivtes interface
 time.sleep(0.5) #wait 5 mili seconds
 nic.active(True) #activtes interface, ^whole process restarts wifi
-nic.connect('B_DECO', 'JJEXXRRE') #connect to router
+nic.connect('your-wifi-name-here', 'wifi-password-here') #connect to router
 
 #If wifi not connecting
 if not nic.isconnected():
