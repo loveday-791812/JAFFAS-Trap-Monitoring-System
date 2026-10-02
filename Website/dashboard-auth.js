@@ -25,6 +25,16 @@
         return String(snap.val() || "").toLowerCase(); //Aaron: return the role of the user in lowercase
     }
 
+    function filterNav(role) { //Aaron: filter the navigation links based on the user's role
+        doocument.querySelectorAll(".tw-nav a").forEach((link) => {
+            const href = link.getAttribute("href") || "";
+            if (href.includes("recipients.html") && role !== "admin") link.style.display = "none"; //Aaron: hide the recipients link if the user is not an admin
+            if (href.includes("traps.html") && role !== "admin" && role !== "manager") link.style.display = "none"; //Aaron: hide the traps link if the user is not an admin or manager
+        });
+        const nav = document.querySelector(".tw-nav");
+        if (nav) { nav.classList.add("ready"); nav.style.visibility = "visible"; } //Aaron: show the navigation links after filtering
+    }
+
     async function afterLogin(user) { //Aaron: after the user is logged in, check if they have the required role and filter the navigation links
         let role;
         try {//Aaron: try to get the role of the user
@@ -40,14 +50,16 @@
             const allowed = required.split(",").map((r) => r.trim().toLowerCase()); //Aaron: split the required roles by comma and trim whitespace and convert to lowercase
             if (!allowed.includes(role)) {
                 alert("You don't have permission to view that page.");
-                return goToDenied(KNOWN_ROLES.includes(role) ?"role" : "no role");
+                return goToDenied(KNOWN_ROLES.includes(role) ?"role" : "no role"); //Aaron: if the user's role is not in the allowed roles, redirect to denied page with reason "role" if the user has a known role, or "no role" if the user has no role
             }
         }
 
+        filterNav(role); //Aaron: filter the navigation links based on the user's role
+        document.body.classList.add("tw-auth-ok"); //Aaron: make the page visible
+        resolveReady(user); //Aaron: resolve the twAuthReady promise with the user object and load datat scriipt
+    }
 
-
-
-    const allowed = required.split(",").map((r) => r.trim().toLowerCase());
+        /*const allowed = required.split(",").map((r) => r.trim().toLowerCase());
 
     try {
         const snap = await rtdb.ref(`users/${user.uid}`).get();
@@ -102,9 +114,9 @@ async function afterLogin(user) {
     const ok = await enforceRole(user);
     if (!ok) return;
     await filterNav(user);
-}
+}*/
 
-async function signInWithToken(tok) {
+    async function signInWithToken(tok) {
     try {
         const res = await fetch(TW_FUNCTIONS.magicLogin, {
             method: "POST",
@@ -126,15 +138,12 @@ async function signInWithToken(tok) {
     }
 }
 
-if (token) {
-    signInWithToken(token);
-} else {
-    twAuth.onAuthStateChanged(async (user) => {
-        if (!user) {
-            goToLogin();
-            return;
-        }
-        await afterLogin(user);
-    });
-}
+    if (token) {
+        signInWithToken(token);
+    } else {
+        twAuth.onAuthStateChanged(async (user) => {
+            if (!user) return   goToLogin();
+            await afterLogin(user);
+        });
+    }
 })();
