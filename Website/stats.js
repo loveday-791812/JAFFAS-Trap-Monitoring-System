@@ -1,4 +1,8 @@
 /* Stats page logic */
+
+await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
+
+
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "stats.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {

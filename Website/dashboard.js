@@ -5,6 +5,9 @@
     3. Handle the date-range dropdown and column sorting
     4. Build and download a JSON report of what's currently shown
 */
+
+await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
+
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "dashboard.html";
 

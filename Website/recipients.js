@@ -3,6 +3,9 @@
 
 IMPORTANT: twRecipients below is FAKE data that only lives in the browser's memory — refreshing the page resets it back to the original 4 people. Once the backend is ready, this is where you'd swap in real API calls (e.g. fetch a list on load, POST/PATCH/DELETE on each action) while keeping the same render functions. */
 
+await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
+
+
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "recipients.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {
