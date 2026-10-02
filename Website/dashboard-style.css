@@ -680,3 +680,7 @@ tbody tr:hover {
 #catches-per-trap-chart {
     max-height: 360px;
 }
+
+/*Aaron hide functtionality for dashbooard until it is auuthenticated*/
+body[data_requred-role].page {visibility: hidden;}/*Aaron: hide the page until the user is authenticated and has the required role*/
+body.tw_auth_ok.page {visibility: visible;}/*Aaron: show the page when the user is authenticated and has the required role*/

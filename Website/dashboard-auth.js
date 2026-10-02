@@ -116,21 +116,21 @@ async function afterLogin(user) {
     await filterNav(user);
 }*/
 
-    async function signInWithToken(tok) {
+    async function signInWithToken(tok) {//Aaron: sign in with the token from the URL
     try {
-        const res = await fetch(TW_FUNCTIONS.magicLogin, {
+        const res = await fetch(TW_FUNCTIONS.magicLogin, {//Aaron: call the magicLogin function to get a custom token
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: tok}),
         });
-        const data = await res.json().catch(() => ({}));
+        const data = await res.json().catch(() => ({}));//Aaron: parse the response as JSON, if it fails return an empty object
         if (!res.ok) throw new Error(data.error || "This link is invalid or has expired.");
 
         await twAuth.signInWithCustomToken(data.customToken);
 
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        const user = twAuth.currentUser;
+        const user = twAuth.currentUser;//Aaron: get the current user after signing in
         if (user) await afterLogin(user);
     } catch (err) {
         alert(err.message);
@@ -138,7 +138,7 @@ async function afterLogin(user) {
     }
 }
 
-    if (token) {
+    if (token) {//Aaron: if there is a token in the URL, sign in with the token
         signInWithToken(token);
     } else {
         twAuth.onAuthStateChanged(async (user) => {
