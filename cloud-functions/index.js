@@ -24,7 +24,7 @@ const SELF_SIGNUP_ROLES = ["worker", "manager", "admin"]; // Roles that can self
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
 
-/* Aaron F math.random can be predictted so we use crypto.randomBytes to generate a secure random token for magic login links. The token is stored in the database and used to create a custom Firebase Auth token for logging in without a password.
+/* Aaron F math.random can be predictted so we use crypto.random to generate a secure random token for magic login links. The token is stored in the database and used to create a custom Firebase Auth token for logging in without a password.
 function generateCode() {
     return Math.floor(100000  + Math.random() * 900000).toString();
 }
@@ -33,7 +33,16 @@ function generateCode() {
 function generateToken() {
     return crypto.randomBytes(32).toString("hex");
 }
-
+async function tooManyFromIp(req, bucket, limit, windowMs) {//Aaron: checks if the number of requests from a given IP address exceeds a specified limit within a certain time window. Rate limiting and preventing abuse of the system.DDos preventtion
+    const ip = String(req.headers["x-forwarded-for"] || req.ip || "unknown").split(",")[0].trim();
+    const key = crypto.createHash("sha256").update(ip).digest("hex");
+    const now = Date.now();
+    const result = await rtdb.ref(`${bucket}/${key}`).transaction((data) => {
+        if (!cur || now - cur.start > windowMs) return {start: now, count: 1};
+        return { start: cur.start, count: cur.count + 1 };
+    });
+    return result.snapshot.val().count > limit;
+}
 function codeEmailHtml(code) {
     return `
     <div style="font-family:Arial, Helvetica, sans-serif; background:#1a1a1a; padding:30px;">
