@@ -6,9 +6,11 @@ import gc
 import ntptime
 from machine import UART
 from machine import RTC
+from machine import Pin
 from signal import transmitter   
 
 timeout = 0 #timeout variable
+APN = "internet" #2 degrees network
 
 #Firebase login info
 FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
@@ -18,13 +20,93 @@ FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase
 
-##MP version of WiFi.h
-#Wifi connection fucntion
-nic = network.WLAN(network.WLAN.IF_STA) #Creates station interface object
-nic.active(False) #deactivtes interface
-time.sleep(0.5) #wait 5 mili seconds
-nic.active(True) #activtes interface, ^whole process restarts wifi
-nic.connect('your-wifi-name-here', 'wifi-password-here') #connect to router
+#4G setup
+MODULE_TX_PIN = 26
+MODULE_RX_PIN = 27
+MODULE_POWERKEY = 4
+MODULE_POWER_ON = 12
+MODULE_BAUD = 115200
+
+##data UART setup
+uart = UART(2, 9600)
+uart.init(9600, rx=21, tx=22, bits=8, parity=None, stop=1)
+
+MESSAGE_LENGTH = 8
+received_bytes = bytearray(MESSAGE_LENGTH)
+byte_index = 0
+packet_too_long = False
+
+##MP version of powerOnModule function
+#4G connection fucntion
+def power_on_module():
+    power_on = Pin(MODULE_POWER_ON, Pin.OUT) 
+    power_on.value(1) 
+
+    powerkey = Pin(MODULE_POWERKEY, Pin.OUT)
+    powerkey.value(0)
+    time.sleep(0.1)
+    powerkey.value(1)
+    time.sleep(1) 
+    powerkey.value(0)
+
+#4G Module UART setup
+power_on_module()
+time.sleep(3)
+module_uart = UART(1, MODULE_BAUD)
+module_uart.init(MODULE_BAUD, rx=MODULE_RX_PIN, tx=MODULE_TX_PIN, bits=8, parity=None, stop=1)
+
+##MP version of sendAT function
+def send_AT(command, expected = 'ok', wait_time = 10):
+    while module_uart.any():
+        module_uart.read()
+
+    module_uart.write(command.encode() + b'\r\n')
+    reply = b''
+    start = time.time()
+
+    while time.time() - start < wait_time:
+        if module_uart.any():
+            reply = reply + module_uart.read()
+            if expected.encode() in reply or b'ERROR' in reply:
+                break
+            time.sleep(0.5)
+
+    print('AT>', command) #shows what was sent
+    print(reply) #shows what came back
+    return expected.encode() in reply
+
+##MP version of wait for module to register
+def wait_for_network(max_seconds=60):
+    start = time.time()
+    while time.time() - start <  max_seconds:
+        if send_AT('AT+CGREG?', '0,1', 2) or send_AT('AT+CGREG?', '0,5', 2):
+            print('Network Registered')
+            return True
+        time.sleep(2)
+    print("Network registration timed out")
+    return False
+
+##MP version of connectMobileData
+def connect_mobile_data():
+    if not wait_for_network():
+        return False
+
+    send_AT('AT+NETCLOSE', '+NETCLOSE: 0', 10)
+    send_AT('AT+CGDCONT=1,"IP","' + APN + '"')
+    if not send_AT('AT+NETOPEN', '+NETOPEN: 0', 75):
+        print('Mobile connection failed')
+        return False
+
+    send_AT('AT+IPADDR')
+    print('Mobile data connected')
+    return True
+
+send_AT('AT') #basic check, should end with OK
+send_AT('AT+CPIN?', 'READY') #SIM check
+send_AT('AT+CSQ') #signal strength
+connect_mobile_data() #joins the network and opens mobile data
+
+
 
 #If wifi not connecting
 if not nic.isconnected():
@@ -39,15 +121,6 @@ if(nic.isconnected()):
     print(f'Connected to {ip}')
 else:
     print('Time Out') #if timeout goes to 0
-
-##UART setup
-uart = UART(1, 9600)
-uart.init(9600, rx=20, tx=21, bits=8, parity=None, stop=1)
-
-MESSAGE_LENGTH = 8
-received_bytes = bytearray(MESSAGE_LENGTH)
-byte_index = 0
-packet_too_long = False
 
 ##Firebase sign in
 def firebase_sign_in():
