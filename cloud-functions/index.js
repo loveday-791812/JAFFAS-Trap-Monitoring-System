@@ -11,9 +11,24 @@ const rtdb = admin.database();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const CODE_TTL_MS = 10 * 60 * 1000;
 
+/*Password Logic:Aaron F
+1. User requests a password reset by providing their email.
+2. A random 6-digit code is generated and hashed, then stored in the database with an expiration timestamp and attempt counter.*/
+const MAX_ATTEMPTS = 5;
+const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute cooldown between resends
+const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
+const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const SELF_SIGNUP_ROLES = ["worker", "manager", "admin"]; // Roles that can self-signup Aaron F Note nott sure if admin shouuld be a self sign up in retrospect.
+
+
+function generateCode() {
+    return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
+
+/* Aaron F math.random can be predictted so we use crypto.randomBytes to generate a secure random token for magic login links. The token is stored in the database and used to create a custom Firebase Auth token for logging in without a password.
 function generateCode() {
     return Math.floor(100000  + Math.random() * 900000).toString();
 }
+*/
 
 function generateToken() {
     return crypto.randomBytes(32).toString("hex");
@@ -189,7 +204,6 @@ exports.magicLogin = onRequest((req, res) => {
     });
 });
 
-const MAX_ATTEMPTS = 5;
 
 function hashCode(code) {
     return crypto.createHash("sha256").update(code).digest("hex");
