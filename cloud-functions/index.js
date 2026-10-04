@@ -220,18 +220,21 @@ exports.verifyCode = onRequest((req, res) => {
 exports.magicLogin = onRequest((req, res) => {
     cors(req, res, async() => {
         try {
-            const { token } = req.body || {};
-            if (!token) return res.status(400).json({ error: "Missing token." });
+            const { token } = req.body || {}; //Aaron: get the magic token from the request body. This token is used to authenticate the user without requiring a password. It is generated when the user verifies their email and is stored in the database for later use.
+            if (!token || typeof token !== "string") {
+                return res.status(400).json({ error: "Missing token." });//Aaron: check if the token is missing or not a string. If it is, return a 400 Bad Request response with an error message indicating that the token is required for authentication.
+            }
+
+            const invalid = { error: "This link is invalid or has expired." };//Aaron: generic error message for invalid or expired magic login links. This message is returned when the token is not found in the database or has expired, preventing unauthorized access to the user's account.
+            const tokenHash = hashCode(token); //Aaron: hash the provided magic token using a secure hashing algorithm. This ensures that even if someone intercepts the request, they won't see the actual token, only its hashed representation. The hashed token is then used to look up the corresponding user in the database.
 
             const query = await rtdb.ref("users")
-                .orderByChild("magicToken")
-                .equalTo(token)
+                .orderByChild("magicTokenHash")//Aaron: query the database for users with a matching hashed magic token. This allows us to find the user associated with the provided token without exposing sensitive information. The query is limited to the first match to ensure we only retrieve one user, as each magic token should be unique and associated with a single user account.
+                .equalTo(tokenHash)
                 .limitToFirst(1)
                 .get();
 
-            if (!query.exists()) {
-                return res.status(404).json({ error: "This link is invalid or has expired"});
-            }
+            if (!query.exists()) return res.status(404).json(invalid); //Aaron: check if the query returned any results. If not, return a 404 Not Found response with the generic invalid link error message. This indicates that the provided magic token does not match any user in the database, either because it is incorrect or has already been used/expired.
             
             let uid, userData;
             query.forEach((child) => {
@@ -239,16 +242,21 @@ exports.magicLogin = onRequest((req, res) => {
                 userData = child.val();
             });
 
-            const customToken = await admin.auth().createCustomToken(uid);
+            await rtdb.ref(`users/${uid}`).update({
+                magicTokenHash: null // Aaron: invalidate the magic token after successful login
+                magicTokenExpiresAt: null, // Aaron: clear the expiration timestamp after successful login
+            });
 
-            return res.status(200).json({
-                customToken,
-                role: userData.role,
-                email: userData.email,
-                        });
-        } catch (err) {
+            if (!userData.magicTokenExpiresAt || Date.now() > userData.magicTokenExpiresAt) {
+                return res.status(404).json(invalid); //Aaron: check if the magic token has expired. If it has, return a 404 Not Found response with the generic invalid link error message. This prevents users from logging in with an expired token, ensuring that the magic login process remains secure and time-limited.
+            }
+
+            const customToken = await admin.auth().createCustomToken(uid); //Aaron: create a custom Firebase Auth token for the user. This token allows the user to authenticate with Firebase without needing a password, enabling a seamless login experience using the magic link. The custom token is generated based on the user's unique identifier (uid) and can be used to sign in to the application securely.
+
+            return res.status(200).json({ customToken });//Aaron: return the custom token in the response, allowing the client to use it for authentication. The client can then sign in with this token to access protected resources and perform actions on behalf of the authenticated user.
+        } catch (err) { //Aaron: catch any errors that occur during the magic login process. This includes issues with database queries, token generation, or any other unexpected errors. Logging the error helps with debugging and provides insight into what went wrong during the request.
             console.error("magicLogin error:", err);
-            return res.status(500).json({ error: "Could not log you in. Please try again." });
+            return res.status(500).json({ error: "Could not login. Please try again." });
         }
     });
 });
