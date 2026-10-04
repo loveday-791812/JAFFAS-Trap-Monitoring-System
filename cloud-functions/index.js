@@ -84,7 +84,11 @@ exports.signup = onRequest((req, res) => {
                 email,
                 role,
                 verified: false,
-                code,
+                codeHash: hashCode(code),//Aaron: store the hashed version of the code in the database for security. This way, even if someone gains access to the database, they won't see the actual code.
+                attempts: 0, //Aaron: initialize the number of attempts to 0. This will be used to track how many times the user has tried to verify their email with the code.
+                lastCodeSentAt: Date.now(),//Aaron: store the timestamp of when the code was sent. This will be used to enforce a cooldown period between resends.
+                sendWindowStart: Date.now(),//Aaron: store the timestamp of when the current send window started. This will be used to enforce a limit on how many times the code can be sent within a certain time frame.
+                sendCount: 1,//Aaron: initialize the send count to 1. This will be used to track how many times the code has been sent within the current send window.
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
                 createdAt: admin.database.ServerValue.TIMESTAMP,
             });
