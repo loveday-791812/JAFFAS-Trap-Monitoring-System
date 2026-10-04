@@ -92,7 +92,7 @@ if (verifyForm) {
 
         try {
             const data = await twPost("verifyCode", {uid, code});
-            window.location.href = `/Website/dashboard.html?token=${encodeURIComponent(data.token)}`;
+            window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
         } catch (err) {
             alert(err.message);
             submitBtn.disabled = false;
@@ -128,9 +128,16 @@ if(loginForm) {
 
         submitBtn.disabled = true;
 
+        const remember = document.getElementById("rememberMe").checked;
+
         try {
+            await twAuth.setPersistence(
+                remember
+                    ? firebase.auth.Auth.Persistence.LOCAL
+                    : firebase.auth.Auth.Persistence.SESSION
+            );
             await twAuth.signInWithEmailAndPassword(email, password);
-            window.location.href = "/Website/dashboard.html";
+            window.location.href = "/dashboard.html";
         }   catch (err) {
             alert("Login failed: " + err.message);
         }   finally {

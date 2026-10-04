@@ -8,7 +8,6 @@ admin.initializeApp();
 
 const rtdb = admin.database();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const CODE_TTL_MS = 10 * 60 * 1000;
 
 function generateCode() {
@@ -33,7 +32,7 @@ function codeEmailHtml(code) {
         </div>`;
 }
 
-exports.signup = onRequest((req, res) => {
+exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
     cors(req, res, async () => {
         try{
             const { email, password, role } = req.body || {};
@@ -57,7 +56,8 @@ exports.signup = onRequest((req, res) => {
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
                 createdAt: admin.database.ServerValue.TIMESTAMP,
             });
-
+            
+            const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [email],
@@ -77,7 +77,7 @@ exports.signup = onRequest((req, res) => {
     });
 });
 
-exports.resendCode = onRequest((req, res) => {
+exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
     cors(req, res, async () => {
         try {
             const { uid } = req.body || {};
@@ -95,6 +95,7 @@ exports.resendCode = onRequest((req, res) => {
             const code = generateCode();
             await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});
 
+            const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [user.email],
@@ -209,7 +210,7 @@ function resetEmailHtml(code) {
     </div>`;
 }
 
-exports.requestPasswordReset = onRequest((req, res) => {
+exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
     cors(req, res, async () => {
         try {
             const { email } = req.body || {};
@@ -232,7 +233,8 @@ exports.requestPasswordReset = onRequest((req, res) => {
                 expiresAt: Date.now() + CODE_TTL_MS,
                 attempts: 0,
             });
-
+            
+            const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [email],

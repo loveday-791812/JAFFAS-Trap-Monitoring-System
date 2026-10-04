@@ -13,10 +13,10 @@ const twAuth = firebase.auth();
 const rtdb = firebase.database();
 
 const TW_FUNCTIONS = {
-    signup: "https://us-central1-trap-watch.cloudfunctions.net/signup",
-    resendCode: "https://us-central1-trap-watch.cloudfunctions.net/resendCode",
-    verifyCode: "https://us-central1-trap-watch.cloudfunctions.net/verifyCode",
-    magicLogin: "https://us-central1-trap-watch.cloudfunctions.net/magicLogin",
-    requestPasswordReset: "https://us-central1-trap-watch.cloudfunctions.net/requestPasswordReset",
-    resetPassword: "https://us-central1-trap-watch.cloudfunctions.net/resetPassword",
+    signup: "/api/signup",
+    resendCode: "/api/resendCode",
+    verifyCode: "/api/verifyCode",
+    magicLogin: "/api/magicLogin",
+    requestPasswordReset: "/api/requestPasswordReset",
+    resetPassword: "/api/resetPassword",
 };
