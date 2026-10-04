@@ -152,6 +152,10 @@ exports.verifyCode = onRequest((req, res) => {
             const { uid, code } = req.body || {};
             if (!uid || !code) return res.status(400).json({ error: "Missing uid or code."});
 
+            if (await tooManyFromIp(req, "verifyCode", 25, HOUR_MS)) {//Aaron: check if the number of verification attempts from the same IP address exceeds the limit within the specified time window. If it does, return an error response to prevent abuse. */
+                return res.status(429).json({ error: "Too many verification attempts from this IP. Please try again later."});
+            }
+
             const userRef = rtdb.ref(`users/${uid}`);
             const snap = await userRef.get();
             if (!snap.exists()) return res.status(404).json({ error: "Account not found." });
@@ -164,9 +168,26 @@ exports.verifyCode = onRequest((req, res) => {
                         if (!user.codeExpiresAt || Date.now() > user.codeExpiresAt) {
                 return res.status(400).json({ error: "That code has expired. Request a new one." });
             }
-            if (user.code !== code) {
+       /*   if (user.code !== code) {
                 return res.status(400).json({ error: "Incorrect code. Please try again." });
+            }*/
+
+            const tx = await userRef.child("attempts").transaction((cur) => (cur || 0) + 1);//Aaron: increment the number of attempts atomically to prevent race conditions. This ensures that even if multiple requests are made simultaneously, the count will be accurate and consistent.
+            const attempts = tx.snapshot.val();//Aaron: get the updated number of attempts after the transaction. This will be used to check if the user has exceeded the maximum number of allowed attempts. If they have, we will return an error response and prevent further verification attempts until a new code is requested.
+            if (attempts > MAX_ATTEMPTS) {//Aaron: check if the number of attempts exceeds the maximum allowed. If it does, return an error response to prevent brute-force attacks and abuse of the verification system.
+                return res.status(429).json({ error: "Too many incorrect attempts.Please request a new code." });//Aaron: return a 429 status code to indicate that the user has exceeded the allowed number of attempts. This helps to prevent abuse and brute-force attacks on the verification system. used 429 because it is a rate limiting error code and fits the context of too many attempts.
             }
+
+            const given = Buffer.from(hashCode(String(code)));//Aaron: hash the provided code and convert it to a Buffer for secure comparison. This ensures that even if someone intercepts the request, they won't see the actual code, only its hashed representation.
+            const stored = Buffer.from(user.codeHash || "");//Aaron: retrieve the stored hashed code from the database and convert it to a Buffer for secure comparison. If the stored hash is missing, we use an empty string to prevent errors during comparison.
+            if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)) {//Aaron: comparedthe hashed provided code with the stored hashed code using a timing-safe comparison to prevent timing attacks. If they don't match, return an error response indicating that the code is incorrect.
+                const left = MAX_ATTEMPTS - attempts;//Aaron: calculate the number of attempts left for the user. This will be used to provide feedback in the error message, letting the user know how many more attempts they have before they are locked out and need to request a new code.
+                return res.status(400).json({//Aaron: returned 400 status code to indicate that the provided code is incorrect. This helps to inform the user that their input was invalid and they need to try again or request a new code if they have exceeded the maximum number of attempts.
+                    error: left > 0 ? `Incorrect code. You have ${left} attempt(s) left.` : "Too many incorrect attempts. Please request a new code.",
+                });
+            }
+
+
 
             const token = generateToken();
 
