@@ -1,4 +1,23 @@
 {
+  "hosting": {
+    "public": "Website",
+    "ignore": [
+      "firebase.json",
+      "**/.",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      { "source": "/", "destination": "/Login/login.html", "type": 302 }
+    ],
+    "rewrites": [
+      { "source": "/api/signup",  "function": "signup" },
+      { "source": "/api/resendCode",  "function": "resendCode" }, 
+      { "source": "/api/verifyCode",  "function": "verifyCode" },
+      { "source": "/api/magicLogin",  "function": "magicLogin" },
+      { "source": "/api/requestPasswordReset",  "function": "requestPasswordReset" },
+      { "source": "/api/resetPassword",  "function": "resetPassword" }
+    ]
+  },
   "functions": [
     {
       "codebase": "default",
@@ -25,13 +44,5 @@
         "*.local"
       ]
     }
-  ],
-  "hosting": {
-    "public": "Website",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  }
+  ]
 }
