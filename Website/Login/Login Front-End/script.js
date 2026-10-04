@@ -117,6 +117,8 @@ if (resendCodeLink) {
 }
 
 /*- Login Form -*/
+let twLoginFails = 0; //Aaron: track of how many times the user has failed to log in. If they fail too many times, we will show a captcha to prevent brute force attacks.
+
 const loginForm = document.getElementById("loginForm");
 if(loginForm) {
     loginForm.addEventListener("submit", async function (event) {

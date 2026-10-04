@@ -243,8 +243,8 @@ exports.magicLogin = onRequest((req, res) => {
             });
 
             await rtdb.ref(`users/${uid}`).update({
-                magicTokenHash: null // Aaron: invalidate the magic token after successful login
-                magicTokenExpiresAt: null, // Aaron: clear the expiration timestamp after successful login
+                magicTokenHash: null,// Aaron: invalidate the magic token after successful login
+                magicTokenExpiresAt: null,// Aaron: clear the expiration timestamp after successful login
             });
 
             if (!userData.magicTokenExpiresAt || Date.now() > userData.magicTokenExpiresAt) {
