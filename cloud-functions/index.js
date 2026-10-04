@@ -23,6 +23,7 @@ const SELF_SIGNUP_ROLES = ["worker", "manager", "admin"]; // Roles that can self
 
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
+}
 
 /* Aaron F math.random can be predictted so we use crypto.random to generate a secure random token for magic login links. The token is stored in the database and used to create a custom Firebase Auth token for logging in without a password.
 function generateCode() {
@@ -63,6 +64,12 @@ exports.signup = onRequest((req, res) => {
             const { email, password, role } = req.body || {};
             if (!email || !password || !role) {
                 return res.status(400).json({ error: "Missing email, password, or role"});
+            }
+            if (!SELF_SIGNUP_ROLES.includes(role)) { /*Aaron: check if the role is valid for self-signup. If not, return an error response. This prevents users from signing up with unauthorized roles. */
+                return res.status(400).json({ error: "Choose a valid role for self-signup."});
+            }
+            if (await tooManyFromIp(req, "signup", 20, HOUR_MS)) { /*Aaron: check if the number of signup attempts from the same IP address exceeds the limit within the specified time window. If it does, return an error response to prevent abuse. */
+                return res.status(429).json({ error: "Too many signup attempts from this IP. Please try again later."});
             }
 
             const userRecord = await admin.auth().createUser({
