@@ -3,6 +3,7 @@ const admin = require("firebase-admin");
 const { Resend } = require("resend");
 const cors = require("cors")({ origin: true});
 const crypto = require("crypto");
+const MAGIC_TOKEN_TTL_MS = 3 * 60 * 60 * 1000; //Aaron: 3 hours expiration for magic login links
 
 admin.initializeApp();
 
@@ -193,9 +194,16 @@ exports.verifyCode = onRequest((req, res) => {
 
             await userRef.update({
                 verified: true,
-                code: null,
+                codeHash: null,//Aaron: clear the stored code hash after successful verification to prevent reuse. This ensures that the code can only be used once and enhances security by removing sensitive information from the database.
                 codeExpiresAt: null,
-                magicToken: token,
+                attempts: 0,
+                sendCount: 0,
+                sendWindowStart: null,
+                lastCodeSentAt: null,
+                
+                magicToken: null, //Aaron: clear any existing magic token to prevent conflicts. This ensures that the user will receive a new magic token for future logins, and any previous tokens are invalidated for security reasons. The token itself does not store setting information, but it is associated with the user's account in the database. When the user logs in using the magic token, the server can retrieve their settings from the database based on their uid.
+                magicTokenHash: null,//Aaron: clear the stored magic token hash after successful login to prevent reuse. This ensures that the magic token can only be used once and enhances security by removing sensitive information from the database.
+                magicTokenExpiresAt: Date.now() + MAGIC_TOKEN_TTL_MS,//Aaron: set the expiration timestamp for the magic token to 3 hours from now. This ensures that the token is only valid for a limited time, enhancing security by reducing the window of opportunity for unauthorized access.
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
