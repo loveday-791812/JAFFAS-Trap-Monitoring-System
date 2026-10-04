@@ -117,7 +117,11 @@ if (resendCodeLink) {
 }
 
 /*- Login Form -*/
+//Aaron: everything below this point is for the login page. It handles the login form submission, forgot password flow, and reset password flow. It uses the twPost function to call the cloud functions for login, password reset request, and password reset confirmation.
+//Aaron: every 5 failed atttepts the reset atttempts along witth firebase protections
 let twLoginFails = 0; //Aaron: track of how many times the user has failed to log in. If they fail too many times, we will show a captcha to prevent brute force attacks.
+
+function twCooldown(btn, seconds) {
 
 const loginForm = document.getElementById("loginForm");
 if(loginForm) {
