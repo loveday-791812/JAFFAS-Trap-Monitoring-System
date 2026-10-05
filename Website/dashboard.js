@@ -28,6 +28,7 @@ function twCloseModal(modalId) {
 
 /* Mock Data */
 let twData = { "7d": null, "30d": null, "all": null};
+let twTotalTraps = 0;
 
 async function loadData() {
     const [trapsSnap, eventsSnap] = await Promise.all([
@@ -37,6 +38,8 @@ async function loadData() {
 
     const traps = trapsSnap.val() || {};
     const events = eventsSnap.val() || {};
+
+    twTotalTraps = Object.values(traps).filter((t) => t && t.status !== "removed").length;
 
     const trapsByNum = {};
     Object.values(traps).forEach((t) => {
@@ -110,6 +113,7 @@ const statusLabels = {
 
 let currentRange = "7d";
 let currentSort = { column: null, direction: 1 };
+let showTriggeredPercentage = false;
 
 /* Fills in 4 card values on the KPI for the given date range */
 function renderKpis(range) {
@@ -117,7 +121,22 @@ function renderKpis(range) {
     document.getElementById("kpi-total-catches").textContent = kpis.totalCatches;
     document.getElementById("kpi-avg-reset").textContent = kpis.avgTimeToReset;
     document.getElementById("kpi-overdue").textContent = kpis.trapsOverdue;
-    document.getElementById("kpi-triggered").textContent = kpis.currentTriggered;
+    renderTriggered(range);
+}
+
+function renderTriggered(range) {
+    const triggered = twData[range].kpis.currentTriggered;
+    const valueEl = document.getElementById("kpi-triggered");
+    const btn = document.getElementById("kpi-triggered-toggle");
+
+    if (showTriggeredPercentage && twTotalTraps > 0) {
+        const pct = (triggered / twTotalTraps) * 100;
+        valueEl.textContent = (Number.isInteger(pct) ? pct : pct.toFixed(1)) + "%";
+        btn.textContent = "Show total";
+    } else {
+        valueEl.textContent = triggered;
+        btn.textContent = "Show %";
+    }
 }
 
 /* renderTable builds the table rows for the given date range, applies the current sort if any, and inserts them into the table body. This function will rerun every time the date range or the sort changes, so the table is always rebuilt from scratch rather than patching individual rows */
@@ -216,8 +235,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         refreshDashboard();
     });
 
-    /* download button clicked */
-    document.getElementById("download-json-btn").addEventListener("click", downloadJson);
+    /* togle Current Triggered Traps card between count adn % */
+    document.getElementById("kpi-triggered-toggle").addEventListener("click", () => {
+        showTriggeredPercentage = !showTriggeredPercentage;
+        renderTriggered(currentRange);
+    });
+
+    document.getElementById("download-json-btn").addEventListener("click", () => {
+        downloadJson();
+    });
 
     document.getElementById("help-btn").addEventListener("click", () => {
         twOpenModal("help-modal");
