@@ -121,7 +121,23 @@ if (resendCodeLink) {
 //Aaron: every 5 failed atttepts the reset atttempts along witth firebase protections
 let twLoginFails = 0; //Aaron: track of how many times the user has failed to log in. If they fail too many times, we will show a captcha to prevent brute force attacks.
 
-function twCooldown(btn, seconds) {
+function twCooldown(btn, seconds) {//Aaron: prevents user from spamming the login button after too many failed attempts. It disables the button for a certain number of seconds and shows a countdown.
+    const original = btn.innerHTTML;//Aaron: store the original button text so we can restore it later
+    let left = seconds;
+    btn.disabled = true;
+    btn.textContent = `Please wait ${left} seconds`; //Aaron: showsthe countdown on the button
+    const timer = setInterval(() => {
+        left -= 1;
+        if(left <= 0) { //Aaron: when the countdown reaches 0, re-enable the button and restore its original text
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.innerHTML = original;
+        } else {
+            btn.textContent = `Please wait ${left} seconds`;//Aaron: updates the countdown every second
+        }
+    }, 1000);
+}
+        
 
 const loginForm = document.getElementById("loginForm");
 if(loginForm) {
