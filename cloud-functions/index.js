@@ -1,6 +1,4 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const { defineSecret } = require("firebase-functions/params");
-const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const admin = require("firebase-admin");
 const { Resend } = require("resend");
 const cors = require("cors")({ origin: true});
@@ -10,11 +8,6 @@ admin.initializeApp();
 
 const rtdb = admin.database();
 
-<<<<<<< Updated upstream
-=======
-let _resend;
-const getResend = () => (_resend ??= new Resend(RESEND_API_KEY.value()));
->>>>>>> Stashed changes
 const CODE_TTL_MS = 10 * 60 * 1000;
 
 function generateCode() {
@@ -39,11 +32,7 @@ function codeEmailHtml(code) {
         </div>`;
 }
 
-<<<<<<< Updated upstream
 exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
-=======
-exports.signup = onRequest({ secrets: [RESEND_API_KEY] }, (req, res) => {
->>>>>>> Stashed changes
     cors(req, res, async () => {
         try{
             const { email, password, role } = req.body || {};
@@ -88,11 +77,7 @@ exports.signup = onRequest({ secrets: [RESEND_API_KEY] }, (req, res) => {
     });
 });
 
-<<<<<<< Updated upstream
 exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
-=======
-exports.resendCode = onRequest({ secrets: [RESEND_API_KEY] }, (req, res) => {
->>>>>>> Stashed changes
     cors(req, res, async () => {
         try {
             const { uid } = req.body || {};
@@ -225,11 +210,7 @@ function resetEmailHtml(code) {
     </div>`;
 }
 
-<<<<<<< Updated upstream
 exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
-=======
-exports.requestPasswordReset = onRequest({ secrets: [RESEND_API_KEY] }, (req, res) => {
->>>>>>> Stashed changes
     cors(req, res, async () => {
         try {
             const { email } = req.body || {};
