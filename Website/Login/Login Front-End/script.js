@@ -148,17 +148,29 @@ if(loginForm) {
         const password = document.getElementById("loginPassword").value;
         const submitBtn = loginForm.querySelector('button[type="submit"]');
 
-        submitBtn.disabled = true;
+        submitBtn.disabled = true; //Aaron: disable the button to prevent multiple submissions
 
         try {
             await twAuth.signInWithEmailAndPassword(email, password);
             window.location.href = "/Website/dashboard.html";
         }   catch (err) {
-            alert("Login failed: " + err.message);
-        }   finally {
-            submitBtn.disabled = false;
+            //Aaron: if there is no internet connection, show a specific message.
+            if (err.code === "auth/network-request-failed") {
+                alert("Network error. Please check your internet connection and try again.");//Aaron: show a specific message for network errors to help the user understand the issue and try again when they have a stable connection.
+                submitBtn.disabled = false;
+                return;
+            }
+            twLoginFails += 1;
+            alert(err.code === "auth/too-many-requests" ? "Too many failed login attempts. wait a few minutets or use the Forgot Password link to reset your password." : "Login failed. Please check your email and password and try again.");
+             //Aaron: show a generic error message for all other errors to avoid giving away too much information to potential attackers. or if the email tthere are guessing is a correct email but the password is wrong, we don't want to tell them that the email is correct. We just say "login failed" for all errors except network errors.
+            if (twLoginFails % 5 === 0) {
+                twCooldown(submitBtn, 30 * (twLoginFails / 5)); //Aaron: if the user has failed 5 times, disable the button for 30 seconds to prevent brute force attacks.
+            } else {
+                submitBtn.disabled = false; //Aaron: re-enable the button for the user to try again if they haven't failed 5 times yet.
+            }
+
         }
-    });
+    }); //Aaron the function above handles the login form submission. It prevents the default form submission, gets the email and password values, disables the submit button, and tries to sign in with Firebase Auth. If successful, it redirects to the dashboard. If there is an error, it shows an alert with a generic message and increments the failed login attempts counter. If the user has failed 5 times, it disables the button for 30 seconds to prevent brute force attacks. This makes tthe dashboard follow tthe firebase ppassword ennemeration and security best practices.
 }
 
 const forgotLink = document.getElementById("forgotLink");
