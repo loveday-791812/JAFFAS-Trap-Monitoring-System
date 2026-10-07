@@ -18,6 +18,21 @@ function generateToken() {
     return crypto.randomBytes(32).toString("hex");
 }
 
+async function addToRecipients(uid, email) {
+        console.log("addToRecipients start", uid, email);
+        try {
+            await rtdb.ref(`Recipients/${uid}`).set({
+                name: email.split("@")[0],
+                email,
+                report:"Weekly",
+                status: "active",
+            });
+            console.log("addToRecipients done", uid);
+    } catch (err) {
+        console.error("addToRecipients error:",err);
+    }
+}
+
 function codeEmailHtml(code) {
     return `
     <div style="font-family:Arial, Helvetica, sans-serif; background:#1a1a1a; padding:30px;">
@@ -32,7 +47,7 @@ function codeEmailHtml(code) {
         </div>`;
 }
 
-exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
+exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
     cors(req, res, async () => {
         try{
             const { email, password, role } = req.body || {};
@@ -56,8 +71,9 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
                 createdAt: admin.database.ServerValue.TIMESTAMP,
             });
-            
+
             const resend = new Resend(process.env.RESEND_API_KEY);
+
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [email],
@@ -75,9 +91,9 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
             return res.status(500).json({ error: message});
         }
     });
-});
+}));
 
-exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
+exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
     cors(req, res, async () => {
         try {
             const { uid } = req.body || {};
@@ -94,8 +110,9 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
             
             const code = generateCode();
             await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});
-
+            
             const resend = new Resend(process.env.RESEND_API_KEY);
+            
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [user.email],
@@ -109,7 +126,7 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
             return res.status(500).json({ error: "Could not resend code. Please try again."});
         }   
     });
-});
+}));
 
 
 exports.verifyCode = onRequest((req, res) => {
@@ -144,8 +161,10 @@ exports.verifyCode = onRequest((req, res) => {
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
+            await addToRecipients(uid, user.email);
 
             return res.status(200).json({ token });
+
         } catch (err) {
             console.error("verifyCode error:", err);
             return res.status(500).json({ error: "Could not verify code. Please try again." });
@@ -210,7 +229,7 @@ function resetEmailHtml(code) {
     </div>`;
 }
 
-exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {
+exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
     cors(req, res, async () => {
         try {
             const { email } = req.body || {};
@@ -233,8 +252,9 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, 
                 expiresAt: Date.now() + CODE_TTL_MS,
                 attempts: 0,
             });
-            
+
             const resend = new Resend(process.env.RESEND_API_KEY);
+
             await resend.emails.send({
                 from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
                 to: [email],
@@ -248,7 +268,7 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, 
             return res.status(500).json({ error: "Could not send reset code. Please try again." });
         }
     });
-});
+}));
 
 exports.resetPassword = onRequest((req, res) => {
     cors(req, res, async () => {

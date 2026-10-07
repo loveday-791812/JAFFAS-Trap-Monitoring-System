@@ -240,9 +240,7 @@
 
                     <span>
                         I agree to the
-                        <a href="#">Terms of Service</a>
-                        and
-                        <a href="#">Privacy Policy</a>
+                        <a href="#" id="termsLink">Terms &amp; Conditions</a>
                     </span>
 
                 </label>
@@ -317,12 +315,26 @@
 
     </main>
 
+    <div class="terms-overlay" id="termsModal" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+        <div class="terms-modal">
+            <h2 id="termsModalTitle">Terms &amp; Conditions</h2>
+            <p>
+                TrapWatch is solely for use with wireless systems supplied by Farm &amp; Forest Telemetry.
+                As physical and atmospheric conditions may interfere with transmission, there is no guarantee
+                that all signals will be recorded on the system. Contact
+                <a href="mailto:fftelemetry1@gmail.com">fftelemetry1@gmail.com</a>
+                if you have any questions.
+            </p>
+            <button type="button" class="create-button" id="termsCloseBtn">Close</button>
+        </div>
+    </div>
+
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-    <script src="../../Website-backEnd/firebase-config.js"></script>
+    <script src="../Website-backEnd/firebase-config.js"></script>
     <script src="script.js"></script>
 
 </body>

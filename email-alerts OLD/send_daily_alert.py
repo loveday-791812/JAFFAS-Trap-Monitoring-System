@@ -189,8 +189,8 @@ resend.Emails.send({
     "subject": f"TrapWatch: Trap(s) {ids_str} Triggered",
     "html": html,
     "attachments": [
-        {"filename" : "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"}, #type: ignore
-        {"filename" : "background.jpg", "content": bg_bytes, "content_id": "background"},
+        {"filename" : "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
+        {"filename" : "background.jpg", "content": bg_bytes, "content_id": "background"}, #type: ignore
     ],
 })
 
