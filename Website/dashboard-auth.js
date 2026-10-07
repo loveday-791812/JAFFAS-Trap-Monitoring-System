@@ -2,7 +2,7 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    const LOGIN_URL = "/Website/Login/Login Front-End/login.html";
+    const LOGIN_URL = "/Login/login.html";
 
     function goToLogin() {
         window.location.href = LOGIN_URL;
