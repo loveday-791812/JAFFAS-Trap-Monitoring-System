@@ -1,4 +1,4 @@
-from firebase_functions import db_fn, scheduler_fn
+from firebase_functions import db_fn, scheduler_fn, options
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app, db
 from datetime import datetime, timedelta
@@ -570,7 +570,8 @@ def _send_with_images(html_body, subject, recipients):
         })
 
 @scheduler_fn.on_schedule(
-    schedule="every monday 09:00",
+    schedule="every thursday 06:00",
+    timezone=options.Timezone("Pacific/Auckland"),
     region="asia-southeast1"
     )
 def send_weekly_report(event: scheduler_fn.ScheduledEvent) -> None:
