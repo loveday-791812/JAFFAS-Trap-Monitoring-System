@@ -19,7 +19,8 @@
             <ul style="padding-left:18px; line-height:1.6;">
                 <li><strong>Overdue threshold</strong> — how many days a trap can go without a reset before it's flagged overdue.</li>
                 <li><strong>Default dashboard view</strong> — which date range the Dashboard opens to when you visit it. </li>
-                <li><strong>Default report frequency</strong> — the frequency pre-selected when adding a new recipient.</li>
+                <li><strong>Default report frequency</strong> — which report types are pre-selected when adding a new recipient.</li>
+                <li><strong>Email notifications</strong> — a master switch for all outgoing report emails.</li>
             </ul>
         </div>
         <div class="modal-footer">
@@ -84,19 +85,71 @@
                 </div>
             </div>
 
-            <!-- default report frequency -->
+            <!-- default report preferences: 4 toggles pre-checked when a new recipient is added -->
             <div class="settings-section">
-                <h2>Default report frequency</h2>
+                <h2>Default report preferences</h2>
                 <p class="settings-description">
-                    Pre-selected report frequency when adding a new recipient.
+                    Which report types are pre-selected when adding a new recipient.
                 </p>
-                <div class="field">
-                    <label for="default-report-frequency">Frequency</label>
-                    <select id="default-report-frequency">
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                    </select>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Instant Reports</div>
+                        <div class="toggle-row-description">You will be notified as soon as a trap is triggered</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="default-report-instant" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Daily Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each day</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="default-report-daily" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Weekly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each week</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="default-report-weekly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Monthly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each month</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="default-report-monthly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Email notifications</h2>
+                <p class="settings-description">
+                    Turn all outgoing report emails on or off, regardless of individual recipient preferences.
+                </p>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Enable/Disable Email Notifications</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="email-notifications-enabled" />
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
 
