@@ -493,3 +493,118 @@ input::placeholder {
     font-weight: bold;
     text-decoration: underline;
 }
+
+.tw-alert-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(34, 58, 32, 0.65);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.tw-alert-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tw-alert-modal {
+    width: 100%;
+    max-width: 430px;
+    background: var(--light-green);
+    border: 1px solid rgba(35, 66, 42, 0.15);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.25);
+    transform: translateY(12px) scale(0.97);
+    transition: transform 0.2s ease;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+.tw-alert-overlay.show .tw-alert-modal {
+    transform: translateY(0) scale(1);
+}
+
+.tw-alert-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(163, 53, 43, 0.12);
+    border: 1px solid rgba(163, 53, 43, 0.12);
+    color: #a3352b;
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.tw-alert-content h2 {
+    margin: 0 0 8px;
+    color: var(--dark-green);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.tw-alert-content p {
+    margin: 0 auto;
+    max-width: 340px;
+    color: var(--secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.tw-alert-button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: var(--dark-green);
+    color: #ffffff;              /* ← must be white */
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+
+.tw-alert-button:hover {
+    background: var(--dark-green);
+}
+
+.tw-alert-button:active {
+    transform: scale(0.98);
+}
+
+.tw-alert-modal.success .tw-alert-icon {
+    background: rgba(45, 74, 43, 0.12);
+    border-color: rgba(45, 74, 43, 0.35);
+    color: var(--dark-green);
+}
+
+.tw-alert-modal.warning .tw-alert-icon {
+    background: rgba(243, 156, 18, 0.12);
+    border-color: rgba(243, 156, 18, 0.35);
+    color: #f39c12;
+}
+
+@media (max-width: 480px) {
+    .tw-alert-modal {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+    .tw-alert-content h2 {
+        font-size: 18px;
+    }
+    .tw-alert-content p {
+        font-size: 13px;
+    }
+}

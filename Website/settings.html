@@ -15,12 +15,12 @@
             <h2>Settings Help</h2>
         </div>
         <div class="modal-body">
-            <p style="margin-bottom:12px;">Control default behaviour across the dashboard</p>
+            <p style="margin-bottom:12px;">Choose which emails you receive.</p>
             <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>My email preferences</strong> — choose which trap emails are sent to you.</li>
                 <li><strong>Overdue threshold</strong> — how many days a trap can go without a reset before it's flagged overdue.</li>
-                <li><strong>Default dashboard view</strong> — which date range the Dashboard opens to when you visit it. </li>
-                <li><strong>Default report frequency</strong> — which report types are pre-selected when adding a new recipient.</li>
-                <li><strong>Email notifications</strong> — a master switch for all outgoing report emails.</li>
+                <li><strong>Default dashboard view</strong> — which date range the Dashboard opens to.</li>
+                <li><strong>Email notifications</strong> — a master switch for all outgoing emails.</li>
             </ul>
         </div>
         <div class="modal-footer">
@@ -57,11 +57,66 @@
     <form id="settings-form">
         <section class="card">
 
-            <!-- overdue threshold -->
+            <!-- my email preferences (everyone) -->
             <div class="settings-section">
+                <h2>My email preferences</h2>
+                <p class="settings-description">
+                    Choose which emails are sent to <strong id="my-email-label">your account</strong>.
+                </p>
+                <p id="my-paused-note" class="settings-description" style="display:none; color:#a3352b;">
+                    Your emails are currently paused by an admin, so you won't receive anything until they're resumed.
+                </p>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Instant Reports</div>
+                        <div class="toggle-row-description">You will be notified as soon as a trap is triggered</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-instant" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Daily Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each day</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-daily" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Weekly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each week</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-weekly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Monthly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each month</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-monthly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- overdue threshold (admin only) -->
+            <div class="settings-section" data-admin-only hidden>
                 <h2>Overdue threshold</h2>
                 <p class="settings-description">
-                    How many days without a reset before a trap counts as "overdue" on the dashboard.
+                    How many days without a reset before a trap counts as "overdue" on the dashboard (applies to everyone).
                 </p>
                 <div class="field">
                     <label for="overdue-threshold">Days</label>
@@ -69,11 +124,11 @@
                 </div>
             </div>
 
-            <!-- default dashboard view -->
-            <div class="settings-section">
+            <!-- default dashboard view (admin only) -->
+            <div class="settings-section" data-admin-only hidden>
                 <h2>Default dashboard view</h2>
                 <p class="settings-description">
-                    Which date range the Admin Dashboard opens to by default.
+                    Which date range the Dashboard opens to by default (applies to everyone).
                 </p>
                 <div class="field">
                     <label for="default-date-range">Date range</label>
@@ -85,62 +140,11 @@
                 </div>
             </div>
 
-            <!-- default report preferences: 4 toggles pre-checked when a new recipient is added -->
-            <div class="settings-section">
-                <h2>Default report preferences</h2>
-                <p class="settings-description">
-                    Which report types are pre-selected when adding a new recipient.
-                </p>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Instant Reports</div>
-                        <div class="toggle-row-description">You will be notified as soon as a trap is triggered</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="default-report-instant" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Daily Reports</div>
-                        <div class="toggle-row-description">You will be sent a catch summary each day</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="default-report-daily" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Weekly Reports</div>
-                        <div class="toggle-row-description">You will be sent a catch summary each week</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="default-report-weekly" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Monthly Reports</div>
-                        <div class="toggle-row-description">You will be sent a catch summary each month</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="default-report-monthly" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="settings-section">
+            <!-- master switch (admin only) -->
+            <div class="settings-section" data-admin-only hidden>
                 <h2>Email notifications</h2>
                 <p class="settings-description">
-                    Turn all outgoing report emails on or off, regardless of individual recipient preferences.
+                    Turn all outgoing emails on or off, regardless of individual preferences.
                 </p>
                 <div class="toggle-row">
                     <div>
@@ -158,10 +162,10 @@
         <!-- save button -->
         <section class="card settings-actions-card">
             <div class="settings-footer">
-                <span id="save-confirmation" class="save-confirmation">Settings saved</span>
                 <button type="submit" class="btn btn-primary">Save Settings</button>
+                <span id="save-confirmation" class="save-confirmation">Settings saved</span>
             </div>
-        </section> 
+        </section>
     </form>
 
 </div>

@@ -4,11 +4,12 @@ from firebase_admin import initialize_app, db, auth
 from datetime import datetime, timedelta
 import resend
 import secrets
+import os
 
 set_global_options(max_instances=10)
 initialize_app()
 
-resend.api_key = ""
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 DASHBOARD_BASE_URL = "https://trapwatch.fft.kiwi"
 
@@ -170,15 +171,34 @@ def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
     </body>
     </html>
 """
+
+REPORT_FLAGS = {
+    "Instant": "reportInstant",
+    "Daily": "reportDaily",
+    "Weekly": "reportWeekly",
+    "Monthly": "reportMonthly",
+}
+
+def emails_enabled():
+    return db.reference("/Settings/emailNotificationsEnabled").get() is not False
+
 def get_recipients(report_type):
-    all_recipients = db.reference("/Recipients").get() or {}
-    return [
-        r["email"] for r in all_recipients.values() # type: ignore
-        if isinstance(r, dict)
-        and r.get("status") == "active"
-        and r.get("report") == report_type
-        and r.get("email")
-    ]
+    if not emails_enabled():
+        print("Email notifications disabled in Settings - skipping")
+        return[]
+    flag = REPORT_FLAGS[report_type]
+    recipients = db.reference("/Recipients").get() or {}
+    out = []
+    for r in recipients.values():  # type: ignore
+        if not isinstance(r, dict) or r.get("status") != "active" or not r.get("email"):
+            continue
+        if flag in r:
+            opted_in = r[flag] is True
+        else:
+            opted_in = r.get("report") == report_type
+        if opted_in:
+            out.append(r["email"])
+    return out
 
 def find_user_by_email(email):
     all_users = db.reference("/users").get() or {}
@@ -257,9 +277,9 @@ def send_trap_alert(event: db_fn.Event) -> None:
     suffix = "th" if 11 <= day_num <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day_num % 10, "th")
     date_str = dt.strftime("%a") + f" {day_num}{suffix} " + dt.strftime("%b")
 
-    recipients = get_recipients("Daily")
+    recipients = get_recipients("Instant")
     if not recipients:
-        print("No active Daily recipients")
+        print("No active instant recipients - skipping email")
         return
 
     for email in recipients:

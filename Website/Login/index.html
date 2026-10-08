@@ -329,6 +329,25 @@
         </div>
     </div>
 
+    <div class="tw-alert-overlay" id="twAlertOverlay" aria-hidden="true">
+        <div class="tw-alert-modal"
+            id="twAlertModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="twAlertTitle"
+            aria-describedby="twAlertMessage">
+            
+            <div class="tw-alert-icon" id="twAlertIcon">!</div>
+
+            <div class="tw-alert-content">
+                <h2 id="twAlertTitle">Something went wrong</h2>
+                <p id="twAlertMessage">Please try again</p>
+            </div>
+
+            <button type="button" class="tw-alert-button" id="twAlertButton">Ok</button>
+        </div>
+    </div>
+
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
