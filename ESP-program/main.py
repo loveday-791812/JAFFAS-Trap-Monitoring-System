@@ -1,17 +1,20 @@
 import time
 import ujson
 import gc
+import random
 from machine import UART
 from machine import Pin
 from signal import transmitter
 from trap_dictionary import trap_ids   
 
 ##TEST ONLY: simulated packet timer, delete later
-TEST_INTERVAL_MS = 45 * 60 * 1000 #sends signal every 45 minutes
+MIN_MS = 60 * 60 * 1000
+MAX_MS = 120 * 60 * 1000
+
+test_interval_ms = random.randint(MIN_MS, MAX_MS)
 last_test_at = time.ticks_ms() #time the last simulated packet was sent, starts as now
 
-APN = "internet" #2 degrees network
-last_reply = b'' #holds the most recent reply from the module
+
 
 #Firebase login info
 FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
@@ -36,6 +39,14 @@ MESSAGE_LENGTH = 8
 received_bytes = bytearray(MESSAGE_LENGTH)
 byte_index = 0
 packet_too_long = False
+
+
+APN = "internet" #2 degrees network
+last_reply = b'' #holds the most recent reply from the module
+
+
+duplicate_window = 90 * 60
+last_signal_at = {}
 
 ##MP version of powerOnModule function
 #4G connection fucntion
@@ -188,7 +199,7 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
 
     #building event
     trap_id = trap_ids.get(hex_data.upper(), "unknown")
-    event_data = {"transmitter_ID": hex_data, "timestamp": timestamp, "trap_ID": trap_id} #the two fields the database rules ask for, as a dictionary
+    event_data = {"transmitter_ID": hex_data, "timeStamp": timestamp, "trap_ID": trap_id} #the two fields the database rules ask for, as a dictionary
     url = FIREBASE_URL + "Events.json" #short address, no token needed because the rules now allow adding events without login
 
     #sending event
@@ -198,8 +209,22 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
     #checking if post request worked
     if response_text != "": #send_once returns text from Firebase when it worked, empty text when it failed
         print("Data added successfully!", response_text) #shows Firebase's reply, which should look like {"name":"-O..."}
+        return True
     else:
         print("Data failed to merge") #nothing came back, so the send failed
+        return False
+
+##repeat filter, filters out whether signal is a new trigger or repeat
+def filter_signal(hex_data):
+    key = hex_data.upper()
+    now_signal = time.time()
+    last_signal = last_signal_at.get(key)
+    if last_signal is None or now_signal - last_signal > duplicate_window:
+        if not send_to_firebase(hex_data):
+            return
+    else:
+        print("Repeat, not new event:", hex_data)
+    last_signal_at[key] = now_signal
 
 def loop(): #defines loop function
     global byte_index, packet_too_long, last_test_at #calls from above to avoid new variables
@@ -211,7 +236,7 @@ def loop(): #defines loop function
                 if not packet_too_long and byte_index > 0: #only runs if packet is 8 bytes or lower AND byte is not empty
                     hex_data = ' '.join(f'{b:02x}' for b in received_bytes[:byte_index]) # converts into string. 0x12 > 12 and adds spaces between bytes
                     print('Received:', hex_data) #prints hex string. packet is put into hex_data
-                    send_to_firebase(hex_data) #sends hex to firebase by calling send to firebase function
+                    filter_signal(hex_data) #sends hex to firebase by calling send to firebase function
                 else:
                     print('Ignored empty or oversized packet') #if packet is empty or more than 8 bytes
                     #resetting for next packet
@@ -228,12 +253,12 @@ def loop(): #defines loop function
             else:
                 packet_too_long = True #if buffer is full before 0x0D appears, then it flags as too long
         ##TEST ONLY: simulated packet, delete this block later
-        if time.ticks_diff(time.ticks_ms(), last_test_at) >= TEST_INTERVAL_MS and byte_index == 0: #true when 30 seconds have passed and no real packet is half received
+        if time.ticks_diff(time.ticks_ms(), last_test_at) >= test_interval_ms and byte_index == 0: #true when 30 seconds have passed and no real packet is half received
             last_test_at = time.ticks_ms() #restarts the timer
             test_bytes = transmitter()[:-1] #gets 9 bytes from signal.py and drops the last one, the 0x0D terminator
             hex_data = ' '.join(f'{b:02x}' for b in test_bytes) #turns the 8 bytes into text like "a3 07 f1 5c 22 9e 40 b8"
             print('Simulated:', hex_data) #shows what is being sent
-            send_to_firebase(hex_data) #sends it to Firebase like a real packet
+            filter_signal(hex_data) #sends it to Firebase like a real packet
 
 #runs at startup
 send_AT('AT') #basic check, should end with OK
