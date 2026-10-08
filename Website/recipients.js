@@ -256,6 +256,7 @@ async function handleRemoveConfirm() {
 
 /* Setup Event Listeners once the page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
     twHighlightNav();
     await loadRecipients();
     renderRecipients();
