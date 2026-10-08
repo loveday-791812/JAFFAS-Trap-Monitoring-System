@@ -36,7 +36,7 @@ body {
     min-height: 100vh;
 }
 
-/* .page wraps all page content w/ 1100px max width */
+/* .page wraps all page content with 1100px max width */
 .page {
     max-width: 1100px; 
     margin: 0 auto;    /* automatically keeps it at 0 margin */
@@ -681,6 +681,121 @@ tbody tr:hover {
     max-height: 360px;
 }
 
+/* toggle switches used on setting and in add/edit recipient modals */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+/* checkbox */
+.toggle-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* pill slider */
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #c7d2c5;
+    border-radius: 999px;
+    pointer-events: none;
+    transition: backgournd-color 0.15s ease;
+}
+
+/* sliding knob */
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* slide knob to right when checked and turn green */
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--tw-green-dark);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* keyboard focus ring */
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: 3px solid #1a5fb4;
+    outline-offset: 2px;
+}
+
+/* full row used in setting and add/edit recipient modals. toggle on right, description on left */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.toggle-row:last-child {
+    border-bottom: none;
+}
+
+.toggle-row-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--tw-text);
+}
+
+.toggle-row-description {
+    font-size: 0.8rem;
+    color: var(--tw-text-muted);
+    margin-top: 2px;
+}
+
+/* toggle pills used in recipients table */
+.report-toggles {
+    display: flex;
+    gap: 6px;
+}
+
+.report-toggle-btn {
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.report-toggle-btn:hover {
+    border-color: var(--tw-green-mid)
+}
+
+/* "on" is added/removed by JS depending on that recipient's saved flags */
+.report-toggle-btn.on {
+    background: var(--tw-green-dark);
+    border-color: var(--tw-green-dark);
+    color: #fff;
+}
+
 /*Aaron hide functtionality for dashbooard until it is auuthenticated*/
-body[data_requred-role].page {visibility: hidden;}/*Aaron: hide the page until the user is authenticated and has the required role*/
-body.tw_auth_ok.page {visibility: visible;}/*Aaron: show the page when the user is authenticated and has the required role*/
+body[data-required-role] .page { visibility: hidden; } /*Aaron: hide the page until the user is authenticated and has the required role*/
+body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the user is authenticated and has the required role*/

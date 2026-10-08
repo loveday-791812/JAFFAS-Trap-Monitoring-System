@@ -26,11 +26,16 @@ function twCloseModal(modalId) {
 
 
 
-//default settings for before anything starts
+/* default settings for before anything starts
+   defaultReportFrequency is now replace with 4 independent booleans since a recipient can now choose more that one report type at once. Daily defaults to "true" */
 const DEFAULT_SETTINGS = {
     overdueThreshold: 7,    //matches 7 days
     defaultDateRange: "7d",
-    defaultReportFrequency: "Daily",  //default recipients type
+    defaultReportInstant: false,
+    defautReportDaily: true,    //default recipients type
+    defaultReportWeekly: false,
+    defaultReportMonthly: false,
+    emailNotificationsEnabled: true,
 };
 
 async function twGetSettings() {
@@ -52,7 +57,11 @@ async function loadSettingsIntoForm() {
     const settings = await twGetSettings();
     document.getElementById("overdue-threshold").value = settings.overdueThreshold;
     document.getElementById("default-date-range").value = settings.defaultDateRange;
-    document.getElementById("default-report-frequency").value = settings.defaultReportFrequency;
+    document.getElementById("default-report-instant").checked = settings.defaultReportInstant;
+    document.getElementById("default-report-daily").checked = settings.defautReportDaily;
+    document.getElementById("default-report-weekly").checked = settings.defaultReportWeekly;
+    document.getElementById("default-report-monthly").checked = settings.defaultReportMonthly;
+    document.getElementById("email-notifications-enabled").checked = settings.emailNotificationsEnabled;
 }
 
 /* runs when save settings button clicked */
@@ -62,7 +71,11 @@ async function handleSettingsSubmit(e) {
     const settings = {
         overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
         defaultDateRange: document.getElementById("default-date-range").value,
-        defaultReportFrequency: document.getElementById("default-report-frequency").value,
+        defaultReportInstant: document.getElementById("default-report-instant").checked,
+        defautReportDaily: document.getElementById("default-report-daily").checked,
+        defaultReportWeekly: document.getElementById("default-report-weekly").checked,
+        defaultReportMonthly: document.getElementById("default-report-monthly").checked,
+        emailNotificationsEnabled: document.getElementById("email-notifications-enabled").checked,
     };
 
     try {

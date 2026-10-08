@@ -44,7 +44,7 @@ async function loadCatchCounts() {
 /* fills in the 3 summary cads above the chart bas on catch counts */
 function renderSummary(counts) {
     const trapNumbers = Object.keys(counts);
-    const totalCatches = Object.values(counts).reduce((sum, c) => sum = c, 0);
+    const totalCatches = Object.values(counts).reduce((sum, c) => sum + c, 0);
 
     document.getElementById("stat-total-catches").textContent = totalCatches;
 
@@ -93,7 +93,7 @@ function renderChart(counts) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {percision: 0},  //round to whole numbers
+                    ticks: {precision: 0},  //round to whole numbers
                 },
             },
         },

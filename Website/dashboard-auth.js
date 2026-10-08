@@ -68,7 +68,7 @@
 
         if (!allowed.includes(role)) {
             alert("You don't have permission to view that page.");
-            window.location.href = "/Website/dashboard.html";
+            window.location.href = "/dashboard.html";
             return false;
         }
         return true;

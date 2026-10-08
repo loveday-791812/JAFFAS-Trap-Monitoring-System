@@ -22,8 +22,8 @@
             <p style="margin-bottom:12px;">Manage who recieves trap catch report emails.</p>
             <ul style="padding-left:18px; line-height:1.6;">
                 <li><strong>+ Add Recipient </strong> — add a new person to recieve reports.</li>
-                <li><strong>Report dropdown</strong> — change how often that person gets emailed (Daily, Weekly, Monthly). </li>
-                <li><strong>Edit</strong> — update the recipient's name, email, and report frequency.</li>
+                <li><strong>Report toggles</strong> — turn Instant, Daily, Weekly, and/or Monthly reports on or off for that person. More than one can be on at once. </li>
+                <li><strong>Edit</strong> — update the recipient's name, email, and report preferences.</li>
                 <li><strong>Remove</strong> — permanetly delete a recipient. Use Pause via Edit instead if its temporary.</li>
             </ul>
         </div>
@@ -100,13 +100,37 @@
                     <label for="add-email">Email <span class="required">*</span></label>
                     <input type="email" id="add-email" required />
                 </div>
+                <!-- Nre report preferences toggles - 4 each replacing the old dropdown-->
                 <div class="field">
-                    <label for="add-report">Report <span class="required">*</span></label>
-                    <select id="add-report">
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                    </select>
+                    <label>Report preferences</label>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Instant Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="add-report-instant" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Daily Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="add-report-daily" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Weekly Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="add-report-weekly" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Monthly Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="add-report-monthly" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -138,13 +162,38 @@
                     <label for="edit-email">Email <span class="required">*</span></label>
                     <input type="email" id="edit-email" required />
                 </div>
+
+                <!-- New 4 toggles added -->
                 <div class="field">
-                    <label for="edit-report">Report <span class="required">*</span></label>
-                    <select id="edit-report">
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                    </select>
+                    <label>Report preferences</label>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Instant Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="edit-report-instant" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Daily Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="edit-report-daily" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Weekly Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="edit-report-weekly" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-row-label">Monthly Reports</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="edit-report-monthly" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="field">
@@ -207,6 +256,7 @@
 
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="settings.js"></script>
 <script src="recipients.js"></script>
 </body>
 </html>

@@ -92,7 +92,7 @@ if (verifyForm) {
 
         try {
             const data = await twPost("verifyCode", {uid, code});
-            window.location.href = `/Website/dashboard.html?token=${encodeURIComponent(data.token)}`;
+            window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
         } catch (err) {
             alert(err.message);
             submitBtn.disabled = false;
@@ -152,7 +152,7 @@ if(loginForm) {
 
         try {
             await twAuth.signInWithEmailAndPassword(email, password);
-            window.location.href = "/Website/dashboard.html";
+            window.location.href = "/dashboard.html";
         }   catch (err) {
             //Aaron: if there is no internet connection, show a specific message.
             if (err.code === "auth/network-request-failed") {
@@ -230,5 +230,27 @@ if (forgotLink) {
         } finally {
             btn.disabled = false;
         }
+    });
+}
+
+const termsLink = document.getElementById("termsLink");
+const termsModal = document.getElementById("termsModal");
+if (termsLink && termsModal) {
+    termsLink.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        termsModal.classList.add("open");
+    });
+
+    document.getElementById("termsCloseBtn").addEventListener("click", function () {
+        termsModal.classList.remove("open");
+    });
+
+    termsModal.addEventListener("click", function (event) {
+        if (event.target === termsModal) termsModal.classList.remove("open");
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") termsModal.classList.remove("open");
     });
 }

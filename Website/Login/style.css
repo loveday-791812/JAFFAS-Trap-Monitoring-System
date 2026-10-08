@@ -449,3 +449,47 @@ input::placeholder {
         font-size: 11px;
     }
 }
+
+.terms-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 35, 20, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+}
+
+.terms-overlay.open {
+    display: flex;
+}
+
+.terms-modal {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 32px 30px 28px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+.terms-modal h2 {
+    font-size: 24px;
+    color: var(--dark-green);
+    margin-bottom: 14px;
+}
+
+.terms-modal p {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 22px;
+}
+
+.terms-modal p a {
+    color: var(--brand-green);
+    font-weight: bold;
+    text-decoration: underline;
+}

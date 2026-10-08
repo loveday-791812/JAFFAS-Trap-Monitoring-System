@@ -11,9 +11,9 @@ from signal import transmitter
 timeout = 0 #timeout variable
 
 #Firebase login info
-FIREBASE_URL = "https://test-a1ebe-default-rtdb.asia-southeast1.firebasedatabase.app"
-FIREBASE_API_KEY = "AIzaSyB9IxN0UE0thEFSu5RpelDWnWbmeFFhyV0"
-FIREBASE_EMAIL = "esp32-device@test.com"
+FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
+FIREBASE_API_KEY = "AIzaSyClXxRuzYNSg54oPuM5V-ONfqqK3vE2TWs"
+FIREBASE_EMAIL = "trapwatchesp32@gmail.com"
 FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase
@@ -24,7 +24,7 @@ nic = network.WLAN(network.WLAN.IF_STA) #Creates station interface object
 nic.active(False) #deactivtes interface
 time.sleep(0.5) #wait 5 mili seconds
 nic.active(True) #activtes interface, ^whole process restarts wifi
-nic.connect('B_DECO', 'JJEXXRRE') #connect to router
+nic.connect('your-wifi-name-here', 'wifi-password-here') #connect to router
 
 #If wifi not connecting
 if not nic.isconnected():
@@ -68,7 +68,7 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
     #ensures wifi is connected
     if not nic.isconnected(): #ensures wifi is connected
         print('WiFi disconnected; attempting to reconnect')
-        nic.connect('B_DECO', 'JJEXXRRE')
+        nic.connect('your-wifi-name-here', 'wifi-password-here')
 
     #checks if the id token is empty
     if firebase_id_token == "": 
@@ -86,7 +86,7 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
     timestamp = "{:02d}/{:02d}/{:04d} {:02d}:{:02d}:{:02d}".format(now[2], now[1], now[0], now[3], now[4], now[5]) #assigns time to timestamp
 
     #building event
-    event_data = {"transmitter_ID": hex_data, "time": timestamp}
+    event_data = {"transmitter_ID": hex_data, "timestamp": timestamp}
     url = FIREBASE_URL + "/Events.json?auth=" + firebase_id_token #puts together location in database where the data will go
     
     #sending event

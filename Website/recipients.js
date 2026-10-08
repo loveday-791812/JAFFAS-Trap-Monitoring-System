@@ -1,11 +1,4 @@
 /* Recipients page logic */
-/* This javascript helps with 1) highlighting the current page in the nav bar. 2) Store mock recipient data and render it as a table. 3) open/close the 3 add/edit/remove modals and wire up their forms. 4) update the mock data in memory when a recipient is changed in any way.
-
-IMPORTANT: twRecipients below is FAKE data that only lives in the browser's memory — refreshing the page resets it back to the original 4 people. Once the backend is ready, this is where you'd swap in real API calls (e.g. fetch a list on load, POST/PATCH/DELETE on each action) while keeping the same render functions. */
-
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
-
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "recipients.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {
@@ -30,7 +23,7 @@ function twCloseModal(modalId) {
     document.getElementById(modalId).classList.remove("open");
 }
 
-/* Mock Data */
+
 /* Each recipient has a unique "id" (separate from their name) so we can find/update/remove the right one even if two people happened to share a name. status is either "active" or "paused" — matches the badge-active / badge-paused CSS classes in dashboard-style.css. */
 let twRecipients = {};
 
@@ -39,8 +32,30 @@ async function loadRecipients() {
     twRecipients = snap.val() || {};
 }
 
-/* keeps track of the next id to hand out when someone click "Add" and starts above the highest id already used in the mock data */
+/* keeps track of the next id to hand out when someone click "Add" and starts above the highest id already used */
 let twNextId = 5;
+
+/* New 4 report types evry recipient can independently turn on/off. Avoids repeating the same list 3 times below - render, row-toggle-click, and add/edit forms all loop over this. */
+const REPORT_TYPES = ["instant", "daily", "weekly", "monthly"];
+
+/* Single letter labels for the table buttons */
+const REPORT_TYPE_META = {
+    instant: { letter: "I", field: "reportInstant", title: "Instant Reports" },
+    daily: { letter: "D", field: "reportDaily", title: "Daily Reports" },
+    weekly: { letter: "W", field: "reportWeekly", title: "Weekly Reports" },
+    monthly: { letter: "M", field: "reportMonthly", title: "Monthly Reports" },
+};
+
+/* There might still be some recipients with the old single report field. This checks the new field first and only falls back to interpreting the old field if the new one was never set so old data still displays sensibly without needing a restructure within the database, while every new save uses the new updated fields */
+function getReportFlag(recipient, type) {
+    const field = REPORT_TYPE_META[type].field;
+    if (recipient[field] !== undefined) return !!recipient[field];
+
+    //legacy fallback - old data only ever had daily weekly or monthly, never instant. This updates that.
+    const legacyLabel = type.charAt(0).toUpperCase() + type.slice(1);
+    return recipient.report === legacyLabel;
+}
+
 
 /* Rendering - rebuilds the whole recipients table from twRecipients. Called after every add/edit/remove so the table always matches the current data */
 function renderRecipients() {
@@ -49,16 +64,26 @@ function renderRecipients() {
 
     Object.entries(twRecipients).forEach(([id, recipient]) => {
         const row = document.createElement("tr");
+
+        /* build 4 toggle buttons, grabs from getReportFlag() to reflect the new boolean fields or the legacy single report value correctly */
+        const toggleButtons = REPORT_TYPES.map((type) => {
+            const meta = REPORT_TYPE_META[type];
+            const isOn = getReportFlag(recipient, type);
+            return `
+                <button
+                    type="button"
+                    class="report-toggle-btn ${isOn ? "on" : ""}"
+                    data-id="${id}"
+                    data-type="${type}"
+                    title="${meta.title}"
+                >${meta.letter}</button>
+                `;
+        }).join("");
+
         row.innerHTML = `
         <td>${recipient.name}</td>
         <td>${recipient.email}</td>
-        <td>
-            <select class="report-select" data-id="${id}">
-                <option value="Daily">Daily</option>
-                <option value="Weekly">Weekly</option>
-                <option value="Monthly">Monthly</option>
-            </select>
-        </td>
+        <td><div class="report-toggles">${toggleButtons}</div></td>
         <td>
             <span class="badge badge-${recipient.status}">
                 ${recipient.status === "active" ? "✅ Active" : "⏸️ Paused"}
@@ -69,22 +94,28 @@ function renderRecipients() {
             <button type="button" class="action-link remove" data-id="${id}">Remove</button>
         </td>
         `;
-        row.querySelector(".report-select").value = recipient.report;
         tbody.appendChild(row);
     });
 
     attachRowListeners();
 }
 
-/* wires up the per-row  controls. Called at the end of remderRecipients() every time the table redraws */
+/* wires up the per-row  controls. Called at the end of renderRecipients() every time the table redraws */
 function attachRowListeners() {
-    /* changing frequency directly in the table updates that recipient immediately without needing to open the Edit modal */
-    document.querySelectorAll(".report-select").forEach((select) => {
-        select.addEventListener("change", async (e) => {
-            const id = (e.target.dataset.id);
-            twRecipients[id].report = e.target.value;
-            await rtdb.ref(`Recipients/${id}`).update({ report: e.target.value});
-            /* no need to rerender here as the dropdown already shows the new value */
+    /* clicking on one of the 4 pills flips just that one report type on/off for that recipient */
+    document.querySelectorAll(".report-toggle-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            const id = e.target.dataset.id;
+            const type = e.target.dataset.type;
+            const field = REPORT_TYPE_META[type].field;
+
+            const newValue = !getReportFlag(twRecipients[id], type);
+
+            /* update local copy immediately for button */
+            twRecipients[id][field] = newValue;
+            e.target.classList.toggle("on", newValue);
+
+            await rtdb.ref(`Recipients/${id}`).update({ [field]: newValue });
         });
     });
 
@@ -102,9 +133,17 @@ function attachRowListeners() {
 }
 
 /* Add Recipient modal */
-function openAddModal() {
+async function openAddModal() {
     /* reset the form to blank/defualt values every time it's opened so leftover text from a previous add attempt doesn't reappear */
     document.getElementById("add-form").reset();
+
+    /* pre-check the 4 toggles based on whatever is set as the default on the settings page rather than always starting as all "off" */
+    const settings = await twGetSettings();
+    document.getElementById("add-report-instant").checked = settings.defaultReportInstant;
+    document.getElementById("add-report-daily").checked = settings.defaultReportDaily;
+    document.getElementById("add-report-weekly").checked = settings.defaultReportWeekly;
+    document.getElementById("add-report-monthly").checked = settings.defaultReportMonthly;
+
     twOpenModal("add-modal");
 }
 
@@ -113,10 +152,18 @@ async function handleAddSubmit(e) {
 
     const name = document.getElementById("add-name").value.trim();
     const email = document.getElementById("add-email").value.trim();
-    const report = document.getElementById("add-report").value;
+
+    const newRecipient = { 
+        name, 
+        email, 
+        status: "active",
+        reportInstant: document.getElementById("add-report-instant").checked,
+        reportDaily: document.getElementById("add-report-daily").checked,
+        reportWeekly: document.getElementById("add-report-weekly").checked,
+        reportMonthly: document.getElementById("add-report-monthly").checked,
+    };
 
     const newRef = rtdb.ref("Recipients").push();
-    const newRecipient = { name, email, report, status: "active" };
     await newRef.set(newRecipient);
 
     twRecipients[newRef.key] = newRecipient;
@@ -133,7 +180,12 @@ function openEditModal(id) {
     document.getElementById("edit-id").value = id;
     document.getElementById("edit-name").value = recipient.name;
     document.getElementById("edit-email").value = recipient.email;
-    document.getElementById("edit-report").value = recipient.report;
+    
+    /* getReportFlag() handles both new-style recipients and any old-style ones with a single report string */
+    document.getElementById("edit-report-instant").checked = getReportFlag(recipient, "instant");
+    document.getElementById("edit-report-daily").checked = getReportFlag(recipient, "daily");
+    document.getElementById("edit-report-weekly").checked = getReportFlag(recipient, "weekly");
+    document.getElementById("edit-report-monthly").checked = getReportFlag(recipient, "monthly");
 
     /* check the radio button matching this recipient's current status */
     const radio = document.querySelector(
@@ -151,7 +203,10 @@ async function handleEditSubmit(e) {
     const updated  = {
         name: document.getElementById("edit-name").value.trim(),
         email: document.getElementById("edit-email").value.trim(),
-        report: document.getElementById("edit-report").value,
+        reportInstant: document.getElementById("edit-report-instant").checked,
+        reportDaily: document.getElementById("edit-report-daily").checked,
+        reportWeekly: document.getElementById("edit-report-weekly").checked,
+        reportMonthly: document.getElementById("edit-report-monthly").checked,
     }
 
     const checkedRadio = document.querySelector('input[name="edit-status"]:checked');
@@ -201,6 +256,7 @@ async function handleRemoveConfirm() {
 
 /* Setup Event Listeners once the page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
     twHighlightNav();
     await loadRecipients();
     renderRecipients();
