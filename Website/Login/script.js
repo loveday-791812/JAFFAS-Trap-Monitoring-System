@@ -1,4 +1,60 @@
 /*===TrapWatch===*/
+
+const twAlertOverlay  = document.getElementById("twAlertOverlay");
+const twAlertModal = document.getElementById("twAlertModal");
+const twAlertTitle = document.getElementById("twAlertTitle");
+const twAlertMessage = document.getElementById("twAlertMessage");
+const twAlertIcon = document.getElementById("twAlertIcon");
+const twAlertButton = document.getElementById("twAlertButton");
+
+function showTwAlert(title, message, type="error") {
+    twAlertTitle.textContent = title;
+    twAlertMessage.textContent = message;
+
+    twAlertModal.classList.remove("success", "warning");
+
+    if (type === "success") {
+        twAlertModal.classList.add("success");
+        twAlertIcon.textContent = "✓";
+    }
+    else if (type === "warning") {
+        twAlertModal.classList.add("warning");
+        twAlertIcon.textContent = "!";
+    }
+    else {
+        twAlertIcon.textContent = "!";
+    }
+
+    twAlertOverlay.classList.add("show");
+    twAlertOverlay.setAttribute("aria-hidden", "false");
+
+    twAlertButton.focus();
+}
+
+function closeTwAlert() {
+    twAlertOverlay.classList.remove("show");
+    twAlertOverlay.setAttribute("aria-hidden", "true");
+}
+
+
+twAlertButton.addEventListener("click", closeTwAlert);
+
+twAlertOverlay.addEventListener("click", function (event){
+
+    if (event.target === twAlertOverlay) {
+        closeTwAlert();
+    }
+});
+
+document.addEventListener("keydown", function (event) {
+    if (
+        event.key === "Escape" && 
+        twAlertOverlay.classList.contains("show")
+    ) {
+        closeTwAlert();
+    }
+});
+
 /*- Password Visibility -*/
 function togglePassword(fieldID, button) {
     const field = document.getElementById(fieldID);
@@ -43,16 +99,25 @@ signupForm.addEventListener("submit", async function(event) {
 
     /*- Check Passwords -*/
     if(password !== confirmPassword) {
-        alert("Your passwords do not match.");
-        return;
+        showTwAlert(
+    "Passwords don't match",
+    "The passwords you entered are different. Please try again."
+    );
+    return;
     }
     if (password.length < 8){
-        alert("Password must be at least 8 characters");
+        showTwAlert(
+            "Password is too short.",
+            "Password must be at least 8 characters"
+        );
         return;
     }
     /*- Check Role -*/
     if(!selectedRole) {
-        alert("Please select a role.");
+        showTwAlert(
+            "Role required.",
+            "Please select a role before creating your account."
+        );
         return;
     }
 
@@ -71,7 +136,10 @@ signupForm.addEventListener("submit", async function(event) {
         signupForm.style.display = "none";
         document.getElementById("verifyForm").style.display = "block";
         }catch (err) {
-            alert(err.message);
+            showTwAlert(
+                "Account could not be created",
+                err.message
+            );
             submitBtn.disabled = false;
             submitBtn.textContent = "Create Account";
         }
@@ -94,7 +162,10 @@ if (verifyForm) {
             const data = await twPost("verifyCode", {uid, code});
             window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
         } catch (err) {
-            alert(err.message);
+            showTwAlert(
+                "Verification failed",
+                err.message
+            );
             submitBtn.disabled = false;
             submitBtn.textContent = "Confirm";
         }
@@ -109,9 +180,16 @@ if (resendCodeLink) {
 
         try {
             await twPost("resendCode", { uid });
-            alert("A new code has been sent to your email.");
+            showTwAlert(
+                "Code sent",
+                "A new code has been sent to your email.",
+                "success"
+            );
         }   catch (err) {
-            alert(err.message);
+            showTwAlert(
+                "Couldn't resend code",
+                err.message
+            );
         }
     });
 }
@@ -132,7 +210,10 @@ if(loginForm) {
             await twAuth.signInWithEmailAndPassword(email, password);
             window.location.href = "/dashboard.html";
         }   catch (err) {
-            alert("Login failed: " + err.message);
+            showTwAlert(
+                "Login failed",
+                "The email or password is incorrect. Please try again."
+            );
         }   finally {
             submitBtn.disabled = false;
         }
@@ -170,7 +251,10 @@ if (forgotLink) {
             await twPost("requestPasswordReset", { email: resetEmail });
             showOnly(resetForm);
         } catch (err) {
-            alert(err.message);
+            showTwAlert(
+                "Password reset failed",
+                err.message
+            );
         } finally {
             btn.disabled = false;
         }
@@ -183,16 +267,29 @@ if (forgotLink) {
         const confirm = document.getElementById("resetConfirm").value;
         const btn = document.getElementById("resetSubmitBtn");
 
-        if (newPassword !== confirm) return alert("Your passwords do not match.");
+        if (newPassword !== confirm){
+            showTwAlert(
+                "Your passwords do not match.",
+                "The two passwords you entered are different. Please try again."
+            );
+            return;
+        }
 
         btn.disabled = true;
         try {
             await twPost("resetPassword", { email: resetEmail, code, newPassword });
-            alert("Password updated. You can now log in.");
+            showTwAlert(
+                "Password updated",
+                "Your password has been changed. You can now log in",
+                "success"
+            );
             resetForm.reset();
             showOnly(loginForm);
         } catch (err) {
-            alert(err.message);
+            showTwAlert(
+                "Password reset failed",
+                err.message
+            );
         } finally {
             btn.disabled = false;
         }

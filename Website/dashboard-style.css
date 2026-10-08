@@ -594,9 +594,10 @@ tbody tr:hover {
 
 @media (max-width: 480px) {
     .settings-footer {
-        justify-content: center;
-        flex-direction: column;
-        gap: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
     }
 
     #download-json-btn {
