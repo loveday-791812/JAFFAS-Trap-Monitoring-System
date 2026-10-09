@@ -18,6 +18,15 @@ function decideSignupRole(role) { // Aaron.F: This function determines whether a
     : deny(400,"Chose Farmer or Manager role to request. Admin role can only be assigned by an admin.");
 }
 
+function decideApproval({ targetRole, emailVerified, newRole}) {
+    if (targetRole !== PENDING) return deny(409, "Account has not verified the email address yet");
+    if(!emailVerified) return deny(409, "Account has not verrified thier email yet.");
+    if (!REQUESTABLE_ROLES.includes(newRole)){
+        return deny(400, "Approve as Field worker or Manager, only Admins can promote Admins.")
+    }
+    return ALLOW;
+}
+
 
 
 /* Aaron F: role policy is a set of rules that define how roles can be assigned and managed within the system. 
