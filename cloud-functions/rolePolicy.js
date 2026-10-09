@@ -5,6 +5,20 @@ const REQUESTABLE_ROLES = ["worker", "manager"] // Aaron.F: Roles that can be re
 const ASSiGNABLE_ROLES = ["worker", "manager", "admin"] // Aaron.F: Roles that can be assigned by an admin. Admin can assign these roles to users based on their responsibilities and access requirements. This helps maintain a structured role hierarchy and ensures that users have the appropriate permissions for their tasks.
 
 
+const ALLOW = Object.freeze({ok:true}); //Aaron F: Sets allow and deny logic for role
+const deny = (status, reason) => ({ok:false, status, reason}); // Aaron F: sets deny logic for role
+
+
+
+//Aaron F: Sign up logic is that the worker and manager can be requested by the user and then approved by the admin. Admin can only be assigned by the admin to a user who has been approved for a role. This ensures that only authorized users can gain access to sensitive features and data within the application, maintaining security and integrity.
+
+function decideSignupRole(role) { // Aaron.F: This function determines whether a given role is requestable during the signup process. It checks if the provided role is included in the REQUESTABLE_ROLES array. If the role is requestable, it returns true, indicating that the user can request this role during signup. If the role is not requestable, it returns false, indicating that the user cannot request this role during signup.
+    return REQUESTABLE_ROLES.includes(role) 
+    ? ALLOW
+    : deny(400,"Chose Farmer or Manager role to request. Admin role can only be assigned by an admin.");
+}
+
+
 
 /* Aaron F: role policy is a set of rules that define how roles can be assigned and managed within the system. 
 It ensures that only authorized users can request certain roles, and that the assignment of roles follows a predefined policy. 
