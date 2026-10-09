@@ -18,7 +18,7 @@ const MAX_ATTEMPTS = 5;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute cooldown between resends
 const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
 const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
-const SELF_SIGNUP_ROLES = ["worker", "manager", "admin"]; // Roles that can self-signup Aaron F Note nott sure if admin shouuld be a self sign up in retrospect.
+const { REQUESTABLE_ROLES } = require(".rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
 
 
 function generateCode() {
