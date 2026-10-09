@@ -18,8 +18,8 @@ const MAX_ATTEMPTS = 5;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute cooldown between resends
 const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
 const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
-const { REQUESTABLE_ROLES } = require(".rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
-const { createUserAdmin } = require("./UserAdmin"); // Aaron.F: Function to create a user with admin privileges. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
+const { REQUESTABLE_ROLES } = require("./rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
+const { createUserAdmin } = require("./userAdmin"); // Aaron.F: Function to create a user with admin privileges. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
 
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
@@ -35,7 +35,7 @@ function generateToken() {
     return crypto.randomBytes(32).toString("hex");
 }
 
-async function addToRecipients(uid, email) {
+/*async function addToRecipients(uid, email) { Aaron F: Shifting logic to role policy in cloud functions folder
         console.log("addToRecipients start", uid, email);
         try {
             await rtdb.ref(`Recipients/${uid}`).set({
@@ -48,7 +48,7 @@ async function addToRecipients(uid, email) {
     } catch (err) {
         console.error("addToRecipients error:",err);
     }
-}
+}*/
 async function tooManyFromIp(req, bucket, limit, windowMs) {//Aaron: checks if the number of requests from a given IP address exceeds a specified limit within a certain time window. Rate limiting and preventing abuse of the system.DDos preventtion
     const ip = String(req.headers["x-forwarded-for"] || req.ip || "unknown").split(",")[0].trim();
     const key = crypto.createHash("sha256").update(ip).digest("hex");
