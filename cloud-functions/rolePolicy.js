@@ -15,7 +15,7 @@ const deny = (status, reason) => ({ok:false, status, reason}); // Aaron F: sets 
 function decideSignupRole(role) { // Aaron.F: This function determines whether a given role is requestable during the signup process. It checks if the provided role is included in the REQUESTABLE_ROLES array. If the role is requestable, it returns true, indicating that the user can request this role during signup. If the role is not requestable, it returns false, indicating that the user cannot request this role during signup.
     return REQUESTABLE_ROLES.includes(role) 
     ? ALLOW
-    : deny(400,"Chose Farmer or Manager role to request. Admin role can only be assigned by an admin.");
+    : deny(400,"Choose a Farmer or Manager role to request. Admin role can only be assigned by an admin.");
 }
 
 function decideApproval({ targetRole, emailVerified, newRole}) {
