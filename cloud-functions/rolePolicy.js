@@ -18,6 +18,8 @@ function decideSignupRole(role) { // Aaron.F: This function determines whether a
     : deny(400,"Choose a Farmer or Manager role to request. Admin role can only be assigned by an admin.");
 }
 
+
+/* Aaron F: Logic approving pending sign up admin cannot be granted here it will be promoted afterwards by existing admin*/
 function decideApproval({ targetRole, emailVerified, newRole}) {
     if (targetRole !== PENDING) return deny(409, "Account has not verified the email address yet");
     if(!emailVerified) return deny(409, "Account has not verrified thier email yet.");
@@ -27,6 +29,22 @@ function decideApproval({ targetRole, emailVerified, newRole}) {
     return ALLOW;
 }
 
+/*Aaron F: Data Management, so if the sign up is rejected it deletes the user from the pending list, not sure how to stop multiple requests will look into it */
+function decideReject({ targetRole }) {
+    return targetRole === PENDING ? ALLOW : deny(409, "Only pending sign-ups can be rejected.");
+}
+
+/* Changing role of a existing account to worker manager or promoting to admin*/
+function decideRoleChange({ actorUid, targetUid, targetRole, newRole, adminRole, adminCount }) {
+    if (actorUid === targetUid) return deny(403, "Only the admin can change roles, please message the admin");
+    if (!ASSiGNABLE_ROLES.includes(targetRole)) return deny(409, "Approve the account before changing its role");
+    if (!ASSiGNABLE_ROLES.includes(newRole)) return deny(400, "Choose Farmer, Manager or Promote to Admin");
+    if (newRole === targetRole) return deny(409, "Account's role is already set as this role");
+    if (targetRole === "admin" && adminCount <= 1) {
+        return deny(409, "There must always be at least one Admin, Promote another account before demoting this account");
+    }
+    return ALLOW;
+}
 
 
 /* Aaron F: role policy is a set of rules that define how roles can be assigned and managed within the system. 
