@@ -1,12 +1,8 @@
 "use strict";// Aaron.F: This file defines the roles that can be requested by users in the system. It exports an array of roles that are considered requestable, meaning that users can request these roles to be assigned to them. The roles are defined as strings and can be used throughout the application to manage user permissions and access control.
 
-const PENDING = "pending";
-const REQUESTABLE_ROLES = [
-    "admin", // Aaron.F: Admin role can be requested by users, but it requires approval from an existing admin. Admins have full access to the system and can manage other users and their roles.
-    "manager", // Aaron.F: Manager role can be requested by users, but it requires approval from an existing admin. Managers have elevated permissions to manage certain aspects of the system, such as overseeing specific projects or teams.
-    "worker", // Aaron.F: Worker role can be requested by users and is typically granted automatically. Workers have standard access to the system's features and functionalities.
-    PENDING // Aaron.F: Pending role is a temporary state for users who have requested a role but are awaiting approval. Users in this state have limited access until their request is reviewed and approved by an admin.
-];
+const PENDING = "pending";// Aaron.F: This constant represents the "pending" status for role requests. When a user requests a role, their request will be marked as "pending" until it is reviewed and approved or denied by an administrator. This status helps track the progress of role requests and ensures that users are aware of the current state of their requests.
+const REQUESTABLE_ROLES = ["worker", "manager"] // Aaron.F: Roles that can be requested by users. These roles are considered requestable, meaning that users can submit requests to be assigned these roles. The roles are defined as strings and can be used throughout the application to manage user permissions and access control.
+const ASSiGNABLE_ROLES = ["worker", "manager", "admin"] // Aaron.F: Roles that can be assigned by an admin. Admin can assign these roles to users based on their responsibilities and access requirements. This helps maintain a structured role hierarchy and ensures that users have the appropriate permissions for their tasks.
 
 
 
