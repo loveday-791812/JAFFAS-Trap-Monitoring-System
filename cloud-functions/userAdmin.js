@@ -6,6 +6,25 @@ const policy = require("./rolePolicy");//Aaron F: .will require rolePolicy
 const RECENT_SIGN_IN_SECONDS = 3 * 60; //Aaron F: the tracking so that the account holder needs to have signed in in the past 180 seconds as an added layer of protection againstt unauthoriszed delteion of the account
 const UID_PATTERN = /^[A-Za-z0-9_-]{1, 128}$/; // Firebase UID pattern/format validates the value inside the database
 
+function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()}) { // Aaron F: creates admin identifing information
+    async function verifyCaller(req) {
+        const header = String((req.headers && req.headers.authorization) || "");
+        const match = header.match(/^Bearer\s+(.+)$/i);
+        if (!match) return null; 
+        try {
+            return await auth.verifyIdTToken(match[1], true); //Aaron F: true rejects tokens revoked by a password reset from an account reseting their password
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async function roleOf(uid) {
+        const snap = await db.ref(`users/${uid}/role`).get();
+        return snap.val();
+    }
+
+
+}
 
 /*Aaron F: User admin logic for role changes, approvals and deleting own account*/
 
