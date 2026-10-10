@@ -19,7 +19,7 @@ function decideSignupRole(role) { // Aaron.F: This function determines whether a
 }
 
 
-/* Aaron F: Logic approving pending sign up admin cannot be granted here it will be promoted afterwards by existing admin*/
+/*Aaron F: Logic approving pending sign up admin cannot be granted here it will be promoted afterwards by existing admin*/
 function decideApproval({ targetRole, emailVerified, newRole}) {
     if (targetRole !== PENDING) return deny(409, "Account has not verified the email address yet");
     if(!emailVerified) return deny(409, "Account has not verrified thier email yet.");
@@ -34,7 +34,7 @@ function decideReject({ targetRole }) {
     return targetRole === PENDING ? ALLOW : deny(409, "Only pending sign-ups can be rejected.");
 }
 
-/* Changing role of a existing account to worker manager or promoting to admin*/
+/*Aaron F: Changing role of a existing account to worker manager or promoting to admin*/
 function decideRoleChange({ actorUid, targetUid, targetRole, newRole, adminRole, adminCount }) {
     if (actorUid === targetUid) return deny(403, "Only the admin can change roles, please message the admin");
     if (!ASSiGNABLE_ROLES.includes(targetRole)) return deny(409, "Approve the account before changing its role");
@@ -42,6 +42,17 @@ function decideRoleChange({ actorUid, targetUid, targetRole, newRole, adminRole,
     if (newRole === targetRole) return deny(409, "Account's role is already set as this role");
     if (targetRole === "admin" && adminCount <= 1) {
         return deny(409, "There must always be at least one Admin, Promote another account before demoting this account");
+    }
+    return ALLOW;
+}
+
+/*Aaron F: Delete account, new sign in and admin logic*/
+function decideSelfDelete ({ role, adminCount, authTimeSec, nowSec, recentSeconds}) {
+    if (!authTimeSec || nowSec - authTimeSec > recentSeconds) {
+        return deny(401, "Please enter your Password to confirm to delete your account");
+    }
+    if (role === "admin" && adminCount <= 1) {
+        return deny(409, "You are the only Admin account!, Please promote another admin before you leave");
     }
     return ALLOW;
 }
