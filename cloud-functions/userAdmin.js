@@ -32,7 +32,26 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
     }
 
     /*Aaron F: admin screen fields so that the logic is contained*/
-    async function
+    async function listUsers() {
+        const records = (await db.ref("users").get()).val() || {};
+        const uids = Object.keys(records).filter((uid) => UID_PATTERN.test(uid));
+        const authByUid = {};
+        for (let i = 0; i < uids.length; i += 100) {
+            const result = await auth.getUsers(uid.slice(i, i + 100).map((uid) => ({ uid })));
+            result.users.forEach((u) => { authByUid[u.uid] = u; });
+        }
+        return uids
+        .filter((uid) => authByUid[uid])
+        .map((uid) => {
+            const record = records[uid] || {};
+            const account = authByUid[uid];
+            return {
+                uid,
+                email: account.email || record.email || "",
+                r
+            }
+        }
+    }
 
 }
 
