@@ -48,9 +48,52 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             return {
                 uid,
                 email: account.email || record.email || "",
-                r
-            }
+                role: record.role || null,
+                requestedRole: record.requestedRole || null, 
+                emailVerified: !!account.emailVerified,
+                createdAt: (account.metadata && account.metadata.creationTime) || null,
+
+            };
+        })
+        .sort((a, b) => a.email.localeCompare(b.email));
+
+    }
+
+    /*Aaron F: The function addRecipient will set approved people to the weekly report*/
+    async function addRecipient(uid, email) {
+        const ref = db.ref(`Recipients/${uid}`);
+        if ((await ref.get()).exists()) return;
+        await ref.set({ name: email.split("@")[0], email, report: "Weekly", status: "active" });
+    }
+    /*Aaron F: removal function for removing the persons records and sign in credentials from the database*/
+    async function deleteAccountData(uid, email) {
+        const updates = {
+            [`users/${uid}`]: null,
+            [`Recipients/${uid}`]: null,
+            [`passwordResets/${uid}`]: null,
+        };
+        if (email) {
+            const wanted = email.trim().toLowerCase();
+            const recipients = (await db.ref("Recipients").get()).val() || {};
+            Object.entries(recipients).forEach(([key, r]) => {   // also catches older rows saved with capitals
+                if (r && typeof r.email === "string" && r.email.trim().toLowerCase() === wanted) {
+                    updates[`Recipients/${key}`] = null;
+                }
+            });
         }
+        await db.ref().update(updates);
+        try {
+            await auth.deleteUser(uid);
+        } catch (err) {
+            if (err.code !== "auth/user-not-found") throw err;
+        }
+    }
+
+    const fail = (res, decision) => res.status(decision.status).json({ error: decision.reason });
+
+    
+
+
     }
 
 }
