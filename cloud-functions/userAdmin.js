@@ -18,11 +18,21 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
         }
     }
 
-    async function roleOf(uid) {
+    async function roleOf(uid) { //Aaron F: roleOf function to call
         const snap = await db.ref(`users/${uid}/role`).get();
         return snap.val();
     }
+    async function countAdmins() { //Aaron F: to count admins so tthat otther logic can work
+        const snap = await db.ref("users").orderByChild("role").equalTo("admin").get();
+        return snap.exists() ? Object.keys(snap.val()).length : 0;
+    }
 
+    async function audit(entry) { //Aaron F: To create Audit logs
+        await db.ref("auditLogs").push({ ...entry, at: serverTimestamp });
+    }
+
+    /*Aaron F: admin screen fields so that the logic is contained*/
+    async function
 
 }
 
