@@ -57,6 +57,12 @@ function decideSelfDelete ({ role, adminCount, authTimeSec, nowSec, recentSecond
     return ALLOW;
 }
 
+/*Aaron F: Exports modules to other classes so that tthey can use the logic*/
+module.exports = {
+    PENDING, REQUESTABLE_ROLES, ASSiGNABLE_ROLES,
+    decideSignupRole, decideApproval, decideReject, decideRoleChange, decideSelfDelete,
+
+};
 
 /* Aaron F: role policy is a set of rules that define how roles can be assigned and managed within the system. 
 It ensures that only authorized users can request certain roles, and that the assignment of roles follows a predefined policy. 
