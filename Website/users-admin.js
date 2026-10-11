@@ -59,7 +59,7 @@ function twFormatDate(value) {
     const date = new Date(value);
     return Number.isNaN(date.getTime())
         ? "-"
-        : DataTransfer.toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" });
+        : Date.toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function renderAccessRequests() {
