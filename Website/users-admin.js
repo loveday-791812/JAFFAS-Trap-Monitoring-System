@@ -45,13 +45,13 @@ function twRoleSelect(roles, selected, label) {
 
 }
 
-function twButtton(text, className, onclick, disabled = false) {
+function twButton(text, className, onclick, disabled = false) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = className;
     button.textContent = text;
     button.disabled = disabled;
-    button.addEventListener("click", onclick);
+    button.addEventListener("click", onClick);
     return button;
 }
 
