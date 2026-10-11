@@ -91,12 +91,60 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
 
     const fail = (res, decision) => res.status(decision.status).json({ error: decision.reason });
 
-    
+    /*Aaron F: User admin logic for role changes, approvals and deleting own account*/
+    async function handleAdminUsers(req, res) {
+        if (req.method !== "POST") return res.status(405).json({ error: "Use POST." });
+        const caller = await verifyCaller(req);
+        if (!caller) return res.status(401).json({ error: "Your sign-in has expired. Sign in again, then retry." });
+        
+        const { action, uid, role } = req.body || {};
+        try {
+            if ((await roleOf(caller.uid)) !== "admin") {
+                return res.status(403).json({ error: "Only admins can manage user accounts." });
+            }
+            if (action === "list") return res.status(200).json({ users: await listUsers(), you: caller.uid });
 
+            if (typeof uid !== "string" || !UID_PATTERN.test(uid)) {
+                return res.status(400).json({ error: "Missing or invalid account id." });
+            }
+            
+             const target = (await db.ref(`users/${uid}`).get()).val();
+            if (!target) return res.status(404).json({ error: "That account no longer exists. Refresh the page." });
+            const account = await auth.getUser(uid).catch(() => null);
 
+            if (action === "approve") {
+                const decision = policy.decideApproval({
+                    targetRole: target.role, emailVerified: !!(account && account.emailVerified), newRole: role,
+                });
+            if (!decision.ok) return fail(res, decision);
+                await db.ref(`users/${uid}`).update({ role, approvedAt: serverTimestamp, approvedBy: caller.uid });
+                await addRecipient(uid, (account && account.email) || target.email);
+                await audit({ action: "user.approve", actorUid: caller.uid, targetUid: uid, from: target.role, to: role });
+                return res.status(200).json({ ok: true });
+            }
+
+            if (action === "reject") {
+                const decision = policy.decideReject({ targetRole: target.role });
+                if (!decision.ok) return fail(res, decision);
+                await deleteAccountData(uid, (account && account.email) || target.email);
+                await audit({ action: "user.reject", actorUid: caller.uid, targetUid: uid, from: target.role, to: null });
+                return res.status(200).json({ ok: true });
+            }
+            if (action === "setRole") {
+                const decision = policy.decideRoleChange({
+                    actorUid: caller.uid, targetUid: uid, targetRole: target.role, newRole: role,
+                    adminCount: await countAdmins(),
+                });
+                if (!decision.ok) return fail(res, decision);
+                await db.ref(`users/${uid}`).update({ role, roleChangedAt: serverTimestamp, roleChangedBy: caller.uid });
+                await audit({ action: "user.setRole", actorUid: caller.uid, targetUid: uid, from: target.role, to: role });
+                return res.status(200).json({ ok: true });
+            }
+            return res.status(400).json({ error: "Unknown action." });
+        } catch (err) {
+            console.error("adminUsers error:", action, err);
+            return res.status(500).json({ error: "That change could not be saved. Please try again." });
+        }
     }
-
 }
-
-/*Aaron F: User admin logic for role changes, approvals and deleting own account*/
 
