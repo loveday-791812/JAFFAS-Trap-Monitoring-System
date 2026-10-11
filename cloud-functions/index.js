@@ -35,20 +35,6 @@ function generateToken() {
     return crypto.randomBytes(32).toString("hex");
 }
 
-/*async function addToRecipients(uid, email) { Aaron F: Shifting logic to role policy in cloud functions folder
-        console.log("addToRecipients start", uid, email);
-        try {
-            await rtdb.ref(`Recipients/${uid}`).set({
-                name: email.split("@")[0],
-                email,
-                report:"Weekly",
-                status: "active",
-            });
-            console.log("addToRecipients done", uid);
-    } catch (err) {
-        console.error("addToRecipients error:",err);
-    }
-}*/
 async function tooManyFromIp(req, bucket, limit, windowMs) {//Aaron: checks if the number of requests from a given IP address exceeds a specified limit within a certain time window. Rate limiting and preventing abuse of the system.DDos preventtion
     const ip = String(req.headers["x-forwarded-for"] || req.ip || "unknown").split(",")[0].trim();
     const key = crypto.createHash("sha256").update(ip).digest("hex");
