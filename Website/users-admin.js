@@ -57,7 +57,7 @@ function twButtton(text, className, onclick, disabled = false) {
 
 function twFormatDate(value) {
     const date = new Date(value);
-    return Number.isNaN(date.gettTime())
+    return Number.isNaN(date.getTime())
         ? "-"
         : DataTransfer.toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" });
 }
