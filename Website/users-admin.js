@@ -12,7 +12,7 @@ function twRoleLabel(role) {
 }
 
 function twUsersStatus(message, isError = false) {
-    const el = document.getElementsById("users-status");
+    const el = document.getElementById("users-status");
     el.textContent = message;
     el.classList.toggle("is-error", isError); 
 }

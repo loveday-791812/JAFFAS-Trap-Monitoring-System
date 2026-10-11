@@ -23,6 +23,12 @@ const TW_FUNCTIONS = {
     deleteMyAccount: "/api/deleteMyAccount",
 };
 
+   /* Local testing only: on the Hosting emulator (localhost), use the local Auth and Database emulators instead of the live project. */
+   if (["localhost", "127.0.0.1"].includes(location.hostname)) {
+       if (firebase.auth) firebase.auth().useEmulator("http://127.0.0.1:9099");
+       if (firebase.database) firebase.database().useEmulator("127.0.0.1", 9000);
+   }
+
 /*Aaron F: function to make the database text safe to be put inside html*/
 
 function twEscape(value) {

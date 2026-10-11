@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const { ServerValue } = require("firebase-admin/database"); //Aaron F: testing with an emulator logic: server timestamp; the emulator hides admin.database.ServerValue
 const { Resend } = require("resend");
 const cors = require("cors")({ origin: true});
 const crypto = require("crypto");
@@ -93,7 +94,7 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 sendWindowStart: Date.now(),//Aaron: store the timestamp of when the current send window started. This will be used to enforce a limit on how many times the code can be sent within a certain time frame.
                 sendCount: 1,//Aaron: initialize the send count to 1. This will be used to track how many times the code has been sent within the current send window.
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
-                createdAt: admin.database.ServerValue.TIMESTAMP,
+                createdAt: ServerValue.TIMESTAMP,
             });
 
             const resend = new Resend(process.env.RESEND_API_KEY);
@@ -389,7 +390,7 @@ exports.resetPassword = onRequest((req, res) => {
 const userAdmin = createUserAdmin({
     auth: admin.auth(),
     db:rtdb,
-    serverTimestamp: admin.database.ServerValue.TIMESTAMP,
+    serverTimestamp: ServerValue.TIMESTAMP,
 });
 
 exports.adminUsers = onRequest((req, res) => userAdmin.handleAdminUsers(req, res));
