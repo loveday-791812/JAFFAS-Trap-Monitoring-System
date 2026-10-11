@@ -2,7 +2,7 @@
 
 const PENDING = "pending";// Aaron.F: This constant represents the "pending" status for role requests. When a user requests a role, their request will be marked as "pending" until it is reviewed and approved or denied by an administrator. This status helps track the progress of role requests and ensures that users are aware of the current state of their requests.
 const REQUESTABLE_ROLES = ["worker", "manager"] // Aaron.F: Roles that can be requested by users. These roles are considered requestable, meaning that users can submit requests to be assigned these roles. The roles are defined as strings and can be used throughout the application to manage user permissions and access control.
-const ASSiGNABLE_ROLES = ["worker", "manager", "admin"] // Aaron.F: Roles that can be assigned by an admin. Admin can assign these roles to users based on their responsibilities and access requirements. This helps maintain a structured role hierarchy and ensures that users have the appropriate permissions for their tasks.
+const ASSIGNABLE_ROLES = ["worker", "manager", "admin"] // Aaron.F: Roles that can be assigned by an admin. Admin can assign these roles to users based on their responsibilities and access requirements. This helps maintain a structured role hierarchy and ensures that users have the appropriate permissions for their tasks.
 
 
 const ALLOW = Object.freeze({ok:true}); //Aaron F: Sets allow and deny logic for role
@@ -12,7 +12,7 @@ const deny = (status, reason) => ({ok:false, status, reason}); // Aaron F: sets 
 
 //Aaron F: Sign up logic is that the worker and manager can be requested by the user and then approved by the admin. Admin can only be assigned by the admin to a user who has been approved for a role. This ensures that only authorized users can gain access to sensitive features and data within the application, maintaining security and integrity.
 
-function decideSignupRole(role) { // Aaron.F: This function determines whether a given role is requestable during the signup process. It checks if the provided role is included in the REQUESTABLE_ROLES array. If the role is requestable, it returns true, indicating that the user can request this role during signup. If the role is not requestable, it returns false, indicating that the user cannot request this role during signup.
+function decideSignupRole(role) { // Aaron.F: This function determines whether a given role is requestable during the signup process. It checks if the provided role is included in the REQUESTABLE_ROLES array. If the role is requestable, it returns Allow, indicating that the user can request this role during signup. If the role is not requestable, it returns deny, indicating that the user cannot request this role during signup.
     return REQUESTABLE_ROLES.includes(role) 
     ? ALLOW
     : deny(400,"Choose a Farmer or Manager role to request. Admin role can only be assigned by an admin.");
@@ -21,7 +21,7 @@ function decideSignupRole(role) { // Aaron.F: This function determines whether a
 
 /*Aaron F: Logic approving pending sign up admin cannot be granted here it will be promoted afterwards by existing admin*/
 function decideApproval({ targetRole, emailVerified, newRole}) {
-    if (targetRole !== PENDING) return deny(409, "Account has not verified the email address yet");
+    if (targetRole !== PENDING) return deny(409, "This Account is not waiting for appproval.");
     if(!emailVerified) return deny(409, "Account has not verrified thier email yet.");
     if (!REQUESTABLE_ROLES.includes(newRole)){
         return deny(400, "Approve as Field worker or Manager, only Admins can promote Admins.")
@@ -35,10 +35,10 @@ function decideReject({ targetRole }) {
 }
 
 /*Aaron F: Changing role of a existing account to worker manager or promoting to admin*/
-function decideRoleChange({ actorUid, targetUid, targetRole, newRole, adminRole, adminCount }) {
-    if (actorUid === targetUid) return deny(403, "Only the admin can change roles, please message the admin");
-    if (!ASSiGNABLE_ROLES.includes(targetRole)) return deny(409, "Approve the account before changing its role");
-    if (!ASSiGNABLE_ROLES.includes(newRole)) return deny(400, "Choose Farmer, Manager or Promote to Admin");
+function decideRoleChange({ actorUid, targetUid, targetRole, newRole, adminCount }) {
+    if (actorUid === targetUid) return deny(403, "You cannot change your own role, another admin must be consulted"); // Aaron F: this logic is in place so that there is always one admin within the system. You would only change add an ADmin if you are handing off responsibility for the site tto someone else.
+    if (!ASSIGNABLE_ROLES.includes(targetRole)) return deny(409, "Approve the account before changing its role");
+    if (!ASSIGNABLE_ROLES.includes(newRole)) return deny(400, "Choose Farmer, Manager or Promote to Admin");
     if (newRole === targetRole) return deny(409, "Account's role is already set as this role");
     if (targetRole === "admin" && adminCount <= 1) {
         return deny(409, "There must always be at least one Admin, Promote another account before demoting this account");
@@ -59,7 +59,7 @@ function decideSelfDelete ({ role, adminCount, authTimeSec, nowSec, recentSecond
 
 /*Aaron F: Exports modules to other classes so that tthey can use the logic*/
 module.exports = {
-    PENDING, REQUESTABLE_ROLES, ASSiGNABLE_ROLES,
+    PENDING, REQUESTABLE_ROLES, ASSIGNABLE_ROLES,
     decideSignupRole, decideApproval, decideReject, decideRoleChange, decideSelfDelete,
 
 };

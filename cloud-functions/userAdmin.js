@@ -4,7 +4,7 @@ in the browser the role policys checks if the change is allowed with tthis page 
 const policy = require("./rolePolicy");//Aaron F: .will require rolePolicy
 
 const RECENT_SIGN_IN_SECONDS = 3 * 60; //Aaron F: the tracking so that the account holder needs to have signed in in the past 180 seconds as an added layer of protection againstt unauthoriszed delteion of the account
-const UID_PATTERN = /^[A-Za-z0-9_-]{1, 128}$/; // Firebase UID pattern/format validates the value inside the database
+const UID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/; // Firebase UID pattern/format validates the value inside the database
 
 function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()}) { // Aaron F: creates admin identifing information
     async function verifyCaller(req) {
@@ -12,7 +12,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
         const match = header.match(/^Bearer\s+(.+)$/i);
         if (!match) return null; 
         try {
-            return await auth.verifyIdTToken(match[1], true); //Aaron F: true rejects tokens revoked by a password reset from an account reseting their password
+            return await auth.verifyIdToken(match[1], true); //Aaron F: true rejects tokens revoked by a password reset from an account reseting their password
         } catch (err) {
             return null;
         }
@@ -37,7 +37,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
         const uids = Object.keys(records).filter((uid) => UID_PATTERN.test(uid));
         const authByUid = {};
         for (let i = 0; i < uids.length; i += 100) {
-            const result = await auth.getUsers(uid.slice(i, i + 100).map((uid) => ({ uid })));
+            const result = await auth.getUsers(uids.slice(i, i + 100).map((uid) => ({ uid })));
             result.users.forEach((u) => { authByUid[u.uid] = u; });
         }
         return uids
