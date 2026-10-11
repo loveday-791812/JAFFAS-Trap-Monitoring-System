@@ -19,8 +19,8 @@ function twUsersStatus(message, isError = false) {
 
 function twCell(text) {
     const id = document.createElement("td");
-    twData.textContent = text;
-    return twData;
+    td.textContent = text;
+    return td;
 }
 
 function twEmptyRow(tbody, columns, message) {
