@@ -214,7 +214,7 @@ def find_user_by_email(email):
 def build_trapwatch_link(email):
     uid, role = find_user_by_email(email)
 
-    if not uid or not role or role == "admin":
+    if not uid or role not in ROLE_LANDING_PAGE:
         return f"{DASHBOARD_BASE_URL}/Login/login.html"
 
     magic_token = secrets.token_hex(32)

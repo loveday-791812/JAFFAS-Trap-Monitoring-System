@@ -2,7 +2,7 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    const LOGIN_URL = "/Website/Login/Login Front-End/login.html";
+    const LOGIN_URL = "/Website/Login/login.html";
     const DENIED_URL = "/unauthorized.html"; //Aaron: unautorized redirect page
     const KNOWN_ROLES = ["admin", "manager", "worker"];//Aaron: known roles for the dashboard
 
@@ -26,7 +26,7 @@
     }
 
     function filterNav(role) { //Aaron: filter the navigation links based on the user's role
-        doocument.querySelectorAll(".tw-nav a").forEach((link) => {
+        document.querySelectorAll(".tw-nav a").forEach((link) => {
             const href = link.getAttribute("href") || "";
             if (href.includes("recipients.html") && role !== "admin") link.style.display = "none"; //Aaron: hide the recipients link if the user is not an admin
             if (href.includes("traps.html") && role !== "admin" && role !== "manager") link.style.display = "none"; //Aaron: hide the traps link if the user is not an admin or manager
@@ -42,18 +42,21 @@
         } catch (err) {
             console.error("Failed to validate user role:", err);
             alert("Could not verify your role.");
-            return goToDenied("role check failed");
+            return goToDenied("error");
         }
+        if (role === "pending") return goToDenied("pending"); //Aaron F: The user at this satge has signed up and is waiting for the admin to approve tthe account
+        if (!KNOWN_ROLES.includes(role)) return goToDenied("norole");
+
 
         const required = document.body.getAttribute("data-required-role");//Aaron: get the required role from the data attribute of the body element
         if (required) {
             const allowed = required.split(",").map((r) => r.trim().toLowerCase()); //Aaron: split the required roles by comma and trim whitespace and convert to lowercase
             if (!allowed.includes(role)) {
                 alert("You don't have permission to view that page.");
-                return goToDenied(KNOWN_ROLES.includes(role) ?"role" : "no role"); //Aaron: if the user's role is not in the allowed roles, redirect to denied page with reason "role" if the user has a known role, or "no role" if the user has no role
+                return goToDenied("role"); //Aaron F: The role is known but the page doesnt allow it.
             }
         }
-
+        window.twCurrentRole = role; //Aaron F: the page adapts to the role, cosmetic only as the database enfoorces access
         filterNav(role); //Aaron: filter the navigation links based on the user's role
         document.body.classList.add("tw-auth-ok"); //Aaron: make the page visible
         resolveReady(user); //Aaron: resolve the twAuthReady promise with the user object and load datat scriipt

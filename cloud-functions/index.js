@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const { ServerValue } = require("firebase-admin/database"); //Aaron F: testing with an emulator logic: server timestamp; the emulator hides admin.database.ServerValue
 const { Resend } = require("resend");
 const cors = require("cors")({ origin: true});
 const crypto = require("crypto");
@@ -18,8 +19,8 @@ const MAX_ATTEMPTS = 5;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute cooldown between resends
 const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
 const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
-const SELF_SIGNUP_ROLES = ["worker", "manager", "admin"]; // Roles that can self-signup Aaron F Note nott sure if admin shouuld be a self sign up in retrospect.
-
+const { REQUESTABLE_ROLES } = require("./rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
+const { createUserAdmin } = require("./userAdmin"); // Aaron.F: Functions to create request handlers for admin user management and the self deletet account. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
 
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
@@ -35,20 +36,6 @@ function generateToken() {
     return crypto.randomBytes(32).toString("hex");
 }
 
-async function addToRecipients(uid, email) {
-        console.log("addToRecipients start", uid, email);
-        try {
-            await rtdb.ref(`Recipients/${uid}`).set({
-                name: email.split("@")[0],
-                email,
-                report:"Weekly",
-                status: "active",
-            });
-            console.log("addToRecipients done", uid);
-    } catch (err) {
-        console.error("addToRecipients error:",err);
-    }
-}
 async function tooManyFromIp(req, bucket, limit, windowMs) {//Aaron: checks if the number of requests from a given IP address exceeds a specified limit within a certain time window. Rate limiting and preventing abuse of the system.DDos preventtion
     const ip = String(req.headers["x-forwarded-for"] || req.ip || "unknown").split(",")[0].trim();
     const key = crypto.createHash("sha256").update(ip).digest("hex");
@@ -76,11 +63,12 @@ function codeEmailHtml(code) {
 exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
     cors(req, res, async () => {
         try{
-            const { email, password, role } = req.body || {};
+            const { password, role } = req.body || {};
+            const email = String((req.body || {}).email || "").trim().toLowerCase();
             if (!email || !password || !role) {
                 return res.status(400).json({ error: "Missing email, password, or role"});
             }
-            if (!SELF_SIGNUP_ROLES.includes(role)) { /*Aaron: check if the role is valid for self-signup. If not, return an error response. This prevents users from signing up with unauthorized roles. */
+            if (!REQUESTABLE_ROLES.includes(role)) { /*Aaron: check if the requested role is valid for self-signup. If not, return an error response. This prevents users from signing up with unauthorized roles. */
                 return res.status(400).json({ error: "Choose a valid role for self-signup."});
             }
             if (await tooManyFromIp(req, "signup", 20, HOUR_MS)) { /*Aaron: check if the number of signup attempts from the same IP address exceeds the limit within the specified time window. If it does, return an error response to prevent abuse. */
@@ -97,7 +85,8 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
 
             await rtdb.ref(`users/${userRecord.uid}`).set({
                 email,
-                role,
+                role: "pending", //Aaron F: makes the role pending so that they have no permissions untill the admin approves the role of the user
+                requestedRole: role, //Aaron F: stores the requested role for the admin to appprove
                 verified: false,
                 codeHash: hashCode(code),//Aaron: store the hashed version of the code in the database for security. This way, even if someone gains access to the database, they won't see the actual code.
                 attempts: 0, //Aaron: initialize the number of attempts to 0. This will be used to track how many times the user has tried to verify their email with the code.
@@ -105,7 +94,7 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 sendWindowStart: Date.now(),//Aaron: store the timestamp of when the current send window started. This will be used to enforce a limit on how many times the code can be sent within a certain time frame.
                 sendCount: 1,//Aaron: initialize the send count to 1. This will be used to track how many times the code has been sent within the current send window.
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
-                createdAt: admin.database.ServerValue.TIMESTAMP,
+                createdAt: ServerValue.TIMESTAMP,
             });
 
             const resend = new Resend(process.env.RESEND_API_KEY);
@@ -144,8 +133,19 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 return res.status(400).json({error: "This account is already verified." });
             }
             
+            if (user.lastCodeSentAt && Date.now() - user.lastCodeSentAt < RESEND_COOLDOWN_MS) {
+                return res.status(429).json({ error: "Please wait a minute before requesting another code."}); //Aaron F: this prevents spamming invite codes using own server as an intermediatary, potentailly wasting our limit we have seen this vunrability and have implemented measures to prevent or mitigate it.    
+            }
+
             const code = generateCode();
-            await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});
+            await userRef.update({
+                codeHash: hashCode(code),
+                attempts: 0,
+                codeExpiresAt: Date.now() + CODE_TTL_MS,
+                lastCodeSentAt: Date.now(),
+            });
+            /*const code = generateCode(); Aaron F: removed to implement role policy and because it leftt the code unhashed and unencypted
+            await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});*/
             
             const resend = new Resend(process.env.RESEND_API_KEY);
             
@@ -206,10 +206,6 @@ exports.verifyCode = onRequest((req, res) => {
                 });
             }
 
-
-
-            const token = generateToken();
-
             await userRef.update({
                 verified: true,
                 codeHash: null,//Aaron: clear the stored code hash after successful verification to prevent reuse. This ensures that the code can only be used once and enhances security by removing sensitive information from the database.
@@ -221,13 +217,12 @@ exports.verifyCode = onRequest((req, res) => {
                 
                 magicToken: null, //Aaron: clear any existing magic token to prevent conflicts. This ensures that the user will receive a new magic token for future logins, and any previous tokens are invalidated for security reasons. The token itself does not store setting information, but it is associated with the user's account in the database. When the user logs in using the magic token, the server can retrieve their settings from the database based on their uid.
                 magicTokenHash: null,//Aaron: clear the stored magic token hash after successful login to prevent reuse. This ensures that the magic token can only be used once and enhances security by removing sensitive information from the database.
-                magicTokenExpiresAt: Date.now() + MAGIC_TOKEN_TTL_MS,//Aaron: set the expiration timestamp for the magic token to 3 hours from now. This ensures that the token is only valid for a limited time, enhancing security by reducing the window of opportunity for unauthorized access.
+                magicTokenExpiresAt: null, // Aaron F: security measure is now implemented in role policy
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
-            await addToRecipients(uid, user.email);
-
-            return res.status(200).json({ token });
+            //Aaron F: This approves the user when an admin grants approval through the use of userAdmin.js so tthat access and the recipients row will be approved after tthe admin grants approval.
+            return res.status(200).json({ verified: true});
 
         } catch (err) {
             console.error("verifyCode error:", err);
@@ -390,3 +385,13 @@ exports.resetPassword = onRequest((req, res) => {
         
     });
 });
+
+/*Aaron F: Self delete for accounts and admin account management logic tthat connects tto userAdmin */ 
+const userAdmin = createUserAdmin({
+    auth: admin.auth(),
+    db:rtdb,
+    serverTimestamp: ServerValue.TIMESTAMP,
+});
+
+exports.adminUsers = onRequest((req, res) => userAdmin.handleAdminUsers(req, res));
+exports.deleteMyAccount = onRequest((req, res) => userAdmin.handleDeleteMyAccount(req, res));

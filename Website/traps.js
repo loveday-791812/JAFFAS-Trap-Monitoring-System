@@ -1,7 +1,5 @@
 /* Traps logic page - twTrapInventory is fake data that only exists in the browser's memory - refreshing the page resets it back to the original 4 traps. We will replace it with real API calls */
 
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
 
 function twHighlightNav() {
 
@@ -53,15 +51,15 @@ function renderTraps() {
         const row = document.createElement("tr");
 
         row.innerHTML = `
-            <td>${trap.trap_num ?? "-"}</td>
-            <td>${trap.trap_location || "-"}</td>
-            <td>${trap.date_installed || "-"}</td>
-            <td><span class="badge badge-${status}">${trapStatusLabels[status] || status}</span></td>
+            <td>${twEscape(trap.trap_num ?? "-")}</td>
+            <td>${twEscape(trap.trap_location || "-")}</td>
+            <td>${twEscape(trap.date_installed || "-")}</td>
+            <td><span class="badge badge-${status}">${twEscape(trapStatusLabels[status] || status)}</span></td>
             <td>
-                <button type="button" class="action-link edit" data-id="${id}">Edit</button>
-                <button type="button" class="action-link remove" data-id="${id}">Remove</button>
+                <button type="button" class="action-link edit" data-id="${twEscape(id)}">Edit</button>
+                <button type="button" class="action-link remove" data-id="${twEscape(id)}">Remove</button>
             </td>
-        `;
+        `;//Aaron F: incase bad values are run accross the site from injecting elements that fail to load then it affects everyone who visits the page not just the user.
         tbody.appendChild(row);   // insert this row into the table
     });
 
@@ -185,6 +183,7 @@ async function handleRemoveConfirm() {
 
 // Event listener
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
     await loadTraps();
     renderTraps();

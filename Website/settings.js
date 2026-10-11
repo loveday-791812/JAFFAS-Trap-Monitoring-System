@@ -2,8 +2,6 @@
 
 /* settings page logic */
 
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
 
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "settings.html";
@@ -104,7 +102,7 @@ async function twLoadMyPreferences(user) {
     const profileSnap = await rtdb.ref(`users/${user.uid}`).get();
     const profile = profileSnap.val() || {};
     twIsAdmin = (profile.role || "").toLowerCase() === "admin";
-    twMyEmail = (profile.email || user.email || "").trim();
+    twMyEmail = (profile.email || user.email || "").trim().toLowerCase();
 
     const emailLabel = document.getElementById("my-email-label");
     if (emailLabel) emailLabel.textContent = twMyEmail;
@@ -187,9 +185,49 @@ async function handleSettingsSubmit(e) {
     }
 }
 
+/* Aaron F: Delete own account logic = confirm, re-enter the password (Firebase requires a recent sign-in for this),
+   then the server deletes the profile, recipient rows and the sign-in (cloud-functions/userAdmin.js). */
+function twStartDeleteAccount() {
+    if (!confirm("Are you sure that you want to delete your account?")) return;
+    document.getElementById("delete-account-error").textContent = "";
+    document.getElementById("delete-password").value = "";
+    twOpenModal("delete-account-modal");
+    document.getElementById("delete-password").focus();
+}
+
+async function handleDeleteAccountSubmit(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById("delete-account-error");
+    const submitBtn = document.getElementById("delete-account-submit");
+    const user = twAuth.currentUser;
+    if (!user) return window.location.replace("/Login/login.html");
+
+    errorEl.textContent = "";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Deleting…";
+    try {
+        const password = document.getElementById("delete-password").value;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+        await user.getIdToken(true);              // a fresh token carries the new sign-in time
+        await twAuthPost("deleteMyAccount");
+        await twAuth.signOut().catch(() => {});
+        window.location.replace("/Login/login.html?deleted=1");
+    } catch (err) {
+        const wrongPassword = ["auth/wrong-password", "auth/invalid-credential", "auth/invalid-login-credentials"].includes(err.code);
+        errorEl.textContent = wrongPassword
+            ? "That password is incorrect. Try again."
+            : err.code === "auth/too-many-requests"
+                ? "Too many attempts. Wait a few minutes, then try again."
+                : err.message;
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Delete account";
+    }
+}
 
 //Set up even listeners
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     if (!document.getElementById("settings-form")) return;
 
     twHighlightNav();
@@ -205,6 +243,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit);
+    document.getElementById("delete-account-btn").addEventListener("click", twStartDeleteAccount);
+    document.getElementById("delete-account-form").addEventListener("submit", handleDeleteAccountSubmit);
+    document.getElementById("delete-account-cancel").addEventListener("click", () => twCloseModal("delete-account-modal"));
+    document.getElementById("delete-account-modal").addEventListener("click", (e) => {
+        if (e.target.id === "delete-account-modal") twCloseModal("delete-account-modal");
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") twCloseModal("delete-account-modal");
+    });    
 
     const user = await twWaitForUser();
     await twLoadMyPreferences(user);

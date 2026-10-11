@@ -1,0 +1,109 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      ".indexOn": [
+        "role",
+        "email",
+        "magicTokenHash"
+      ],
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "Traps": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+      "$trapId": {
+        ".write": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager'))",
+        "trap_num": {
+          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "trap_location": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "date_installed": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "status": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        }
+      }
+    },
+    "Events": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+      "$eventId": {
+        ".write": "(auth != null && root.child('devices').child(auth.uid).val() === true) && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['transmitter_ID', 'timestamp'])",
+        "transmitter_ID": {
+          ".validate": "newData.isString() && newData.val().length <= 64 && newData.val().matches(/^[0-9A-Fa-f ]+$/)"
+        },
+        "timestamp": {
+          ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[0-9 :.\\/TZ+-]+$/)"
+        },
+        "timeStamp": {
+          ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[0-9 :.\\/TZ+-]+$/)"
+        },
+        "trap_ID": {
+          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[A-Za-z0-9_-]+$/))"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "Settings": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+      ".write": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      "overdueThreshold": {
+        ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3650"
+      },
+      "defaultDateRange": {
+        ".validate": "newData.isString() && newData.val().length <= 10"
+      },
+      "emailNotificationsEnabled": {
+        ".validate": "newData.isBoolean()"
+      }
+    },
+    "Recipients": {
+      ".indexOn": [
+        "email"
+      ],
+      ".read": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin') || ((auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker')) && query.orderByChild === 'email' && query.equalTo === auth.token.email)",
+      "$rid": {
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin') || ((auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker')) && newData.exists() && (data.exists() ? data.child('email').val().toLowerCase() === auth.token.email : newData.child('email').val() === auth.token.email))",
+        ".validate": "newData.hasChildren(['email'])",
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 254 && ((auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin') || !data.exists() || newData.val() === data.val())"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 100 && ((auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin') || !data.exists() || newData.val() === data.val())"
+        },
+        "status": {
+          ".validate": "(newData.val() === 'active' || newData.val() === 'paused') && ((auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin') || newData.val() === data.val() || (!data.exists() && newData.val() === 'active'))"
+        },
+        "report": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "reportInstant": {
+          ".validate": "newData.isBoolean()"
+        },
+        "reportDaily": {
+          ".validate": "newData.isBoolean()"
+        },
+        "reportWeekly": {
+          ".validate": "newData.isBoolean()"
+        },
+        "reportMonthly": {
+          ".validate": "newData.isBoolean()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "auditLogs": {
+      ".read": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    }
+  }
+}

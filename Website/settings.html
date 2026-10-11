@@ -165,9 +165,44 @@
                 <button type="submit" class="btn btn-primary">Save Settings</button>
                 <span id="save-confirmation" class="save-confirmation">Settings saved</span>
             </div>
-        </section>
-    </form>
+    </section>
+</form>
 
+<!-- Aaron F: Delete account: open to every role. settings.js asks for confirmation, then the password to delette account. -->
+<section class="card danger-card" aria-labelledby="delete-heading">
+    <div class="settings-section">
+        <h2 id="delete-heading">Delete my account</h2>
+        <p class="settings-description">Permanently deletes your sign-in, your profile and your email report settings. This can't be undone.</p>
+        <button type="button" id="delete-account-btn" class="btn btn-danger">Delete my account</button>
+    </div>
+</section>
+
+</div>
+
+<!-- Aaron F: Password check before deleting (Firebase needs a recent sign-in for this to validate) -->
+<div class="modal-overlay" id="delete-account-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div class="modal-header">
+            <h2 id="delete-account-title">Enter your password to delete your account</h2>
+        </div>
+        <form id="delete-account-form">
+            <div class="modal-body">
+                <div class="warning-box">
+                    <span aria-hidden="true">⚠️</span>
+                    <span>Your account and its data will be deleted straight away. This can't be undone.</span>
+                </div>
+                <div class="field">
+                    <label for="delete-password">Password</label>
+                    <input type="password" id="delete-password" autocomplete="current-password" required />
+                </div>
+                <p id="delete-account-error" class="field-error" role="alert"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="delete-account-cancel">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="delete-account-submit">Delete account</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- settings script -->

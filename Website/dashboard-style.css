@@ -800,3 +800,13 @@ tbody tr:hover {
 /*Aaron hide functtionality for dashbooard until it is auuthenticated*/
 body[data-required-role] .page { visibility: hidden; } /*Aaron: hide the page until the user is authenticated and has the required role*/
 body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the user is authenticated and has the required role*/
+
+/*Aaron F: Users and access links to recipients.html and delete account settings.html*/
+.users-status { min-height: 1.4em; margin: 12px 4px; font-weight: 600; color: var(--tw-green-dark); }
+.users-status.is-error, .field-error { color: var(--tw-danger); }
+.users-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.users-table select { font-family: inherit; font-size: 0.9rem; padding: 8px 10px; border-radius: var(--tw-radius-sm); border: 1px solid var(--tw-border); background: #fff; color: var(--tw-text); }
+.users-table button:disabled { opacity: 0.55; cursor: not-allowed; }
+.users-table select:focus-visible, .users-table button:focus-visible, .danger-card button:focus-visible { outline: 3px solid var(--tw-green-mid); outline-offset: 2px; }
+.danger-card .settings-section { border-left: 4px solid var(--tw-danger); border-bottom: none; }
+.field-error { min-height: 1.2em; margin: 8px 0 0; font-size: 0.9rem; }
