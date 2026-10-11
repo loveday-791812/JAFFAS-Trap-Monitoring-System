@@ -143,8 +143,34 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             return res.status(400).json({ error: "Unknown action." });
         } catch (err) {
             console.error("adminUsers error:", action, err);
-            return res.status(500).json({ error: "That change could not be saved. Please try again." });
+            return res.status(500).json({ error: "That action could not be saved. Please try again." });
         }
     }
+    /*Aaron F: Function to delte users acount by themselves*/
+    async function handleDeleteMyAccount(req, res) {
+        if (req.method !== "POST") return res.status(405).json({ error: "Use POST." });
+        const caller = await verifyCaller(req);
+        if (!caller) return res.status(401).json({ error: "Your sign-in has expired. Sign in again, then retry." });
+        try {
+            const role = await roleOf(caller.uid);
+            const decision = policy.decideSelfDelete({
+                role,
+                adminCount: role === "admin" ? await countAdmins() : 0,
+                authTimeSec: caller.auth_time,
+                nowSec: Math.floor(nowMs() / 1000),
+                recentSeconds: RECENT_SIGN_IN_SECONDS,
+            });
+            if (!decision.ok) return fail(res, decision);
+            await deleteAccountData(caller.uid, caller.email);
+            await audit({ action: "account.delete", actorUid: caller.uid, targetUid: caller.uid, from: role || null, to: null });
+            return res.status(200).json({ ok: true });
+        } catch (err) {
+            console.error("deleteMyAccount error:", err);
+            return res.status(500).json({ error: "Your account could not be deleted. Please try again." });
+        }
+    }
+
+    return { handleAdminUsers, handleDeleteMyAccount, deleteAccountData, listUsers};
 }
 
+module.exports = { createUserAdmin, RECENT_SIGN_IN_SECONDS };
