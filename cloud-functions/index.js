@@ -62,11 +62,12 @@ function codeEmailHtml(code) {
 exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
     cors(req, res, async () => {
         try{
-            const { email, password, role } = req.body || {};
+            const { password, role } = req.body || {};
+            const email = String((req.body || {}).email || "").trim().toLowerCase();
             if (!email || !password || !role) {
                 return res.status(400).json({ error: "Missing email, password, or role"});
             }
-            if (!SELF_SIGNUP_ROLES.includes(role)) { /*Aaron: check if the role is valid for self-signup. If not, return an error response. This prevents users from signing up with unauthorized roles. */
+            if (!REQUESTABLE_ROLES.includes(role)) { /*Aaron: check if the requested role is valid for self-signup. If not, return an error response. This prevents users from signing up with unauthorized roles. */
                 return res.status(400).json({ error: "Choose a valid role for self-signup."});
             }
             if (await tooManyFromIp(req, "signup", 20, HOUR_MS)) { /*Aaron: check if the number of signup attempts from the same IP address exceeds the limit within the specified time window. If it does, return an error response to prevent abuse. */
@@ -83,7 +84,8 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
 
             await rtdb.ref(`users/${userRecord.uid}`).set({
                 email,
-                role,
+                role: "pending", //Aaron F: makes the role pending so that they have no permissions untill the admin approves the role of the user
+                requestedRole: role, //Aaron F: stores the requested role for the admin to appprove
                 verified: false,
                 codeHash: hashCode(code),//Aaron: store the hashed version of the code in the database for security. This way, even if someone gains access to the database, they won't see the actual code.
                 attempts: 0, //Aaron: initialize the number of attempts to 0. This will be used to track how many times the user has tried to verify their email with the code.
@@ -130,8 +132,19 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 return res.status(400).json({error: "This account is already verified." });
             }
             
+            if (user.lastCoodeSentAt && Date.now() - user.lastCodeSentAt < RESEND_COOLDOWN_MS) {
+                return res.status(429).json({ error: "Please wait a minute before requesting another code."}); //Aaron F: this prevents spamming invite codes using own server as an intermediatary, potentailly wasting our limit we have seen this vunrability and have implemented measures to prevent or mitigate it.    
+            }
+
             const code = generateCode();
-            await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});
+            await userRef.update({
+                codeHash: hashcoode(code),
+                attemptts: 0,
+                codeExpiresAt: Date.now() + CODE_TTL_MS,
+                lastCodeSentAt: Date.now(),
+            });
+            /*const code = generateCode(); Aaron F: removed to implement role policy
+            await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});*/
             
             const resend = new Resend(process.env.RESEND_API_KEY);
             
