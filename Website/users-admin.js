@@ -18,7 +18,7 @@ function twUsersStatus(message, isError = false) {
 }
 
 function twCell(text) {
-    const id = document.createElement("td");
+    const td = document.createElement("td");
     td.textContent = text;
     return td;
 }
