@@ -243,6 +243,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit);
+    document.getElementById("delete-account-btn").addEventListener("click", twStartDeleteAccount);
+    document.getElementById("delete-account-form").addEventListener("submit", handleDeleteAccountSubmit);
+    document.getElementById("delete-account-cancel").addEventListener("click", () => twCloseModal("delete-account-modal"));
+    document.getElementById("delete-account-modal").addEventListener("click", (e) => {
+        if (e.target.id === "delete-account-modal") twCloseModal("delete-account-modal");
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") twCloseModal("delete-account-modal");
+    });    
 
     const user = await twWaitForUser();
     await twLoadMyPreferences(user);
