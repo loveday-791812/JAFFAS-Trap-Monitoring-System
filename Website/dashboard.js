@@ -6,7 +6,6 @@
     4. Build and download a JSON report of what's currently shown
 */
 
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
 
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "dashboard.html";
@@ -218,6 +217,7 @@ function downloadJson() {
 
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
     const settings = await twGetSettings();
     currentRange = settings.defaultDateRange;
