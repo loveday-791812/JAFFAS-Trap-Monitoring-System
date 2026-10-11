@@ -80,6 +80,46 @@
             </tbody>
         </table>
     </section>
+<!-- Aaron F: Users & access (admin only). Filled by users-admin.js; every change is checked by firebase server. -->
+<p id="users-status" class="users-status" role="status" aria-live="polite"></p>
+
+<section class="card table-card" aria-labelledby="requests-heading">
+    <div class="settings-section">
+        <h2 id="requests-heading">Access requests</h2>
+        <p class="settings-description">People who signed up and are waiting for approval. They can't see anything until you approve them, and they must verify their email first.</p>
+    </div>
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Requested role</th>
+                <th>Email verified</th>
+                <th>Signed up</th>
+                <th>Approve as</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="requests-tbody"></tbody>
+    </table>
+</section>
+
+<section class="card table-card" aria-labelledby="accounts-heading">
+    <div class="settings-section">
+        <h2 id="accounts-heading">User accounts</h2>
+        <p class="settings-description">Switch people between Field worker and Manager (farmer), or promote an approved account to Admin. You can't change your own role, and the last admin can't be removed.</p>
+    </div>
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Change to</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="accounts-tbody"></tbody>
+    </table>
+</section>    
 
 </div>
 
@@ -258,5 +298,6 @@
 <script src="dashboard-auth.js"></script>
 <script src="settings.js"></script>
 <script src="recipients.js"></script>
+<script src="users-admin.js"></script>
 </body>
 </html>
