@@ -205,10 +205,6 @@ exports.verifyCode = onRequest((req, res) => {
                 });
             }
 
-
-
-            const token = generateToken();
-
             await userRef.update({
                 verified: true,
                 codeHash: null,//Aaron: clear the stored code hash after successful verification to prevent reuse. This ensures that the code can only be used once and enhances security by removing sensitive information from the database.
@@ -220,13 +216,12 @@ exports.verifyCode = onRequest((req, res) => {
                 
                 magicToken: null, //Aaron: clear any existing magic token to prevent conflicts. This ensures that the user will receive a new magic token for future logins, and any previous tokens are invalidated for security reasons. The token itself does not store setting information, but it is associated with the user's account in the database. When the user logs in using the magic token, the server can retrieve their settings from the database based on their uid.
                 magicTokenHash: null,//Aaron: clear the stored magic token hash after successful login to prevent reuse. This ensures that the magic token can only be used once and enhances security by removing sensitive information from the database.
-                magicTokenExpiresAt: Date.now() + MAGIC_TOKEN_TTL_MS,//Aaron: set the expiration timestamp for the magic token to 3 hours from now. This ensures that the token is only valid for a limited time, enhancing security by reducing the window of opportunity for unauthorized access.
+                magicTokenExpiresAt: null, // Aaron F: security measure is now implemented in role policy
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
-            await addToRecipients(uid, user.email);
-
-            return res.status(200).json({ token });
+            //Aaron F: This approves the user when an admin grants approval through tthe use of userAdmin.js
+            return res.status(200).json({ verified: true});
 
         } catch (err) {
             console.error("verifyCode error:", err);
@@ -389,3 +384,13 @@ exports.resetPassword = onRequest((req, res) => {
         
     });
 });
+
+/*Aaron F: Self delete for accounts and admin account management logic tthat connects tto userAdmin */ 
+const userAdmin = createUserAdmin({
+    auth: admin.auth(),
+    db:rtdb,
+    serverTimestamp: admin.database.ServerValue.TIMESTAMP,
+});
+
+exports.adminUsers = onRequest((req, res) => userAdmin.handleAdminUsers(req, res));
+exports.deleteMyAccount = onRequest((req, res) => userAdmin.handleDeleteMyAccount(req, res));
