@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import resend
 import secrets
 import os
+import hashlib
+import time
 
 set_global_options(max_instances=10)
 initialize_app()
@@ -13,11 +15,12 @@ resend.api_key = os.environ.get("RESEND_API_KEY")
 
 DASHBOARD_BASE_URL = "https://trapwatch.fft.kiwi"
 
+
 TRAPNZ_URL = "https://trap.nz"
 
 ROLE_LANDING_PAGE = {
     "manager": "dashboard.html",
-    "worker": "traps.html",
+    "worker": "dashboard.html",
 }
 
 
@@ -192,6 +195,8 @@ def get_recipients(report_type):
     for r in recipients.values():  # type: ignore
         if not isinstance(r, dict) or r.get("status") != "active" or not r.get("email"):
             continue
+        if r.get("emailEnabled") is False:
+            continue
         if flag in r:
             opted_in = r[flag] is True
         else:
@@ -217,15 +222,37 @@ def build_trapwatch_link(email):
     if not uid or not role or role == "admin":
         return f"{DASHBOARD_BASE_URL}/Login/login.html"
 
-    magic_token = secrets.token_hex(32)
-
+    token = secrets.token_hex(32)
     db.reference(f"users/{uid}").update({
-        "magicToken": magic_token
+        "magicTokenHash": hashlib.sha256(token.encode()).hexdigest(),
+        "magicTokenExpiresAt": int(time.time() * 1000) + 3 * 60 * 60 * 1000,
     })
 
     landing_page = ROLE_LANDING_PAGE.get(role, "dashboard.html")
 
-    return f"{DASHBOARD_BASE_URL}/auto.html?token={magic_token}&next={landing_page}"
+    return f"{DASHBOARD_BASE_URL}/{landing_page}?token={token}"
+
+def parse_iso(s):
+    try:
+        return datetime.fromisoformat(str(s).replace("Z", "+00:00")).replace(tzinfo=None)
+    except (ValueError, TypeError):
+        return None
+
+def get_trap_labels():
+    traps = db.reference("/Traps").get() or {}
+    links = db.reference("/TrapTransmitter").get() or {}
+    tvals = traps.values() if isinstance(traps, dict) else [t for t in traps if t]
+    by_tx = {}
+    for l in (links.values() if isinstance(links, dict) else links):
+        if not isinstance(l, dict):
+            continue
+        tid = str(l.get("trap_ID"))
+        t = traps.get(tid) if isinstance(traps, dict) else None
+        if not t:
+            t = next((x for x in tvals if isinstance(x, dict) and str(x.get("trap_num")) == tid), None)
+            by_tx.setdefault(str(l.get("transmitter_ID")).upper(), []).append(str(t.get("trap_num")) if t else tid)
+    return {k: " / ".join(v) for k, v in by_tx.items()}
+    
 
 def get_events_today():
     now = datetime.now()
@@ -238,13 +265,14 @@ def get_events_today():
     for event_id, data in all_events.items(): # type: ignore
         if not isinstance(data, dict):
             continue
-        trap_id = data.get("trap_ID")
+        trap_id = str(data.get("transmitter_ID") or data.get("trap_ID") or "").upper()
+        if not trap_id:
+            continue
         timestamp = data.get("timeStamp")
         if not trap_id or not timestamp:
             continue
-        try:
-            dt = datetime.fromisoformat(timestamp)
-        except (ValueError, TypeError):
+        dt = parse_iso(timestamp)
+        if dt is None:
             continue
         if start <= dt <= now:
             if trap_id not in seen or dt < seen[trap_id]:
@@ -260,15 +288,12 @@ def send_trap_alert(event: db_fn.Event) -> None:
     Fires when a new entry is written to /Events
     """
     data = event.data
-    trap_id = data.get("trap_ID", "Unknown")
+    raw_id = data.get("transmitter_ID") or data.get("trap_ID", "Unknown")
+    trap_id = get_trap_labels().get(str(raw_id).upper(), raw_id)
     timestamp = data.get("timeStamp")
 
-    if timestamp:
-        try:
-            dt = datetime.fromisoformat(timestamp)
-        except (ValueError, TypeError):
-            dt = datetime.now()
-    else:
+    dt = parse_iso(timestamp) if timestamp else None
+    if dt is None:
         dt = datetime.now()
 
     # cross platform dafe time formatting
@@ -911,16 +936,19 @@ def get_trap_streaks():
     for event_id, data in all_events.items(): # type: ignore
         if not isinstance(data, dict):
             continue
-        trap_id = data.get("trap_ID")
+        trap_id = str(data.get("transmitter_ID") or data.get("trap_ID") or "").upper()
+        if not trap_id:
+            continue
         timestamp = data.get("timeStamp")
         if not trap_id or not timestamp:
             continue
-        try:
-            dt = datetime.fromisoformat(timestamp)
-        except (ValueError, TypeError):
+        dt = parse_iso(timestamp)
+        if dt is None:
             continue
         by_trap.setdefault(trap_id, []).append(dt)
 
+    _tx_raw = db.reference("/Transmitters").get() or {}
+    transmitters = {str(k).upper(): v for k, v in _tx_raw.items()} if isinstance(_tx_raw, dict) else {}
     GAP_THRESHOLD = timedelta(minutes=90)
     now = datetime.now()
     streaks = []
@@ -938,6 +966,10 @@ def get_trap_streaks():
                 })
                 streak_start = ts
             streak_end = ts
+        tx = transmitters.get(trap_id) if isinstance(transmitters, dict) else None
+        ls = parse_iso((tx or {}).get("last_seen")) if isinstance(tx, dict) else None
+        if ls and ls > streak_end:
+            streak_end = ls
         is_ongoing = (now - streak_end) <= GAP_THRESHOLD
         streaks.append({
             "trap_id": trap_id,

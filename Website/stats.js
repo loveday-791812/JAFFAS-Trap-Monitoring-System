@@ -1,8 +1,3 @@
-/* Stats page logic */
-
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
-
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "stats.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {
@@ -26,18 +21,29 @@ function twCloseModal(modalId) {
 /* reads every catch event from firebase and counts how many times each trap number appears and returns it as a simple object like {
 "23": 5} where trap number: total catch count. */
 async function loadCatchCounts() {
-    const eventsSnap = await rtdb.ref("Events").once("value");
-    const events = eventsSnap.val() || {};
+    const twNorm = (s) => String(s).trim().toUpperCase();
 
-    const counts = {};
-    Object.values(events).forEach((event) => {
-        //skips events w. missing trap id
-        if (event.trap_ID == null) return;
-
-        const trapNum = String(event.trap_ID);
-        counts[trapNum] = (counts[trapNum] || 0) + 1;
+    const [evSnap, trSnap, lkSnap] = await Promise.all([
+        rtdb.ref("Events").once("value"),
+        rtdb.ref("Traps").once("value"),
+        rtdb.ref("TrapTransmitter").once("value"),
+    ]);
+    const traps = trSnap.val() || {};
+    const labels = {};
+    Object.values(lkSnap.val() || {}).forEach((l) => {
+        if (!l || !l.transmitter_ID) return;
+        const t = traps[l.trap_ID] || Object.values(traps).find((x) => x && String(x.trap_num) === String(l.trap_ID));
+        (labels[twNorm(l.transmitter_ID)] ||= []).push(t ? t.trap_num : l.trap_ID);
     });
 
+    const counts = {};
+    Object.values(evSnap.val() || {}).forEach((event) => {
+        const txId = event.transmitter_ID || event.trap_ID;
+        if (txId == null) return;
+        const key = twNorm(txId)
+        const label = labels[key] ? labels[key].join(" / ") : String(txId);
+        counts[label] = (counts[label] || 0) + 1;
+    });
     return counts;
 }
 
@@ -67,7 +73,7 @@ function renderSummary(counts) {
 /* Draws bar chart using Chart.js x-axis is trap no. and y-axis catch count */
 function renderChart(counts) {
     //alphanumerical ordering
-    const trapNumbers = Object.keys(counts).sort((a, b) => Number(a) - Number(b));
+    const trapNumbers = Object.keys(counts).sort((a, b) => a.localeCompare(b, undefined, { numeric: true}));
     const catchCounts = trapNumbers.map((trapNum) => counts[trapNum]);
 
     const canvas = document.getElementById("catches-per-trap-chart");
