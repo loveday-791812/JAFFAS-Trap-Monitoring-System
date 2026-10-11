@@ -2,8 +2,6 @@
 
 /* settings page logic */
 
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
 
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "settings.html";
@@ -190,6 +188,7 @@ async function handleSettingsSubmit(e) {
 
 //Set up even listeners
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     if (!document.getElementById("settings-form")) return;
 
     twHighlightNav();

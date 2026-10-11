@@ -1,7 +1,5 @@
 /* Traps logic page - twTrapInventory is fake data that only exists in the browser's memory - refreshing the page resets it back to the original 4 traps. We will replace it with real API calls */
 
-await window.twAuthReady;  //Aaron: wait for the twAuthReady promise to resolve before running the rest of the code
-
 
 function twHighlightNav() {
 
@@ -185,6 +183,7 @@ async function handleRemoveConfirm() {
 
 // Event listener
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
     await loadTraps();
     renderTraps();
