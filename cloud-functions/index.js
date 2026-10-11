@@ -19,7 +19,7 @@ const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute cooldown between resends
 const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
 const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
 const { REQUESTABLE_ROLES } = require("./rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
-const { createUserAdmin } = require("./userAdmin"); // Aaron.F: Function to create a user with admin privileges. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
+const { createUserAdmin } = require("./userAdmin"); // Aaron.F: Functions to create request handlers for admin user management and the self deletet account. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
 
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
@@ -132,18 +132,18 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 return res.status(400).json({error: "This account is already verified." });
             }
             
-            if (user.lastCoodeSentAt && Date.now() - user.lastCodeSentAt < RESEND_COOLDOWN_MS) {
+            if (user.lastCodeSentAt && Date.now() - user.lastCodeSentAt < RESEND_COOLDOWN_MS) {
                 return res.status(429).json({ error: "Please wait a minute before requesting another code."}); //Aaron F: this prevents spamming invite codes using own server as an intermediatary, potentailly wasting our limit we have seen this vunrability and have implemented measures to prevent or mitigate it.    
             }
 
             const code = generateCode();
             await userRef.update({
-                codeHash: hashcoode(code),
-                attemptts: 0,
+                codeHash: hashCode(code),
+                attempts: 0,
                 codeExpiresAt: Date.now() + CODE_TTL_MS,
                 lastCodeSentAt: Date.now(),
             });
-            /*const code = generateCode(); Aaron F: removed to implement role policy
+            /*const code = generateCode(); Aaron F: removed to implement role policy and because it leftt the code unhashed and unencypted
             await userRef.update({ code, codeExpiresAt: Date.now() + CODE_TTL_MS});*/
             
             const resend = new Resend(process.env.RESEND_API_KEY);
@@ -220,7 +220,7 @@ exports.verifyCode = onRequest((req, res) => {
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
-            //Aaron F: This approves the user when an admin grants approval through tthe use of userAdmin.js
+            //Aaron F: This approves the user when an admin grants approval through the use of userAdmin.js so tthat access and the recipients row will be approved after tthe admin grants approval.
             return res.status(200).json({ verified: true});
 
         } catch (err) {
