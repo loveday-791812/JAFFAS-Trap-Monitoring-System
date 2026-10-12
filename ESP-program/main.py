@@ -17,10 +17,16 @@ last_test_at = time.ticks_ms() #time the last simulated packet was sent, starts 
 
 
 #Firebase login info
+<<<<<<< Updated upstream
 FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
 FIREBASE_HOST = "trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app"
 FIREBASE_API_KEY = "AIzaSyClXxRuzYNSg54oPuM5V-ONfqqK3vE2TWs"
 FIREBASE_EMAIL = "trapwatchesp32@gmail.com"
+=======
+FIREBASE_URL = "https://test-a1ebe-default-rtdb.asia-southeast1.firebasedatabase.app"
+FIREBASE_API_KEY = ""
+FIREBASE_EMAIL = "esp32-device@test.com"
+>>>>>>> Stashed changes
 FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase

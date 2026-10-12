@@ -1,5 +1,3 @@
-/* Traps logic page - twTrapInventory is fake data that only exists in the browser's memory - refreshing the page resets it back to the original 4 traps. We will replace it with real API calls */
-
 
 function twHighlightNav() {
 
@@ -47,7 +45,8 @@ function renderTraps() {
     tbody.innerHTML = "";   // deletes any existing rows
 
     Object.entries(twTrapInventory).forEach(([id, trap]) => {
-        const status = trap.status || "active";
+        const raw = trap.installed_status || trap.status;
+        const status = raw === "removed" ? "removed" : "active";
         const row = document.createElement("tr");
 
         row.innerHTML = `
@@ -95,7 +94,7 @@ async function handleAddSubmit(e) {
         trap_num: document.getElementById("add-trap-no").value.trim(),
         trap_location: document.getElementById("add-trap-location").value.trim(),
         date_installed: document.getElementById("add-trap-date").value.trim(),
-        status: "active",   // every new trap is active by default
+        installed_status: "active",   // every new trap is active by default
     };
 
     const newRef = rtdb.ref("Traps").push();
@@ -115,7 +114,7 @@ function openEditModal(id) {
     document.getElementById("edit-trap-location").value = trap.trap_location || "";
     document.getElementById("edit-trap-date").value = trap.date_installed || "";
 
-    const status = trap.status || "active";
+    const status = (trap.installed_status || trap.status) === "removed" ? "removed" : "active";
     const radio = document.querySelector(
         `input[name="edit-trap-status"][value="${status}"]`
     );
@@ -136,7 +135,7 @@ async function handleEditSubmit(e) {
     }
     
     const checkedRadio = document.querySelector('input[name="edit-trap-status"]:checked');
-    if (checkedRadio) updated.status = checkedRadio.value;
+    if (checkedRadio) updated.installed_status = checkedRadio.value;
 
     await rtdb.ref(`Traps/${id}`).update(updated);
     twTrapInventory[id] = { ...twTrapInventory[id], ...updated };

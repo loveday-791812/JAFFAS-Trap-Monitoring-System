@@ -50,3 +50,9 @@ async function twAuthPost(functionName, body = {}) {
     return data;
     
 }
+
+async function getRole(user) {
+    const snap = await rtdb.ref(`users/${user.uid}`).get();
+    const profile = snap.val() || {};
+    return (profile.role || "").toLowerCase();
+}

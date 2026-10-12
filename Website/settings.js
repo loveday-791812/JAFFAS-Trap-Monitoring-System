@@ -1,8 +1,3 @@
-
-
-/* settings page logic */
-
-
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "settings.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {
@@ -114,24 +109,45 @@ async function twLoadMyPreferences(user) {
         twMyRecipientId = found.id;
         twMyRecipient = found.record;
     }
+    const emailOn = !twMyRecipient || twMyRecipient.emailEnabled !== false;
 
     ["instant", "daily", "weekly", "monthly"].forEach((type) => {
         const box = document.getElementById(`my-report-${type}`);
-        box.checked = twMyRecipient ? !!twMyFlag(twMyRecipient, type) : false;
+        box.checked = (emailOn && twMyRecipient) ? !!twMyFlag(twMyRecipient, type) : false;
     });
 
     const note = document.getElementById("my-paused-note");
     if (note) note.style.display = (twMyRecipient && twMyRecipient.status === "paused") ? "block" : "none";
+
+    document.querySelector(`input[name="email-notifications"][value="${emailOn ? "on" : "off"}"]`).checked = true;
+    twSetPersonalTogglesDisabled(!emailOn);
+}
+
+function twSetPersonalTogglesDisabled(disabled) {
+    ["instant", "daily", "weekly", "monthly"].forEach((type) => {
+        const box = document.getElementById(`my-report-${type}`);
+        if (!box) return;
+        box.disabled = disabled;
+        if (disabled) box.checked = false;
+        const row = box.closest(".toggle-row");
+        if (row) {
+            row.style.opacity = disabled ? "0.45" : "1";
+            row.style.pointerEvents = disabled ? "none" : "";
+        }
+    });
 }
 
 async function twSaveMyPreferences() {
     if (!twMyEmail) throw new Error("No email found for this account");
 
+    const emailOn = document.querySelector('input[name="email-notifications"]:checked').value === "on";
+   
     const flags = {
-        reportInstant: document.getElementById("my-report-instant").checked,
-        reportDaily: document.getElementById("my-report-daily").checked,
-        reportWeekly: document.getElementById("my-report-weekly").checked,
-        reportMonthly: document.getElementById("my-report-monthly").checked,
+        reportInstant: emailOn && document.getElementById("my-report-instant").checked,
+        reportDaily: emailOn && document.getElementById("my-report-daily").checked,
+        reportWeekly: emailOn && document.getElementById("my-report-weekly").checked,
+        reportMonthly: emailOn && document.getElementById("my-report-monthly").checked,
+        emailEnabled: emailOn,
     };
 
     if (twMyRecipientId) {
@@ -149,23 +165,22 @@ async function twSaveMyPreferences() {
         twMyRecipientId = newRef.key;
         twMyRecipient = record;
     }
+
+    twSetPersonalTogglesDisabled(!emailOn)
 }
 
 /* fills saved data */
 async function loadSettingsIntoForm() {
-    const settings = await twGetSettings();
-    document.getElementById("overdue-threshold").value = settings.overdueThreshold;
-    document.getElementById("default-date-range").value = settings.defaultDateRange;
-    document.getElementById("email-notifications-enabled").checked = settings.emailNotificationsEnabled;
+    const s = await twGetSettings();
+    document.getElementById("overdue-threshold").value = s.overdueThreshold;
+    document.getElementById("default-date-range").value = s.defaultDateRange;
 }
 
 async function saveAdminSettings() {
-    const settings = {
-        overdueThreshold : Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
-        defaultDateRange : document.getElementById("default-date-range").value,
-        emailNotificationsEnabled: document.getElementById("email-notifications-enabled").checked,
-    };
-    await rtdb.ref("Settings").set(settings);
+    await rtdb.ref("Settings").update({
+        overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
+        defaultDateRange: document.getElementById("default-date-range").value,
+    });
 }
 
 /* runs when save settings button clicked */

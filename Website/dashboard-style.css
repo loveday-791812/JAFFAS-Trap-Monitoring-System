@@ -797,6 +797,7 @@ tbody tr:hover {
     color: #fff;
 }
 
+.badge-removed { background: var(--tw-status-paused); color: #2a2a2a; }
 /*Aaron hide functtionality for dashbooard until it is auuthenticated*/
 body[data-required-role] .page { visibility: hidden; } /*Aaron: hide the page until the user is authenticated and has the required role*/
 body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the user is authenticated and has the required role*/

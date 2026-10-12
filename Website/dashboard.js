@@ -6,6 +6,10 @@
     4. Build and download a JSON report of what's currently shown
 */
 
+const twNorm = (s) => String(s).trim().toUpperCase();
+
+
+const twDate = (s) => new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : s + "Z");
 
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "dashboard.html";
@@ -18,6 +22,20 @@ function twHighlightNav() {
             link.classList.remove("active");
         }
     });
+}
+
+let twOverdueDays = 7;
+const RESET_GAP_MS = 90 * 60 * 1000;
+
+function twTrapLabels(traps, links) {
+    const out = {};
+    Object.values(links).forEach((l) => {
+        if (!l || !l.transmitter_ID) return;
+        const t = traps[l.trap_ID] || Object.values(traps).find((x) => x && String(x.trap_num) === String(l.trap_ID));
+        (out[twNorm(l.transmitter_ID)] ||= []).push(t ? t.trap_num : l.trap_ID);
+    });
+    Object.keys(out).forEach((k) => (out[k] = out[k].join("/")));
+    return out;
 }
 
 function twOpenModal(modalId) {
@@ -33,62 +51,57 @@ let twData = { "7d": null, "30d": null, "all": null};
 let twTotalTraps = 0;
 
 async function loadData() {
-    const [trapsSnap, eventsSnap] = await Promise.all([
+    const [trapsSnap, eventsSnap, txSnap, linkSnap] = await Promise.all([
         rtdb.ref("Traps").once("value"),
         rtdb.ref("Events").once("value"),
+        rtdb.ref("Transmitters").once("value"),
+        rtdb.ref("TrapTransmitter").once("value"),
     ]);
 
     const traps = trapsSnap.val() || {};
     const events = eventsSnap.val() || {};
+    const transmitters = txSnap.val() || {};
+    const labels = twTrapLabels(traps, linkSnap.val() || {});
 
-    twTotalTraps = Object.values(traps).filter((t) => t && t.status !== "removed").length;
-
-    const trapsByNum = {};
-    Object.values(traps).forEach((t) => {
-        trapsByNum[String(t.trap_num)] = t;
-    });
+    const txNorm = {};
+    Object.entries(transmitters).forEach(([k, v]) => (txNorm[twNorm(k)] = v));
+    twTotalTraps = Object.keys(txNorm).length;
 
     const eventList = Object.values(events)
-        .filter((e) => e.trap_ID != null && e.timeStamp)
-        .map((e) => ({
-            trapNum: String(e.trap_ID),
-            date: new Date(e.timeStamp),
-        }));
+        .filter((e) => (e.transmitter_ID || e.trap_ID) != null && e.timeStamp)
+        .map((e) => ({ txId: twNorm(e.transmitter_ID || e.trap_ID), date: twDate(e.timeStamp) }))
+        .filter((e) => !isNaN(e.date));
     
-    twData["7d"] = buildRangeData(eventList, trapsByNum, 7);
-    twData["30d"] = buildRangeData(eventList, trapsByNum, 30);
-    twData["all"] = buildRangeData(eventList, trapsByNum, null);
-
+    twData["7d"] = buildRangeData(eventList, txNorm, labels, 7);
+    twData["30d"] = buildRangeData(eventList, txNorm, labels, 30);
+    twData["all"] = buildRangeData(eventList, txNorm, labels, null);
 };
 
-function buildRangeData(eventList, trapsByNum, days) {
+function buildRangeData(eventList, transmitters, labels, days) {
+    const now = Date.now();
     const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
     const filtered = cutoff ? eventList.filter((e) => e.date >= cutoff) : eventList;
 
-    const latestByTrap = {};
+    const latestByTx = {};
     filtered.forEach((e) => {
-        if (!latestByTrap[e.trapNum] || e.date > latestByTrap[e.trapNum].date) {
-            latestByTrap[e.trapNum] = e;
-        }
+        if (!latestByTx[e.txId] || e.date > latestByTx[e.txId].date) latestByTx[e.txId] = e;
     });
 
-    const trapRows = Object.entries(latestByTrap).map(([trapNum, catchEvent]) => {
-        const trapInfo = trapsByNum[trapNum] || {};
-        const resetAt = trapInfo.reset_at ? new Date(trapInfo.reset_at) : null;
-        const daysToReset = resetAt
-            ? Math.round((resetAt - catchEvent.date) / 86400000)
-            : null;
-        
+    const trapRows = Object.entries(latestByTx).map(([txId, ev]) => {
+        const ls = transmitters[txId] && transmitters[txId].last_seen ? twDate(transmitters[txId].last_seen) : null;
+        const lastSeen = ls && !isNaN(ls) ? Math.max(ls.getTime(), ev.date.getTime()) : ev.date.getTime();
+        const pending = now - lastSeen < RESET_GAP_MS;
+        const overdue = pending && now - ev.date.getTime() > twOverdueDays * 86400000;
+        const status = overdue ? "overdue" : pending ? "pending" : "reset";
         return {
-            trapNo: trapNum,
-            catchDate: catchEvent.date.toLocaleString(),
-            resetDate: resetAt ? resetAt.toLocaleString() : "-",
-            daysToReset: daysToReset ?? "-",
-            status: trapInfo.status || "pending", 
+            trapNo: labels[txId] || txId,
+            catchDate: ev.date.toLocaleString(),
+            resetDate: pending ? "-" : new Date(lastSeen).toLocaleString(),
+            daysToReset: pending ? "-" : Number(((lastSeen - ev.date.getTime()) / 86400000).toFixed(1)),
+            status,
         };
     });
 
-    const overdue = trapRows.filter((t) => t.status === "overdue").length;
     const resetTimes = trapRows.map((t) => t.daysToReset).filter((d) => typeof d === "number");
     const  avg = resetTimes.length
         ? (resetTimes.reduce((a, b) => a + b, 0) / resetTimes.length).toFixed(1) + " days"
@@ -97,8 +110,8 @@ function buildRangeData(eventList, trapsByNum, days) {
         kpis: {
             totalCatches: filtered.length,
             avgTimeToReset: avg,
-            trapsOverdue: overdue,
-            currentTriggered: trapRows.filter((t) => t.status === "pending").length,
+            trapsOverdue: trapRows.filter((t) => t.status === "overdue").length,
+            currentTriggered: trapRows.filter((t) => t.status !== "reset").length,
         },
         traps: trapRows,
     };
@@ -220,6 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
     const settings = await twGetSettings();
+    twOverdueDays = Number(settings.overdueThreshold) || 7;
     currentRange = settings.defaultDateRange;
     document.getElementById("date-range-select").value = currentRange;
     document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${settings.overdueThreshold} DAYS)`
