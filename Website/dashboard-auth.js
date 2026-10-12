@@ -3,73 +3,57 @@
     const token = params.get("token");
 
     const LOGIN_URL = "/Login/login.html";
+    const DENIED_URL = "/unauthorized.html"; //Aaron: unautorized redirect page
+    const KNOWN_ROLES = ["admin", "manager", "worker"];//Aaron: known roles for the dashboard
 
     function goToLogin() {
         window.location.href = LOGIN_URL;
     }
 
-    async function enforceRole(user) {
-        const required = document.body.getAttribute("data-required-role");
-        if (!required) return true;
-    
-
-    const allowed = required.split(",").map((r) => r.trim().toLowerCase());
-
-    try {
-        const snap = await rtdb.ref(`users/${user.uid}`).get();
-        const profile = snap.val() || {};
-        const role = (profile.role || "").toLowerCase();
-
-        if (!allowed.includes(role)) {
-            alert("You don't have permission to view that page.");
-            window.location.href = "/dashboard.html";
-            return false;
-        }
-        return true;
-    } catch (err) {
-        console.error("Role check failed:", err);
-        alert("Could not verify your permissions.");
-        goToLogin();
-        return false;
-    }
-}
-
-async function filterNav(user) {
-    const nav = document.querySelector(".tw-nav");
-
-    try {
-        const snap = await rtdb.ref(`users/${user.uid}`).get();
-        const role = ((snap.val() || {}).role || "").toLowerCase();
-
+    function filterNav(role) { //Aaron: filter the navigation links based on the user's role
         document.querySelectorAll(".tw-nav a").forEach((link) => {
             const href = link.getAttribute("href") || "";
-
-            if (href.includes("recipients.html") && role !== "admin") {
-                link.style.display = "none";
-            }
-
-            if (href.includes("traps.html") && role !== "admin" && role !== "manager") {
-                link.style.display = "none";
-            }
+            if (href.includes("recipients.html") && role !== "admin") link.style.display = "none"; //Aaron: hide the recipients link if the user is not an admin
+            if (href.includes("traps.html") && role !== "admin" && role !== "manager") link.style.display = "none"; //Aaron: hide the traps link if the user is not an admin or manager
         });
-    } catch (err) {
-        console.error("Nav filter failed:", err);
-    } finally {
-        if (nav) {
-            requestAnimationFrame(() => {
-                nav.classList.add("ready");
-                nav.style.visibility = "visible";
-            });
-        }
+        const nav = document.querySelector(".tw-nav");
+        if (nav) { nav.classList.add("ready"); nav.style.visibility = "visible"; } //Aaron: show the navigation links after filtering
     }
-}
 
-async function afterLogin(user) {
-    const ok = await enforceRole(user);
-    if (!ok) return;
-    await filterNav(user);
-    document.body.classList.add("tw-auth-ok");
-}
+    function goToDenied(reason) {
+    window.location.href = `${DENIED_URL}?reason=${reason}`;
+    }
+
+    let __resolveReady;
+    const twAuthReady = new Promise((r) => { __resolveReady = r; });
+    function resolveReady(user) { __resolveReady(user); }
+
+    async function afterLogin(user) { //Aaron: after the user is logged in, check if they have the required role and filter the navigation links
+        let role;
+        try {//Aaron: try to get the role of the user
+            role = await getRole(user);
+        } catch (err) {
+            console.error("Failed to validate user role:", err);
+            alert("Could not verify your role.");
+            return goToDenied("error");
+        }
+        if (role === "pending") return goToDenied("pending"); //Aaron F: The user at this satge has signed up and is waiting for the admin to approve tthe account
+        if (!KNOWN_ROLES.includes(role)) return goToDenied("norole");
+
+
+        const required = document.body.getAttribute("data-required-role");//Aaron: get the required role from the data attribute of the body element
+        if (required) {
+            const allowed = required.split(",").map((r) => r.trim().toLowerCase()); //Aaron: split the required roles by comma and trim whitespace and convert to lowercase
+            if (!allowed.includes(role)) {
+                alert("You don't have permission to view that page.");
+                return goToDenied("role"); //Aaron F: The role is known but the page doesnt allow it.
+            }
+        }
+        window.twCurrentRole = role; //Aaron F: the page adapts to the role, cosmetic only as the database enfoorces access
+        filterNav(role); //Aaron: filter the navigation links based on the user's role
+        document.body.classList.add("tw-auth-ok"); //Aaron: make the page visible
+        resolveReady(user); //Aaron: resolve the twAuthReady promise with the user object and load datat scriipt
+    }
 
 async function signInWithToken(tok) {
     try {

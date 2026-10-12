@@ -1,23 +1,10 @@
 #generates bytes not hex
 import os
+from trap_dictionary import trap_ids
 
 def transmitter():
-    data = os.urandom(8)        
-    return data + b'\x0d' 
+    hex_keys = list(trap_ids.keys())
+    pick = hex_keys[os.urandom(1)[0] % len(hex_keys)]
+    data = bytes(int(part, 16) for part in pick.split(" "))
+    return data + b'\r'
 
-
-
-
-
-
-
-
-#previous, that only generated hex
-##import os
-
-##def transmitter():
-     ##data = os.urandom(8) #byte data, will need to change to receive from receiver
-     ##hex_signal = ' '.join(f'{b:02x}' for b in data) #converts to hex, with spaces
-     #print(hex_signal)  #prints hex
-
-     ##return hex_signal

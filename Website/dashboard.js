@@ -8,6 +8,7 @@
 
 const twNorm = (s) => String(s).trim().toUpperCase();
 
+
 const twDate = (s) => new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : s + "Z");
 
 function twHighlightNav() {
@@ -188,12 +189,12 @@ function renderTable(range) {
     traps.forEach((trap) => {
         const row = document.createElement("tr"); /* the badge-${trap.status} class picks up the right color from dashboard-stye.css (reset = green, overdue = red) */
         row.innerHTML = `
-            <td>${trap.trapNo}</td>
-            <td>${trap.catchDate}</td>
-            <td>${trap.resetDate}</td>
-            <td>${trap.daysToReset}</td>
-            <td><span class="badge badge-${trap.status}">${statusLabels[trap.status]}</span></td>
-        `;
+            <td>${twEscape(trap.trapNo)}</td>
+            <td>${twEscape(trap.catchDate)}</td>
+            <td>${twEscape(trap.resetDate)}</td>
+            <td>${twEscape(trap.daysToReset)}</td>
+            <td><span class="badge badge-${twEscape(trap.status)}">${statusLabels[trap.status]}</span></td>
+        `; //Aaron F: incase bad values are run accross the site from injecting elements that fail to load then it affects everyone who visits the page not just the user.
         tbody.appendChild(row);
     });
 }
@@ -229,6 +230,7 @@ function downloadJson() {
 
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
     const settings = await twGetSettings();
     twOverdueDays = Number(settings.overdueThreshold) || 7;

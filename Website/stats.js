@@ -1,3 +1,6 @@
+/* Stats page logic */
+
+
 function twHighlightNav() {
     const current = window.location.pathname.split("/").pop() || "stats.html";
     document.querySelectorAll(".tw-nav a").forEach((link) => {
@@ -107,6 +110,7 @@ function renderChart(counts) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
     twHighlightNav();
 
     document.getElementById("nav-toggle").addEventListener("click", (e) => {

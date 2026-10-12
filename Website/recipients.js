@@ -73,7 +73,7 @@ function renderRecipients() {
                 <button
                     type="button"
                     class="report-toggle-btn ${isOn ? "on" : ""}"
-                    data-id="${id}"
+                    data-id="${twEscape(id)}"
                     data-type="${type}"
                     title="${meta.title}"
                 >${meta.letter}</button>
@@ -81,17 +81,17 @@ function renderRecipients() {
         }).join("");
 
         row.innerHTML = `
-        <td>${recipient.name}</td>
-        <td>${recipient.email}</td>
+        <td>${twEscape(recipient.name)}</td>
+        <td>${twEscape(recipient.email)}</td>
         <td><div class="report-toggles">${toggleButtons}</div></td>
         <td>
-            <span class="badge badge-${recipient.status}">
+            <span class="badge badge-${twEscape(recipient.status)}">
                 ${recipient.status === "active" ? "✅ Active" : "⏸️ Paused"}
             </span>
         </td>
         <td>
-            <button type="button" class="action-link edit" data-id="${id}">Edit</button>
-            <button type="button" class="action-link remove" data-id="${id}">Remove</button>
+            <button type="button" class="action-link edit" data-id="${twEscape(id)}">Edit</button>
+            <button type="button" class="action-link remove" data-id="${twEscape(id)}">Remove</button>
         </td>
         `;
         tbody.appendChild(row);

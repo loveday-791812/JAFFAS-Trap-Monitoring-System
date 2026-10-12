@@ -15,7 +15,7 @@
        <p>If you want access to this page, it has to be approved by a TrapWatch admin. That can change your role.</p>
        <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;"> <!-- Aaron: I added a flex container to hold the buttons and make them responsive. -->
          <a class="btn btn-outline" href="dashboard.html" id="deny-dashboard">Go to dashboard</a><!-- Aaron: I changed the href to point to the dashboard page so that users can go back to the dashboard. -->
-         <a class="btn btn-primary" href="Login/Login Front-End/login.html" id="deny-logout">Log in as someone else</a> <!-- Aaron: I changed the href to point to the login page so that users can log in as a different user and log out. -->
+         <a class="btn btn-primary" href="Login/login.html" id="deny-logout">Log in as someone else</a> <!-- Aaron: I changed the href to point to the login page so that users can log in as a different user and log out. -->
        </div>
      </section>
 </main> 
@@ -28,6 +28,7 @@
      const messages = {
        role: "Your role doesn't include access to that page.",
        norole: "Your account hasn't been given a role yet.",
+       pending: "Thanks for signing up. An Admin is nottified and will be review your sign up and approve your use of TrapWatch",
        error: "We couldn't check your permissions right now.",
      };
      document.getElementById("deny-reason").textContent = messages[reason] || messages.role;// Aaron: I added a check to hide the "Go to dashboard" button if the reason is not "role". This is because if the user doesn't have a role, they shouldn't be able to go to the dashboard.
