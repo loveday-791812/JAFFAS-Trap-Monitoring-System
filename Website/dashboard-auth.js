@@ -25,7 +25,7 @@
     }
 
     let __resolveReady;
-    const twAuthReady = new Promise((r) => { __resolveReady = r; });
+    window.twAuthReady = new Promise((r) => { __resolveReady = r; }); //Aaron.F changed, was causing an error
     function resolveReady(user) { __resolveReady(user); }
 
     async function afterLogin(user) { //Aaron: after the user is logged in, check if they have the required role and filter the navigation links
