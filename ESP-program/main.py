@@ -1,20 +1,9 @@
 import time
 import ujson
 import gc
-import random
 from machine import UART
 from machine import Pin
-from signal import transmitter
 from trap_dictionary import trap_ids   
-
-##TEST ONLY: simulated packet timer, delete later
-MIN_MS = 60 * 60 * 1000
-MAX_MS = 120 * 60 * 1000
-
-test_interval_ms = random.randint(MIN_MS, MAX_MS)
-last_test_at = time.ticks_ms() #time the last simulated packet was sent, starts as now
-
-
 
 #Firebase login info
 FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
@@ -47,31 +36,31 @@ APN = "internet" #2 degrees network
 last_reply = b'' #holds the most recent reply from the module
 
 
-duplicate_window = 90 * 60
-last_signal_at = {}
+duplicate_window = 90 * 60 #if signal sent in 90 minutes of same hex code, ignore
+last_signal_at = {} #adds last signal to this for later
 
 ##MP version of powerOnModule function
 #4G connection fucntion
 def power_on_module():
-    power_on = Pin(MODULE_POWER_ON, Pin.OUT) 
-    power_on.value(1) 
+    power_on = Pin(MODULE_POWER_ON, Pin.OUT) #sets pin 12 an output pin
+    power_on.value(1) #turns power to module on
 
-    powerkey = Pin(MODULE_POWERKEY, Pin.OUT)
-    powerkey.value(0)
-    time.sleep(0.1)
-    powerkey.value(1)
+    powerkey = Pin(MODULE_POWERKEY, Pin.OUT) #sets pin 4 an output pin
+    powerkey.value(0) #acts as release of power button
+    time.sleep(0.1) 
+    powerkey.value(1) #acts as button press
     time.sleep(1) 
-    powerkey.value(0)
+    powerkey.value(0) #acts as release of power button
 
 #4G Module UART setup
-power_on_module() #calls above function
+power_on_module() #calls above function 
 time.sleep(3) #lets module time to start
-module_uart = UART(1, MODULE_BAUD)
-module_uart.init(MODULE_BAUD, rx=MODULE_RX_PIN, tx=MODULE_TX_PIN, bits=8, parity=None, stop=1, rxbuf=4096)
+module_uart = UART(1, MODULE_BAUD) #UART 1 is line to the module
+module_uart.init(MODULE_BAUD, rx=MODULE_RX_PIN, tx=MODULE_TX_PIN, bits=8, parity=None, stop=1, rxbuf=4096) #rxbuf = big enough for the 1.4KB replies from Firebase
 
 #Listens to module until expected text arrives
-def read_until(expected='OK', wait_time=10):
-    global last_reply
+def read_until(expected='OK', wait_time=10): #waits for 'OK' for 10 seconds
+    global last_reply #calls variable from top
     reply = b'' #collects expected text
     start = time.time() #takes the time when start of wait
 
@@ -186,22 +175,22 @@ def firebase_sign_in():
     auth_url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FIREBASE_API_KEY
     auth_payload = {"email": FIREBASE_EMAIL, "password": FIREBASE_PASSWORD, "returnSecureToken": True} #login credentials as a dicionary
     gc.collect() #garbage collector, removes unused objects. lowers running our of ram chance
-    ### auth_response = urequests.post(auth_url, data=ujson.dumps(auth_payload), headers={'Content-Type': 'application/json'}) #sends a post request to url, converts the auth_payload into JSON string, tells firebase its sending JSON
+    
     auth_text = send_once(auth_url, ujson.dumps(auth_payload)) #4G change: sends the login through the module instead of urequests, gets the answer back as text
     auth_result = ujson.loads(auth_text) if auth_text != '' else {} #4G change: reads the text from send_once, empty dictionary if it failed
-    ### auth_response.close() #closes network connection to avoid network failures
+    
     return auth_result #sends received dictionary to the caller of the function, should contain "idToken" and "refreshToken", if fialed contains error
 
 ##log in if token not there or over an hour old
-def ensure_login():
+def ensure_login(): #makes sure there is a valid token, replys true or false
     global firebase_id_token, token_time
-    if firebase_id_token == "" or time.time() - token_time > 3000:
-        auth_result = firebase_sign_in()
-        if "idToken" not in auth_result:
+    if firebase_id_token == "" or time.time() - token_time > 3000: #no token yet or older than 3000 seconds, tokens last 3600
+        auth_result = firebase_sign_in() #signs in again
+        if "idToken" not in auth_result: #sign in failed
             print("Login failed:", auth_result)
             return False
-        firebase_id_token = auth_result["idToken"]
-        token_time = time.time()
+        firebase_id_token = auth_result["idToken"] #saves new token
+        token_time = time.time() #writes down time token was received
         print("Login Successful")
     return True
 
@@ -215,13 +204,13 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
         return False
     
     #timestamp
-    timestamp = get_timestamp() #asks the module for the time and turns it into dd/mm/yyyy hh:mm:ss
+    timestamp = get_timestamp() #asks the module for the time and turns it into yyyy-mm-ddThh:mm:ss
     print(timestamp) #shows the timestamp in the terminal
 
     #building event
-    trap_id = trap_ids.get(hex_data.upper(), "unknown")
-    event_data = {"transmitter_ID": hex_data, "timeStamp": timestamp, "trap_ID": trap_id} #the two fields the database rules ask for, as a dictionary
-    path = "/Events.json?auth=" + firebase_id_token
+    trap_id = trap_ids.get(hex_data.upper(), "unknown") #gets trap from trap_dictionary using hex, 'unknown' if not in dictionary
+    event_data = {"transmitter_ID": hex_data, "timeStamp": timestamp, "trap_ID": trap_id} #the three fields the database rules ask for, as a dictionary
+    path = "/Events.json?auth=" + firebase_id_token #location where data goes with token on end so firebase gives access
     
     #sending event
     gc.collect() #garbage collecting, clears any unused object to save memory
@@ -231,48 +220,47 @@ def send_to_firebase(hex_data): #hex_data is parameter, placeholder for value th
     if status == 200: #send_once returns text from Firebase when it worked, empty text when it failed
         print("Data added successfully!", response_text) #shows Firebase's reply, which should look like {"name":"-O..."}
         return True
-    elif status == 401:
-        firebase_id_token = ""
-        print("Auth expired, will sign in again next packet")
+    elif status == 401: #401 means token not accepted
+        firebase_id_token = "" #resets token to nothing
+        print("Auth expired, will sign in again next packet") #shows what happened
         return False
     else:
         print("Data failed to merge") #nothing came back, so the send failed
         return False
 
 ##Update transmitter last_seen
-def update_last_seen(hex_data):
+def update_last_seen(hex_data): #updates last_seen of transmitter
     global firebase_id_token
-    if not ensure_login():
-        return False
-    key = hex_data.upper().replace(' ', '%20')
-    path = '/Transmitters/' + key + '.json?auth=' + firebase_id_token
-    body = ujson.dumps({"last_seen": get_timestamp()})
+    if not ensure_login(): #signs in if needed, calls ensure_login
+        return False #no token nothing can be sent
+    key = hex_data.upper().replace(' ', '%20') #database key is uppercase, spaces become '%20'
+    path = '/Transmitters/' + key + '.json?auth=' + firebase_id_token #location of transmitter in database with token at end
+    body = ujson.dumps({"last_seen": get_timestamp()}) #calls get_timestamp as JSON
     status, response_text = raw_connect_request('PATCH', path, body)
     if status == 200:
-        print("last_seen updated:", response_text)
+        print("last_seen updated:", response_text) #shows firebase reply
         return True
-    elif status == 401:
-        firebase_id_token = ""
-    print("last_seen update failed:", status)
+    elif status == 401: #401 means token not accepted
+        firebase_id_token = "" #resets token to nothing
+    print("last_seen update failed:", status) #shows status that returned
     return False
 
 ##repeat filter, filters out whether signal is a new trigger or repeat
-def filter_signal(hex_data):
-    key = hex_data.upper()
-    now_signal = time.time()
-    last_signal = last_signal_at.get(key)
-    """if last_signal is not None: #TEST ONLY
-        print('Gap since last signal (seconds):', now_signal - last_signal) #TEST ONLY"""
-    if last_signal is None or now_signal - last_signal > duplicate_window:
-        if not send_to_firebase(hex_data):
-            return
-    else:
-        print("Repeat, not new event:", hex_data)
-    update_last_seen(hex_data)
-    last_signal_at[key] = now_signal
+def filter_signal(hex_data): #hex_data is the packet as a hex
+    key = hex_data.upper() #turns hex_data to uppercase, puts into key
+    now_signal = time.time() #sets time signal was received
+    last_signal = last_signal_at.get(key) #when transmitter was last heard, none if never heard
+    if last_signal is None or now_signal - last_signal > duplicate_window: #if never seen or last heard longer ago then next window
+        if not send_to_firebase(hex_data): #sends new event using send_to_firebase
+            return #if failed, next signal is tried again
+    else: #heard recently
+        print("Repeat, not new event:", hex_data) #says if it was skipped
+    update_last_seen(hex_data) #every signal updates last_seen
+    last_signal_at[key] = now_signal #restrats timer for transmitter
 
+##main loop
 def loop(): #defines loop function
-    global byte_index, packet_too_long#, last_test_at, test_interval_ms #calls from above to avoid new variables ############TEST
+    global byte_index, packet_too_long ##calls from above to avoid new variables
     while True: #starts the infinite loop, keeps checking for new bytes
         while uart.any(): #second loop, returns unread bytes
             incoming_byte = uart.read(1)[0] #reads the next byte in line, returns the byte as an object, [0] is inserted to get teh real value
@@ -297,17 +285,6 @@ def loop(): #defines loop function
                 byte_index += 1 #increases to the next avaible byte spot
             else:
                 packet_too_long = True #if buffer is full before 0x0D appears, then it flags as too long
-        
-        
-        ##TEST ONLY: simulated packet, delete this block later
-        if time.ticks_diff(time.ticks_ms(), last_test_at) >= test_interval_ms and byte_index == 0: #true when 30 seconds have passed and no real packet is half received
-            last_test_at = time.ticks_ms() #restarts the timer
-            test_interval_ms = random.randint(MIN_MS, MAX_MS) #########TEST
-            test_bytes = transmitter()[:-1] #gets 9 bytes from signal.py and drops the last one, the 0x0D terminator
-            hex_data = ' '.join(f'{b:02x}' for b in test_bytes) #turns the 8 bytes into text like "a3 07 f1 5c 22 9e 40 b8"
-            print('Simulated:', hex_data) #shows what is being sent
-            filter_signal(hex_data) #sends it to Firebase like a real packet"""
-
 
 ##open a raw secure connection to Firebase and close it again
 def raw_connect_open():
@@ -322,32 +299,32 @@ def raw_connect_close():
     send_AT('AT+CCHSTOP', '+CCHSTOP: 0', 10) #stops the secure connection service
 
 #send POST request over raw connection
-def raw_connect_request(method, path, body):
-    body_bytes = body.encode()
-    head = method + ' ' + path + ' HTTP/1.1\r\n'
-    head = head + 'Host: ' + FIREBASE_HOST + '\r\n'
-    head = head + 'Content-Type: application/json\r\n'
-    head = head + 'Content-Length: ' + str(len(body_bytes)) + '\r\n'
-    head = head + 'Connection: close\r\n\r\n'
-    request = head.encode() + body_bytes
-    status = 0
-    response_text = ''
-    if raw_connect_open():
-        if send_AT('AT+CCHSEND=0,' + str(len(request)), '>', 10):
-            module_uart.write(request)
-            read_until('+CCHRECV: DATA', 30)
-            reply = last_reply
+def raw_connect_request(method, path, body): #method = POST or PATCH, path = address with token, body = JSON text
+    body_bytes = body.encode() #turns body to bytes
+    head = method + ' ' + path + ' HTTP/1.1\r\n' #first line of request
+    head = head + 'Host: ' + FIREBASE_HOST + '\r\n' #which server
+    head = head + 'Content-Type: application/json\r\n' #says body is JSON
+    head = head + 'Content-Length: ' + str(len(body_bytes)) + '\r\n' #how many bytes is body made of
+    head = head + 'Connection: close\r\n\r\n' #after replying, server closes
+    request = head.encode() + body_bytes #heaed and body together as bytes
+    status = 0 #stays 0 if nothing come back
+    response_text = '' #stays empty if nothing comes back
+    if raw_connect_open(): #only used if connection is open
+        if send_AT('AT+CCHSEND=0,' + str(len(request)), '>', 10): #says how many bytes are coming, waits for > prompt
+            module_uart.write(request) #sends request itself
+            read_until('+CCHRECV: DATA', 30) #waits for firebase reply to start arriving
+            reply = last_reply #copies what we have so far
             time.sleep(1)
-            if module_uart.any():
-                reply = reply + module_uart.read()
-            if b'HTTP/1.1 ' in reply:
-                status = int(reply.split(b'HTTP/1.1 ')[1][:3].decode())
-            start = reply.find(b'{')
-            end = reply.rfind(b'}')
-            if start != -1 and end != -1:
-                response_text = reply[start:end + 1].decode()
-    raw_connect_close()
-    return status, response_text
+            if module_uart.any(): #looks for any bytes still arriving
+                reply = reply + module_uart.read() #adds the new bytes
+            if b'HTTP/1.1 ' in reply: #checks if reply has status line
+                status = int(reply.split(b'HTTP/1.1 ')[1][:3].decode()) #three digits after 'HTTP/1.1' is the status code
+            start = reply.find(b'{') #find where JSON starts
+            end = reply.rfind(b'}') #find where JSON ends
+            if start != -1 and end != -1: #if both were found
+                response_text = reply[start:end + 1].decode() #cuts JSON out as text
+    raw_connect_close() #always closes the connection after
+    return status, response_text #gives back status and reply text
 
 #runs at startup
 send_AT('AT') #basic check, should end with OK
