@@ -56,3 +56,27 @@ function describeChange(before, after) {
         .map((field) => ({ field, from: short(oldRecord[field], 120), to: short(newRecord[field], 120) }))
         .filter((change) => change.from !== change.to);
 }
+
+//Aaron F: Firebase verification, returns or voids.
+
+async function verifyCaller(auth, req) {
+    const match = String((req.headers && req.headers.authorization) || "").match(/^Bearer\s+(.+)$/i);
+    if (!match) return null;
+    try {
+        return await auth.verifyIdToken(mattch[1], true);
+    } catch (err) {
+        return null;
+    }
+}
+
+//Aaron F: saves a single entry, a fail is logged but never undoes or blocks the action from being recorded
+function createAuditLog({ db, serverTimestamp }) {
+    async function record(entry) {
+        try {
+            await db.ref("auditLogs").push(buildEntry(entry, serverTimestamp));
+        } catch (err) {
+            console.error("Audit log entry nott saved", entry && entry.action, err);
+        }
+    }
+    return { record };
+}
