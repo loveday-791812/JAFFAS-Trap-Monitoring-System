@@ -80,3 +80,26 @@ function createAuditLog({ db, serverTimestamp }) {
     }
     return { record };
 }
+
+//Aaron F: The browser reports its own sign-in or sign-out. The server checks the ID token, so nobody can record an event for someone else.
+
+function createSessionAudit({ auth, record, nowMs = () => Date.now() }) {
+    async function handleAuditSession(req, res) {
+        if (req.method !== "POST") return res.status(405).json({ error: "Use POST." });
+        const caller = await verifyCaller(auth, req);
+        if (!caller) return res.status(401).json({ error: "Your sign-in has expired. Sign in again, then retry." });
+
+        const event = String((req.body || {}).event || "");
+        if (event !== "signIn" && event !== "signOut") return res.status(400).json({ error: "Unknown event." });
+
+        const secondsSinceSignIn = Math.floor(nowMs() / 1000) - (caller.auth_time || 0);
+        if (event === "signIn" && secondsSinceSignIn > SIGN_IN_WINDOW_SECONDS) {
+            return res.status(200).json({ recorded: false });   //Aaron F: not a sign-in that has just happened
+        }
+        const method = event === "signIn" && caller.firebase ? caller.firebase.sign_in_provider : null;   //Aaron F: password for the login form
+        await record({ action: `session.${event}`, actorUid: caller.uid, actorEmail: caller.email || null, detail: { method } });
+        return res.status(200).json({ recorded: true });
+    }
+    return { handleAuditSession };
+}
+
