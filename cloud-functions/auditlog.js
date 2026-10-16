@@ -42,3 +42,17 @@ function buildEntry(entry, serverTimestamp) {
     if(Object.keys(detail).length) stored.detail = detail;
     return stored;
 }
+// Aaron F: creates fields that differentiate bettween versions of the record
+
+function describeChange(before, after) {
+    const asObject = (value) => {
+        if (value === null || value === undefined) return{};
+        return typeof value === "object" && !Array.isArray(value) ? value : { value };
+    };
+    const oldRecord = asObject(before);
+    const newRecord = asObject(after);
+    const fields = [...new Set([...Object.keys(oldRecord), ...Object.keys(newRecord)])].sort();
+    return fields
+        .map((field) => ({ field, from: short(oldRecord[field], 120), to: short(newRecord[field], 120) }))
+        .filter((change) => change.from !== change.to);
+}
