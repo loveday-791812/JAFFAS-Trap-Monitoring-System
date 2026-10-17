@@ -123,4 +123,51 @@ function createAuditTriggers({ record, lookupEmail }) {
         if (event.authType === "unauthenticated") return { actorType: "unauthenticated" };
         return { actorType: "unknown" };
     } 
-}
+
+
+    //Aaron F: traps, recipients and setttings add, edit and remove (crud) with new and old vlaues
+    function dataChange(kind) {
+        return async (event) => {
+            const before = event.data.before.val();
+            const after = event.data.after.val();
+            const changes = describeChange(before, after);
+            if (!changes.length) return null;
+            const action = before === null ? `${kind}.create` : after === null ? `${kind}.delete` : `${kind}.update`;
+            const id = Object.values(event.params || {})[0] || "";
+            return record({
+                action,
+                ...(await actorOf(event)),
+                target: DATA_KINDS[kind](after || before, id),
+                detail: { changes },
+            });
+        };
+    }
+
+    //Aaron F: records the role change made on the firebase server
+    async function roleChange(event) {
+        const before = event.data.before.val();
+        const after = event.data.after.val();
+        if(!after) return null; //Aaron F: deltions are recorded by accountt.delete and user.reject
+        const fromRole = (before && before.role) || null;
+        const toRole = after.role || null; 
+        if (fromRole === toRole) return null; //Aaron F: not a role change
+        if (!before && toRole === "pending") return null; // Aaron F: normal sign up recorded by account.signup
+        if (before && (before.approvedAt !== after.approvedAt || before.roleChangedAt !== after.roleChangedAttt)) return null;
+        return record({
+            action: "role.changedOutsideApp",
+            ...CHANGE_LIMIT(await actorOf(event)),
+            targetUid: (event.params && event.params.uid) || null,
+            targetEmail: after.email || null,
+            from: fromRole,
+            to: toRole,
+        });    
+    }
+
+    return { dataChange, roleChange };
+)
+
+module.exports = {
+    createAuditLog, createSessionAudit, createAuditTriggers,
+    buildEntry, describeChange, verifyCaller, SIGN_IN_WINDOW_SECONDS,
+
+};
