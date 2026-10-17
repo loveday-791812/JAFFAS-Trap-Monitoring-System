@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrapWatch - Audit Log</title> <!-- Aaron F: I changed the Audit Log to reflect the purpose of this page. -->
+<link rel="stylesheet" href="dashboard-style.css" />
+</head>
+<body data-required-role="admin">
+
+<!--Aaron F: Help about the ? to tell the user about whatt each part of the page means-->
+
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Auditt Log Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">Audit Log shows who did what and when, The server writes every entry so that no body can edit or delete them from the website.</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>Show </strong> — pick one type of event: accounts and roles, sign ins, data changes or security.</li>
+                <li><strong>Search</strong> — type an email address, a trap or an event name</li>
+                <li><strong>Refresh</strong> — Loads the newest 100 events.<strong>Load older events</strong> adds the 100 before them.</li>
+                <li><strong>Security</strong> — events are shown in red: lockouts after too many wrong codes, refused admin actions and role changed outside Trapwatch.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="help-close">Got it</button>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+
+    <header class="tw-header">
+        <div class="tw-header-left">
+            <div class="tw-logo">
+                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+            </div>
+            <h1 class="tw-title">Audit Log</h1>
+            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+        </div>
+        <div class="tw-header-right">
+            <button id="audit-refresh" class="btn btn-primary" type="button">Refresh</button>
+        </div>
+    </header>
+
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+        <a href="traps.html">Traps</a>
+        <a href="stats.html">Stats</a>
+        <a href="settings.html">Settings</a>
+        <a href="audit.html">Audit</a>
+        <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
+    </nav>
+
+    
+
+
+       <p id="deny-reason">Your role does not allow access to this page.</p>
+       <p>If you want access to this page, it has to be approved by a TrapWatch admin. That can change your role.</p>
+       <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;"> <!-- Aaron: I added a flex container to hold the buttons and make them responsive. -->
+         <a class="btn btn-outline" href="dashboard.html" id="deny-dashboard">Go to dashboard</a><!-- Aaron: I changed the href to point to the dashboard page so that users can go back to the dashboard. -->
+         <a class="btn btn-primary" href="Login/login.html" id="deny-logout">Log in as someone else</a> <!-- Aaron: I changed the href to point to the login page so that users can log in as a different user and log out. -->
+       </div>
+     </section>
+</main> 
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script> <!-- Aaron: Creates a global Firebase app capability -->
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script> <!-- Aaron: Creates a global Firebase auth capability-->
+   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script> <!-- Aaron: Creates a global Firebase realtime database capability -->
+   <script src="Website-backEnd/firebase-config.js"></script> <!-- Aaron: This script contains the Firebase configuration and initialization code. -->
+   <script>
+    const reason = new URLSearchParams(location.search).get("reason");// Aaron: I added a check to get the reason for the access denial from the URL query parameters. This allows us to display different messages based on the reason for the denial.
+     const messages = {
+       role: "Your role doesn't include access to that page.",
+       norole: "Your account hasn't been given a role yet.",
+       pending: "Thanks for signing up. An Admin is nottified and will be review your sign up and approve your use of TrapWatch",
+       error: "We couldn't check your permissions right now.",
+     };
+     document.getElementById("deny-reason").textContent = messages[reason] || messages.role;// Aaron: I added a check to hide the "Go to dashboard" button if the reason is not "role". This is because if the user doesn't have a role, they shouldn't be able to go to the dashboard.
+     if (reason !== "role") document.getElementById("deny-dashboard").style.display = "none";
+
+     document.getElementById("deny-logout").addEventListener("click", async (e) => { // Aaron: I added an event listener to the "Log in as someone else" button that signs the user out and redirects them to the login page. This allows users to log in as a different user if they don't have access to the current page.
+       e.preventDefault();
+       const target = e.currentTarget.href;
+       await twRecordSession("signOut"); //Aaron F: records the sign out on the Audit page
+       await twAuth.signOut();
+       window.location.href = target;
+     });
+   </script>
+   </body>
+   </html>
