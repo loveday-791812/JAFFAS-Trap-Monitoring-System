@@ -103,3 +103,24 @@ function createSessionAudit({ auth, record, nowMs = () => Date.now() }) {
     return { handleAuditSession };
 }
 
+//Aaron F: Audit naming convention on audit page.
+
+const DATA_KINDS = {
+    trap: (row, id) => `Trap ${row && row.trap_num !== undefined && row.trap_num !== null ? row.trap_num : id}`,
+    recipient: (row, id) => (row && (row.email || row.name)) || id,
+    settings: () => "Setttings",
+};
+
+//Aaron F: handlers for database trtiggers, recording changes made in tthe browser which functiions currently dont see
+
+function createAuditTriggers({ record, lookupEmail }) {
+    //Aaron F: looks at which account made the change, reports tthe signed in users, not sure if the emulator will be able to catch it
+    async function actorOf(event) {
+        if (event.authType === "app_user" && event.authId) {
+            return { actorUid: event.authId, actorEmail: await lookupEmail(event.authId) };
+        }
+        if (event.authType === "admin") return { actorType: "system" };   //Aaron F: a server function or the Firebase console
+        if (event.authType === "unauthenticated") return { actorType: "unauthenticated" };
+        return { actorType: "unknown" };
+    } 
+}
