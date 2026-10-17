@@ -21,6 +21,7 @@ const TW_FUNCTIONS = {
     resetPassword: "/api/resetPassword",
     adminUsers: "/api/adminUsers",
     deleteMyAccount: "/api/deleteMyAccount",
+    auditSession: "/api/auditSession",
 };
 
    /* Local testing only: on the Hosting emulator (localhost), use the local Auth and Database emulators instead of the live project. */
@@ -49,6 +50,13 @@ async function twAuthPost(functionName, body = {}) {
     if (!res.ok) throw new Error(data.error || "Something went wrong. Please refresh and try again");
     return data;
     
+}
+
+/* Aaron F: server sends information about a sign-in or sign-out so it appears on the Audit page. It never blocks the user and gives up after 3 seconds, and a failure is only logged in the console. */
+function twRecordSession(event) {
+    const record = twAuthPost("auditSession", { event }).catch((err) => console.warn("Audit not recorded:", err.message));
+    const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
+    return Promise.race([record, timeout]);
 }
 
 async function getRole(user) {
