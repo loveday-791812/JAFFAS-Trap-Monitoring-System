@@ -57,39 +57,55 @@
         <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
     </nav>
 
-    
+    <!--Aaron F: filters for event so that they are already loaded-->
+    <section class="card audit-filters" aria-label="Filter the audit log">
+        <div class="field">
+            <label for="audit-category">Show</label>
+            <select id="audit-category">
+                <option value="all">All events</option>
+                <option value="all">Accounts and Roles</option>
+                <option value="all">Sign ins and Sign outs</option>
+                <option value="all">Traps, recipients and settings</option>
+                <option value="all">Security</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="audit-search">Search</label>
+            <input type="text" id="audit-search" placeholder="Email, trap or event" autocomplete="off" />
+        </div>
+    </section>
 
+    <p id="audit-status" class="users-status" role="status" aria-live="polite"></p>
 
-       <p id="deny-reason">Your role does not allow access to this page.</p>
-       <p>If you want access to this page, it has to be approved by a TrapWatch admin. That can change your role.</p>
-       <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;"> <!-- Aaron: I added a flex container to hold the buttons and make them responsive. -->
-         <a class="btn btn-outline" href="dashboard.html" id="deny-dashboard">Go to dashboard</a><!-- Aaron: I changed the href to point to the dashboard page so that users can go back to the dashboard. -->
-         <a class="btn btn-primary" href="Login/login.html" id="deny-logout">Log in as someone else</a> <!-- Aaron: I changed the href to point to the login page so that users can log in as a different user and log out. -->
-       </div>
-     </section>
-</main> 
-   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script> <!-- Aaron: Creates a global Firebase app capability -->
-   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script> <!-- Aaron: Creates a global Firebase auth capability-->
-   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script> <!-- Aaron: Creates a global Firebase realtime database capability -->
-   <script src="Website-backEnd/firebase-config.js"></script> <!-- Aaron: This script contains the Firebase configuration and initialization code. -->
-   <script>
-    const reason = new URLSearchParams(location.search).get("reason");// Aaron: I added a check to get the reason for the access denial from the URL query parameters. This allows us to display different messages based on the reason for the denial.
-     const messages = {
-       role: "Your role doesn't include access to that page.",
-       norole: "Your account hasn't been given a role yet.",
-       pending: "Thanks for signing up. An Admin is nottified and will be review your sign up and approve your use of TrapWatch",
-       error: "We couldn't check your permissions right now.",
-     };
-     document.getElementById("deny-reason").textContent = messages[reason] || messages.role;// Aaron: I added a check to hide the "Go to dashboard" button if the reason is not "role". This is because if the user doesn't have a role, they shouldn't be able to go to the dashboard.
-     if (reason !== "role") document.getElementById("deny-dashboard").style.display = "none";
+    <section class="card table-card">
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Event</th>
+                    <th>Who</th>
+                    <th>Affected</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="audit-tbody">
+                <!--Aaron F: twRenderAudit() adds rows in audit.js-->
+            </tbody>
+        </table>
+    </section>
 
-     document.getElementById("deny-logout").addEventListener("click", async (e) => { // Aaron: I added an event listener to the "Log in as someone else" button that signs the user out and redirects them to the login page. This allows users to log in as a different user if they don't have access to the current page.
-       e.preventDefault();
-       const target = e.currentTarget.href;
-       await twRecordSession("signOut"); //Aaron F: records the sign out on the Audit page
-       await twAuth.signOut();
-       window.location.href = target;
-     });
-   </script>
+    <div class="audit-more" id="audit-more" style="display:none;">
+        <button id="audit-older" class="btn btn-outline" type="button">Load older events</button>
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script src="Website-backEnd/firebase-config.js"></script>
+<script src="dashboard-auth.js"></script>
+<script src="audit.js"></script>
    </body>
    </html>
