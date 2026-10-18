@@ -811,3 +811,16 @@ body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the u
 .users-table select:focus-visible, .users-table button:focus-visible, .danger-card button:focus-visible { outline: 3px solid var(--tw-green-mid); outline-offset: 2px; }
 .danger-card .settings-section { border-left: 4px solid var(--tw-danger); border-bottom: none; }
 .field-error { min-height: 1.2em; margin: 8px 0 0; font-size: 0.9rem; }
+
+/*Aaron F: Sign out link at the end of nav*/
+.tw-nav a.tw-signout {color: var(--tw-danger); }
+.tw-nav a.tw-signout:hover { background: var(--tw-danger); border-color: var(--tw-danger); color: #fff; }
+
+/*Aaron F: Audit page (audit.html)*/
+.audit-filters { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px 20px; margin-bottom: 8px; }
+.audit-filters .field { flex: 1 1 220px; margin-bottom: 0; }
+.audit-table thead th { cursor: default; }
+.audit-table td { vertical-align: top; }
+.audit-table td:first-child { white-space: nowrap; }
+.audit-table tr.audit-security td:nth-child(2) { color: car(--tw-danger); font-weight: 700 }
+.audit-more { display: flex; justify-content: center; margin-top: 16px; }
