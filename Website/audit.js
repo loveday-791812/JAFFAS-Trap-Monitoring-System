@@ -156,3 +156,45 @@ async function twLoadAudit(older) {
     document.getElementById("audit-more").style.display = batch.length === TW_AUDIT_PAGE_SIZE ? "" : "none";
 }
 
+async function twAuditRefresh(older = false) {
+    const buttons = [document.getElementById("audit-refresh"), document.getElementById("audit-older")];
+    buttons.forEach((button) => { button.disabled = true; });
+    twAuditStatus("Loading events…");
+    try {
+        await twLoadAudit(older);
+        twRenderAudit();
+    } catch (err) {
+        console.error("Audit log failed to load:", err);
+        twAuditStatus(`Couldn't load the audit log. ${err.message}`, true);
+    } finally {
+        buttons.forEach((button) => { button.disabled = false; });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady;   // Aaron F: dashboard-auth.js resolves this once an admin is signed in
+
+    document.querySelectorAll(".tw-nav a").forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === "audit.html");
+    });
+
+    // Aaron F: the ? hoverable opens it; Got it, the dimmed background or Escape closes it
+    const help = document.getElementById("help-modal");
+    document.getElementById("help-btn").addEventListener("click", () => help.classList.add("open"));
+    document.getElementById("help-close").addEventListener("click", () => help.classList.remove("open"));
+    help.addEventListener("click", (e) => { if (e.target === help) help.classList.remove("open"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") help.classList.remove("open"); });
+
+        // Menu button on phones
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const isOpen = document.getElementById("tw-nav").classList.toggle("open");
+        e.currentTarget.setAttribute("aria-expanded", isOpen);
+    });
+
+        document.getElementById("audit-category").addEventListener("change", twRenderAudit);
+    document.getElementById("audit-search").addEventListener("input", twRenderAudit);
+    document.getElementById("audit-refresh").addEventListener("click", () => twAuditRefresh(false));
+    document.getElementById("audit-older").addEventListener("click", () => twAuditRefresh(true));
+
+    await twAuditRefresh(false);
+});
