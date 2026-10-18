@@ -30,9 +30,129 @@ const TW_AUDIT_EVENTS = {
     "role.changedOutsideApp": { label: "Role changed outside TrapWatch", group: "security" },
 };
 
-//Aaron F: audit roles named with the same role names as the Recipients page
+// Aaron F: audit roles named with the same role names as the Recipients page
 const TW_AUDIT_ROLES = { worker: "Farmer", manager: "Farm Manager", admin: "Admin", pending: "Waiting for approval" };
 
 // Aaron F: records who made a change when no person was signed in to the website
 const TW_AUDIT_ACTORS = { system: "System or Firebase console", unauthenticated: "Not signed in", unknown: "Unknown" };
+
+// Aaron F: Plain words for the values the server stores
+const TW_AUDIT_WORDS = {
+    password: "password", emailLink: "email link",
+    verifyCode: "email code check", resetPassword: "password reset", adminUsers: "user management",
+};
+
+let twAuditEntries = [];     // Aaron F: the loaded events display the newest first
+let twAuditOldestKey = null; //Aaron F: Load older events carries on from here
+
+function twAuditEvent(action) {
+    return TW_AUDIT_EVENTS[action] || { label: action || "Unknown event", group: "other" };
+}
+
+function twAuditRole(role) {
+    return TW_AUDIT_ROLES[role] || role || "No role";
+}
+
+function twAuditWhen(at) {
+    const date = new Date(at);
+    if (!at || Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString("en-NZ", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+// Aaron F: The entries with no actorUid's were made by someone who wasn't signed in, for example a password reset
+function twAuditWho(entry) {
+    return entry.actorEmail || entry.actorUid || TW_AUDIT_ACTORS[entry.actorType] || "Not signed in";
+}
+
+function twAuditAffected(entry) {
+    return entry.targetEmail || entry.target || entry.targetUid || "—";
+}
+
+//Aaron F: One line is added per entry: the role change, how they signed in, and old changed to new values for data changes 
+function twAuditDetails(entry) {
+    const detail = entry.detail || {};
+    const lines = [];
+    if (entry.from && entry.to) lines.push(`${twAuditRole(entry.from)} → ${twAuditRole(entry.to)}`);
+    else if (entry.from) lines.push(`Role was ${twAuditRole(entry.from)}`);
+    else if (entry.to) lines.push(`New role: ${twAuditRole(entry.to)}`);
+    if (detail.requestedRole) lines.push(`Asked for: ${twAuditRole(detail.requestedRole)}`);
+    if (detail.method) lines.push(`Using ${TW_AUDIT_WORDS[detail.method] || detail.method}`);
+    if (detail.endpoint) lines.push(`In: ${TW_AUDIT_WORDS[detail.endpoint] || detail.endpoint}`);
+    if (detail.attempted) lines.push(`Tried: ${detail.attempted}`);
+    Object.values(detail.changes || {}).forEach((change) => {
+        lines.push(`${change.field}: ${change.from ?? "(empty)"} → ${change.to ?? "(empty)"}`);
+    });
+    return lines;
+}
+
+function twAuditCell(text) {
+    const td = document.createElement("td");
+    td.textContent = text;
+    return td;
+}
+
+function twAuditRow(entry) {
+    const event = twAuditEvent(entry.action);
+    const row = document.createElement("tr");
+    if (event.group === "security") row.classList.add("audit-security");
+    row.appendChild(twAuditCell(twAuditWhen(entry.at)));
+    row.appendChild(twAuditCell(event.label));
+    row.appendChild(twAuditCell(twAuditWho(entry)));
+    row.appendChild(twAuditCell(twAuditAffected(entry)));
+    const details = twAuditCell("");
+    twAuditDetails(entry).forEach((line) => {
+        const div = document.createElement("div");
+        div.textContent = line;
+        details.appendChild(div);
+    });
+    row.appendChild(details);
+    return row;
+}
+
+function twAuditStatus(message, isError = false) {
+    const el = document.getElementById("audit-status");
+    el.textContent = message;
+    el.classList.toggle("is-error", isError);
+}
+
+// Aaron F: The function shows the loaded events that match the Show filter and the search box which is needed as a function of the admin to find pertinant events
+function twRenderAudit() {
+    const group = document.getElementById("audit-category").value;
+    const search = document.getElementById("audit-search").value.trim().toLowerCase();
+    const shown = twAuditEntries.filter((entry) => {
+        if (group !== "all" && twAuditEvent(entry.action).group !== group) return false;
+        if (!search) return true;
+        const text = [twAuditEvent(entry.action).label, twAuditWho(entry), twAuditAffected(entry), ...twAuditDetails(entry)];
+        return text.join(" ").toLowerCase().includes(search);
+    });
+
+    const tbody = document.getElementById("audit-tbody");
+    tbody.replaceChildren();
+    shown.forEach((entry) => tbody.appendChild(twAuditRow(entry)));
+    if (!shown.length) {
+        const row = document.createElement("tr");
+        const td = twAuditCell(twAuditEntries.length ? "No events match these filters." : "No events have been recorded yet.");
+        td.colSpan = 5;
+        row.appendChild(td);
+        tbody.appendChild(row);
+    }
+    twAuditStatus(`Showing ${shown.length} of ${twAuditEntries.length} loaded events.`);
+}
+
+// Aaron F: Loads the newest events, or with older = true the ones before those already loaded
+async function twLoadAudit(older) {
+    let query = rtdb.ref("auditLogs").orderByKey();   // push keys sort oldest → newest
+    if (older) query = query.endBefore(twAuditOldestKey);
+    const snap = await query.limitToLast(TW_AUDIT_PAGE_SIZE).once("value");
+
+    const batch = [];
+    snap.forEach((child) => {
+        batch.push({ key: child.key, ...child.val() });   // keep the braces: returning true would stop forEach early
+    });
+    batch.reverse();   // newest first
+
+    twAuditEntries = older ? twAuditEntries.concat(batch) : batch;
+    if (batch.length) twAuditOldestKey = batch[batch.length - 1].key;
+    document.getElementById("audit-more").style.display = batch.length === TW_AUDIT_PAGE_SIZE ? "" : "none";
+}
 
