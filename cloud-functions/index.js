@@ -1,6 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { onValueWritten } = require("firebase-functions/v2/database");
-const { createAuditLog, createSessionAudit, CreateAuditTriggers } = require("./auditLog");
+const { createAuditLog, createSessionAudit, createAuditTriggers } = require("./auditLog");
 const admin = require("firebase-admin");
 const { ServerValue } = require("firebase-admin/database"); //Aaron F: testing with an emulator logic: server timestamp; the emulator hides admin.database.ServerValue
 const { Resend } = require("resend");
