@@ -36,8 +36,11 @@ APN = "internet" #2 degrees network
 last_reply = b'' #holds the most recent reply from the module
 
 
-duplicate_window = 90 * 60 #if signal sent in 90 minutes of same hex code, ignore
+duplicate_window = 10  #if signal sent in 90 minutes of same hex code, ignore
 last_signal_at = {} #adds last signal to this for later
+#Packet gap
+packet_gap_ms = 30 #how many milliseconds of silence means the packet has finished
+last_byte_at = 0 #the time the last byte arrived, in milliseconds
 
 ##MP version of powerOnModule function
 #4G connection fucntion
@@ -260,31 +263,33 @@ def filter_signal(hex_data): #hex_data is the packet as a hex
 
 ##main loop
 def loop(): #defines loop function
-    global byte_index, packet_too_long ##calls from above to avoid new variables
+    global byte_index, packet_too_long, last_byte_at ##calls from above to avoid new variables
     while True: #starts the infinite loop, keeps checking for new bytes
         while uart.any(): #second loop, returns unread bytes
             incoming_byte = uart.read(1)[0] #reads the next byte in line, returns the byte as an object, [0] is inserted to get teh real value
-            #detect end of packet
-            if incoming_byte == 0x0D: #0x0D is the carriage return character used as a terminator. for example 12 11 0D: 12 = packet data, 11 = packet data, 0D = end of packet. after 0x0D, stops collecting bytes
-                if not packet_too_long and byte_index > 0: #only runs if packet is 8 bytes or lower AND byte is not empty
-                    hex_data = ' '.join(f'{b:02x}' for b in received_bytes[:byte_index]) # converts into string. 0x12 > 12 and adds spaces between bytes
-                    print('Received:', hex_data) #prints hex string. packet is put into hex_data
-                    filter_signal(hex_data) #sends hex to firebase by calling send to firebase function
-                else:
-                    print('Ignored empty or oversized packet') #if packet is empty or more than 8 bytes
-                    #resetting for next packet
-                byte_index = 0 #makes it ready to read the next byte in line again
-                packet_too_long = False #lets new packet be allowed
-                continue #goes back to start, skips below
-
+            last_byte_at = time.ticks_ms()
             if incoming_byte == 0x0A: #skips 0x0A (line feed, comes after 0x0D)
                 continue #skips to next byte
-
+            if incoming_byte == 0x0D: #skips 0x0D (carriage return, we will ignore and wait for silence instead)
+                continue #skips to next byte
+            
             if byte_index < MESSAGE_LENGTH: #if the packet has room to store another byte, one will be added
                 received_bytes[byte_index] = incoming_byte
                 byte_index += 1 #increases to the next avaible byte spot
             else:
                 packet_too_long = True #if buffer is full before 0x0D appears, then it flags as too long
+            
+        #detect end of packet
+        if byte_index > 0 and time.ticks_diff(time.ticks_ms(), last_byte_at) > packet_gap_ms: #bytes wait and if nothing new arrived for packet_gap_ms, so packet has finished sending
+            if not packet_too_long: #only runs if packet is 8 bytes or lower
+                hex_data = ' '.join(f'{b:02x}' for b in received_bytes[:byte_index]) # converts into string. 0x12 > 12 and adds spaces between bytes
+                print('Received:', hex_data) #prints hex string. packet is put into hex_data
+                filter_signal(hex_data) #sends hex to firebase by calling send to firebase function
+            else:
+                print('Ignored oversized packet') #if packet is empty or more than 8 bytes
+                    #resetting for next packet
+            byte_index = 0 #makes it ready to read the next byte in line again
+            packet_too_long = False #lets new packet be allowed
 
 ##open a raw secure connection to Firebase and close it again
 def raw_connect_open():
