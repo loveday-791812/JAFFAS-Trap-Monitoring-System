@@ -36,7 +36,7 @@ APN = "internet" #2 degrees network
 last_reply = b'' #holds the most recent reply from the module
 
 
-duplicate_window = 10  #if signal sent in 90 minutes of same hex code, ignore
+duplicate_window = 90 * 60  #if signal sent in 90 minutes of same hex code, ignore
 last_signal_at = {} #adds last signal to this for later
 #Packet gap
 packet_gap_ms = 30 #how many milliseconds of silence means the packet has finished
