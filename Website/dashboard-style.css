@@ -560,6 +560,16 @@ tbody tr:hover {
     margin-top: 20px;
 }
 
+/*Aaron F: fixing the settings button so that its more neat and lines up correctly*/
+.settings-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+}
+.settings-footer.bttn { order: -1 } /*Aaron F: there is a hidden artifact so by putting the button earlier in order there isnt a gap that makes the dashboard look unprofessional*/
+.danger-card { margin-top: 20px; } /*Aaron F: there is now a gap between the settings button and the delete btn */
+
 .save-confirmation {
     font-size: 0.88rem;
     color: var(--tw-green-dark);
