@@ -1,4 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { onValueWritten } = require("firebase-functions/v2/database");
+const { createAuditLog, createSessionAudit, createAuditTriggers } = require("./auditLog");
 const admin = require("firebase-admin");
 const { ServerValue } = require("firebase-admin/database"); //Aaron F: testing with an emulator logic: server timestamp; the emulator hides admin.database.ServerValue
 const { Resend } = require("resend");
@@ -9,6 +11,12 @@ const MAGIC_TOKEN_TTL_MS = 3 * 60 * 60 * 1000; //Aaron: 3 hours expiration for m
 admin.initializeApp();
 
 const rtdb = admin.database();
+// Aaron F: Audit log ttracks every important event, and is written to /auditLogs by the server cloud-functions/auditLog.js.
+const auditLog = createAuditLog({ db: rtdb, serverTimestamp: ServerValue.TIMESTAMP });
+const lookupEmail = (uid) => admin.auth().getUser(uid).then((u) => u.email || null).catch(() => null);
+// Aaron F: Database triggers run next to the database in Singapore. Us central is for emulator*/
+const AUDIT_TRIGGER_REGION = process.env.FUNCTIONS_EMULATOR === "true" ? "us-central1" : "asia-southeast1";
+
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 
@@ -106,6 +114,7 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 html: codeEmailHtml(code),
             });
 
+            await auditLog.record({ action: "accountt.signup", actorUid: userRecord.uid, actorEmail: email, detail: { requestableRole: role } });
             return res.status(200).json({ uid: userRecord.uid });
 
         } catch (err) {
@@ -194,6 +203,7 @@ exports.verifyCode = onRequest((req, res) => {
             const tx = await userRef.child("attempts").transaction((cur) => (cur || 0) + 1);//Aaron: increment the number of attempts atomically to prevent race conditions. This ensures that even if multiple requests are made simultaneously, the count will be accurate and consistent.
             const attempts = tx.snapshot.val();//Aaron: get the updated number of attempts after the transaction. This will be used to check if the user has exceeded the maximum number of allowed attempts. If they have, we will return an error response and prevent further verification attempts until a new code is requested.
             if (attempts > MAX_ATTEMPTS) {//Aaron: check if the number of attempts exceeds the maximum allowed. If it does, return an error response to prevent brute-force attacks and abuse of the verification system.
+                if (attempts === MAX_ATTEMPTS + 1) await auditLog.record({ action: "security.lockout", targetUid: uid, targetEmail: user.email || null, detail: { endpoint: "verifyCode" } })
                 return res.status(429).json({ error: "Too many incorrect attempts.Please request a new code." });//Aaron: return a 429 status code to indicate that the user has exceeded the allowed number of attempts. This helps to prevent abuse and brute-force attacks on the verification system. used 429 because it is a rate limiting error code and fits the context of too many attempts.
             }
 
@@ -221,6 +231,7 @@ exports.verifyCode = onRequest((req, res) => {
             });
 
             await admin.auth().updateUser(uid, { emailVerified: true });
+            await auditLog.record({ action: "account.verify", actorUid: uid, actorEmail: user.email || null });
             //Aaron F: This approves the user when an admin grants approval through the use of userAdmin.js so tthat access and the recipients row will be approved after tthe admin grants approval.
             return res.status(200).json({ verified: true});
 
@@ -267,6 +278,7 @@ exports.magicLogin = onRequest((req, res) => {
             });
 
             const customToken = await admin.auth().createCustomToken(uid); //Aaron: create a custom Firebase Auth token for the user. This token allows the user to authenticate with Firebase without needing a password, enabling a seamless login experience using the magic link. The custom token is generated based on the user's unique identifier (uid) and can be used to sign in to the application securely.
+            await auditLog.record({ action: "session.signIn", actorUid: uid, actorEmail: userData.email || null, detail: { method: "emailLink" } });
             return res.status(200).json({ customToken, role: userData.role, email: userData.email  });//Aaron: return the custom token in the response, allowing the client to use it for authentication. The client can then sign in with this token to access protected resources and perform actions on behalf of the authenticated user.
         } catch (err) { //Aaron: catch any errors that occur during the magic login process. This includes issues with database queries, token generation, or any other unexpected errors. Logging the error helps with debugging and provides insight into what went wrong during the request.
             console.error("magicLogin error:", err);
@@ -327,6 +339,7 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req,
                 html: resetEmailHtml(code),
             });
 
+            await auditLog.record({ action: "password.resetRequest", targetUid: userRecord.uid, targetEmail: userRecord.email || null });
             return res.status(200).json({ success: true});
         } catch (err) {
             console.error("requestPasswordReset error:", err);
@@ -362,6 +375,7 @@ exports.resetPassword = onRequest((req, res) => {
 
         if (Date.now() > reset.expiresAt || reset.attempts >= MAX_ATTEMPTS) {
             await ref.remove();
+            if (reset.attempts >= MAX_ATTEMPTS) await auditLog.record({ action: "security.lockout", targetUid: userRecord.uid, targetEmail: userRecord.email || null, detail: { endpoint: "resetPassword" } });
             return res.status(400).json(genericError);
         }
 
@@ -375,6 +389,7 @@ exports.resetPassword = onRequest((req, res) => {
         await admin.auth().updateUser(userRecord.uid, { password: newPassword});
         await admin.auth().revokeRefreshTokens(userRecord.uid);
         await ref.remove();
+        await auditLog.record({ action: "password.reset", targetUid: userRecord.uid, targetEmail: userRecord.email || null });
 
         return res.status(200).json({ success: true });
     } catch (err) {
@@ -394,3 +409,13 @@ const userAdmin = createUserAdmin({
 
 exports.adminUsers = onRequest((req, res) => userAdmin.handleAdminUsers(req, res));
 exports.deleteMyAccount = onRequest((req, res) => userAdmin.handleDeleteMyAccount(req, res));
+
+/* Aaron F: Audit logic - sign-ins and sign-outs reported by the browser, and changes made directly in the database. */
+const sessionAudit = createSessionAudit({ auth: admin.auth(), record: auditLog.record });
+const auditTriggers = createAuditTriggers({ record: auditLog.record, lookupEmail });
+
+exports.auditSession = onRequest((req, res) => sessionAudit.handleAuditSession(req, res));
+exports.auditTraps = onValueWritten({ ref: "/Traps/{trapId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("trap"));
+exports.auditRecipients = onValueWritten({ ref: "/Recipients/{recipientId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("recipient"));
+exports.auditSettings = onValueWritten({ ref: "/Settings", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("settings"));
+exports.auditRoles = onValueWritten({ ref: "/users/{uid}", region: AUDIT_TRIGGER_REGION }, auditTriggers.roleChange);

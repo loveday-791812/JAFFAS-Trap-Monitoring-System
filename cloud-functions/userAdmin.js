@@ -2,6 +2,7 @@
 in the browser the role policys checks if the change is allowed with tthis page will write the roles.*/
 
 const policy = require("./rolePolicy");//Aaron F: .will require rolePolicy
+const { buildEntry } = require("./auditLog");
 
 const RECENT_SIGN_IN_SECONDS = 3 * 60; //Aaron F: the tracking so that the account holder needs to have signed in in the past 180 seconds as an added layer of protection againstt unauthoriszed delteion of the account
 const UID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/; // Firebase UID pattern/format validates the value inside the database
@@ -28,8 +29,13 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
     }
 
     async function audit(entry) { //Aaron F: To create Audit logs
-        await db.ref("auditLogs").push({ ...entry, at: serverTimestamp });
+        try {
+            await db.ref("auditLogs").push(buildEntry(entry, serverTimestamp));
+        } catch (err) {
+            console.error("Audit log entry not saved:", entry.action, err); //Aaron F: the change itself has already been saved the audit log has not
+        }
     }
+
 
     /*Aaron F: admin screen fields so that the logic is contained*/
     async function listUsers() {
@@ -100,6 +106,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
         const { action, uid, role } = req.body || {};
         try {
             if ((await roleOf(caller.uid)) !== "admin") {
+                await audit({ action: "security.denied", actorUid: caller.uid, actorEmail: caller.email || null, detail: { endpoint: "adminUsers", attempted: String(action) } });
                 return res.status(403).json({ error: "Only admins can manage user accounts." });
             }
             if (action === "list") return res.status(200).json({ users: await listUsers(), you: caller.uid });
@@ -119,7 +126,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             if (!decision.ok) return fail(res, decision);
                 await db.ref(`users/${uid}`).update({ role, approvedAt: serverTimestamp, approvedBy: caller.uid });
                 await addRecipient(uid, (account && account.email) || target.email);
-                await audit({ action: "user.approve", actorUid: caller.uid, targetUid: uid, from: target.role, to: role });
+                await audit({ action: "user.approve", actorUid: caller.uid, actorEmail: caller.email || null, targetUid: uid, targetEmail: (account && account.email) || target.email || null, from: target.role, to: role });
                 return res.status(200).json({ ok: true });
             }
 
@@ -127,7 +134,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
                 const decision = policy.decideReject({ targetRole: target.role });
                 if (!decision.ok) return fail(res, decision);
                 await deleteAccountData(uid, (account && account.email) || target.email);
-                await audit({ action: "user.reject", actorUid: caller.uid, targetUid: uid, from: target.role, to: null });
+                await audit({ action: "user.reject", actorUid: caller.uid, actorEmail: caller.email || null, targetUid: uid, targetEmail: (account && account.email) || target.email || null, from: target.role, to: null });
                 return res.status(200).json({ ok: true });
             }
             if (action === "setRole") {
@@ -137,7 +144,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
                 });
                 if (!decision.ok) return fail(res, decision);
                 await db.ref(`users/${uid}`).update({ role, roleChangedAt: serverTimestamp, roleChangedBy: caller.uid });
-                await audit({ action: "user.setRole", actorUid: caller.uid, targetUid: uid, from: target.role, to: role });
+                await audit({ action: "user.setRole", actorUid: caller.uid, actorEmail: caller.email || null, targetUid: uid, targetEmail: (account && account.email) || target.email || null, from: target.role, to: role });
                 return res.status(200).json({ ok: true });
             }
             return res.status(400).json({ error: "Unknown action." });
@@ -162,7 +169,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             });
             if (!decision.ok) return fail(res, decision);
             await deleteAccountData(caller.uid, caller.email);
-            await audit({ action: "account.delete", actorUid: caller.uid, targetUid: caller.uid, from: role || null, to: null });
+            await audit({ action: "account.delete", actorUid: caller.uid, actorEmail: caller.email || null, targetUid: caller.uid, targetEmail: caller.email || null, from: role || null, to: null });
             return res.status(200).json({ ok: true });
         } catch (err) {
             console.error("deleteMyAccount error:", err);

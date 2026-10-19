@@ -34,7 +34,7 @@
       ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
       "$eventId": {
         ".write": "(auth != null && root.child('devices').child(auth.uid).val() === true) && !data.exists() && newData.exists()",
-        ".validate": "newData.hasChildren(['transmitter_ID', 'timestamp'])",
+        ".validate": "newData.hasChildren(['transmitter_ID', 'timeStamp'])",
         "transmitter_ID": {
           ".validate": "newData.isString() && newData.val().length <= 64 && newData.val().matches(/^[0-9A-Fa-f ]+$/)"
         },
@@ -45,7 +45,7 @@
           ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[0-9 :.\\/TZ+-]+$/)"
         },
         "trap_ID": {
-          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[A-Za-z0-9_-]+$/))"
+          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[A-Za-z0-9\\/_-]+$/))"
         },
         "$other": {
           ".validate": false

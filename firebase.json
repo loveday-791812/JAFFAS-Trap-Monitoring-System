@@ -28,7 +28,8 @@
       { "source": "/api/requestPasswordReset",  "function": "requestPasswordReset" },
       { "source": "/api/resetPassword",  "function": "resetPassword" },
       { "source": "/api/adminUsers",  "function": "adminUsers" },
-      { "source": "/api/deleteMyAccount",  "function": "deleteMyAccount" }
+      { "source": "/api/deleteMyAccount",  "function": "deleteMyAccount" },
+      { "source": "/api/auditSession",  "function": "auditSession" }
     ]
   },
   "functions": [

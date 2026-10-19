@@ -51,6 +51,8 @@
         <a href="traps.html">Traps</a>
         <a href="stats.html">Stats</a>
         <a href="settings.html">Settings</a>
+        <a href="audit.html">Audit</a>
+        <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
     </nav>
 
     <!-- setting form -->
@@ -154,10 +156,11 @@
 
         </section>
 
-        <!-- save button -->
+        <!-- save and discard changes button -->
         <section class="card settings-actions-card">
             <div class="settings-footer">
                 <span id="save-confirmation" class="save-confirmation">Settings saved</span>
+                <button type="button" id="discard-settings-btn" class="btn btn-outline">Discard changes</button> <!--Aaron F: added discard changes in case they wanted to revert to what they have saved as thier settings -->
                 <button type="submit" class="btn btn-primary">Save Settings</button>
             </div>
         </section> 
