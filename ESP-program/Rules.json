@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "users": {
+      ".indexOn": ["role", "email", "magicToken", "magicTokenHash"],
+      ".read": false,
+      ".write": false
+    },
+    "Users": {
+      "$user_ID": {
+        ".validate": "newData.hasChildren(['email', 'full_name', 'role'])",
+        "email": { ".validate": "newData.isString()" },
+        "full_name": { ".validate": "newData.isString()" },
+        "role": { ".validate": "newData.isString()" },
+        "report_type": { ".validate": "newData.isString()" }
+      }
+    },
+    "Traps": {
+      "$trap_ID": {
+        ".validate": "newData.hasChildren(['trap_num', 'trap_type', 'status'])",
+        "trap_num": { ".validate": "newData.isNumber()" },
+        "trap_type": { ".validate": "newData.isString()" },
+        "trap_location": { ".validate": "newData.isString()" }
+      }
+    },
+    "Events": {
+      "$event_ID": {
+        ".validate": "newData.hasChildren(['transmitter_ID', 'timeStamp', 'trap_ID'])",
+        "transmitter_ID": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "trap_ID": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "timeStamp": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "$other": { ".validate": false }
+      }
+    },
+    "Transmitters": {
+      "$transmitter_ID": {
+        ".validate": "newData.hasChildren(['transmitter_num'])",
+        "transmitter_num": { ".validate": "newData.isString()" },
+        "last_seen": { ".validate": "newData.isString()" }
+      }
+    },
+    "TrapTransmitter": {
+      "$link_ID": {
+        ".validate": "newData.hasChildren(['transmitter_ID', 'trap_ID'])",
+        "transmitter_ID": { ".validate": "newData.isString()" },
+        "trap_ID": { ".validate": "newData.isString()" }
+      }
+    },
+    "Recipients": {
+      "$recipient_ID": {
+        ".validate": "newData.hasChildren(['email', 'name', 'report', 'status'])",
+        "email": { ".validate": "newData.isString()" },
+        "name": { ".validate": "newData.isString()" },
+        "report": { ".validate": "newData.isString()" },
+        "status": { ".validate": "newData.isString()" }
+      }
+    }
+  }
+}
