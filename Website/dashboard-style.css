@@ -567,7 +567,7 @@ tbody tr:hover {
     gap: 16px;
     padding: 16px 24px;
 }
-.settings-footer.bttn { order: -1 } /*Aaron F: there is a hidden artifact so by putting the button earlier in order there isnt a gap that makes the dashboard look unprofessional*/
+.settings-footer .btn { order: -1; white-space: nowrap } /*Aaron F: there is a hidden artifact so by putting the button earlier in order there isnt a gap that makes the dashboard look unprofessional*/
 .danger-card { margin-top: 20px; } /*Aaron F: there is now a gap between the settings button and the delete btn */
 
 .save-confirmation {
