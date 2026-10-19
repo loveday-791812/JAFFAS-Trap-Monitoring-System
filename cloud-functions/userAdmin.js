@@ -33,7 +33,9 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             await db.ref("auditLogs").push(buildEntry(entry, serverTimestamp));
         } catch (err) {
             console.error("Audit log entry not saved:", entry.action, err); //Aaron F: the change itself has already been saved the audit log has not
+        }
     }
+
 
     /*Aaron F: admin screen fields so that the logic is contained*/
     async function listUsers() {
