@@ -101,6 +101,8 @@
                             type="button"
                             class="password-toggle"
                             onclick="togglePassword('password', this)"
+                            tabindex="-1"
+                            aria-label="Show or hide password"
                         >
                             ◉
                         </button>
@@ -131,6 +133,8 @@
                             type="button"
                             class="password-toggle"
                             onclick="togglePassword('confirmPassword', this)"
+                            tabindex="-1"
+                            aria-label="Show or hide password"
                         >
                             ◉
                         </button>
@@ -147,14 +151,14 @@
                         Select Role
                     </label>
 
-                    <div class="roles">
+                    <div class="roles" role="radiogroup" aria-labelledby="role-label">
 
                         <label class="role-option">
 
                             <input
                                 type="radio"
                                 name="role"
-                                value="manager"
+                                value="worker"
                                 required
                             >
 
@@ -163,10 +167,10 @@
                                 <span class="radio-circle"></span>
 
                                 <div>
-                                    <strong>Farm Manager</strong>
+                                    <strong>Farmer</strong>
 
                                     <small>
-                                        Manage traps and monitor activity
+                                        Check and reset traps in the field
                                     </small>
                                 </div>
 
@@ -180,7 +184,7 @@
                             <input
                                 type="radio"
                                 name="role"
-                                value="worker"
+                                value="manager"
                             >
 
                             <div class="role-content">
@@ -188,10 +192,10 @@
                                 <span class="radio-circle"></span>
 
                                 <div>
-                                    <strong>Farmer</strong>
+                                    <strong>Farm Manager</strong>
 
                                     <small>
-                                        Check and reset traps in the field
+                                        Manages and monitors trap activity
                                     </small>
                                 </div>
 
