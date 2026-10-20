@@ -45,12 +45,24 @@
           ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[0-9 :.\\/TZ+-]+$/)"
         },
         "trap_ID": {
-          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[A-Za-z0-9\\/_-]+$/))"
+          ".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[A-Za-z0-9 \\/_-]+$/))"
         },
         "$other": {
           ".validate": false
         }
       }
+    },
+    "Transmitters": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
+      "$transmitterId": {
+        "last_seen": {
+          ".write": "auth != null && root.child('devices').child(auth.uid).val() === true && data.parent().exists()",
+          ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/^[0-9 :.\\/TZ+-]+$/)"
+        }        
+      }
+    },
+    "TrapTransmitters": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))" 
     },
     "Settings": {
       ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
@@ -95,6 +107,9 @@
           ".validate": "newData.isBoolean()"
         },
         "reportMonthly": {
+          ".validate": "newData.isBoolean()"
+        },
+        "emailEnabled": {
           ".validate": "newData.isBoolean()"
         },
         "$other": {
