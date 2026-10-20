@@ -44,6 +44,7 @@ const TW_AUDIT_WORDS = {
 
 let twAuditEntries = [];     // Aaron F: the loaded events display the newest first
 let twAuditOldestKey = null; //Aaron F: Load older events carries on from here
+let twAuditEmails= {}; // Aaron F: changes user UID to Email for older entries
 
 function twAuditEvent(action) {
     return TW_AUDIT_EVENTS[action] || { label: action || "Unknown event", group: "other" };
@@ -59,16 +60,26 @@ function twAuditWhen(at) {
     return date.toLocaleString("en-NZ", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-// Aaron F: The entries with no actorUid's were made by someone who wasn't signed in, for example a password reset
+// Aaron F: The entries with no actorUid's were made by someone who wasn't signed in, for example a password reset. Also Changed to incorporate Uid to email logic for audit page
 function twAuditWho(entry) {
-    return entry.actorEmail || entry.actorUid || TW_AUDIT_ACTORS[entry.actorType] || "Not signed in";
+    return entry.actorEmail || twAuditEmails[entry.actorUid] || entry.actorUid || TW_AUDIT_ACTORS[entry.actorType] || "Not signed in";
 }
 
 function twAuditAffected(entry) {
-    return entry.targetEmail || entry.target || entry.targetUid || "—";
+    return entry.targetEmail || entry.target || twAuditEmails[entry.targetUid] || entry.actorUid || entry.targetUid || "—";
 }
 
-//Aaron F: One line is added per entry: the role change, how they signed in, and old changed to new values for data changes 
+
+async function twLoadAuditEmails() {
+    try {
+        const data = await twAuthPost("adminUsers", { action: "list" });
+        twAuditEmails = Object.fromEntries((data.users || []).map((u) => [u.uid, u.email]));
+    } catch (err) {
+        console.warn("Could not find emails for audit log:", err.message);
+    }
+}
+
+//Aaron F: One line is added per entry: the role change, how they signed in, and old changed to new values for data changes.
 function twAuditDetails(entry) {
     const detail = entry.detail || {};
     const lines = [];
@@ -196,5 +207,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("audit-refresh").addEventListener("click", () => twAuditRefresh(false));
     document.getElementById("audit-older").addEventListener("click", () => twAuditRefresh(true));
 
+    await twLoadAuditEmails();
     await twAuditRefresh(false);
 });
