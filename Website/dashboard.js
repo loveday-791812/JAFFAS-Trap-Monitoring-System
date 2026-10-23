@@ -46,9 +46,16 @@ function twCloseModal(modalId) {
     document.getElementById(modalId).classList.remove("open");
 }
 
-/* Mock Data */
+/* Aaron F: Data for 3 date ranges, it is rebuilt everytime a selected data within the group changes */
 let twData = { "7d": null, "30d": null, "all": null};
 let twTotalTraps = 0;
+
+/* Aaron F: Everything is loaded from the database before any group filter takes effect */
+let twAllTraps = {};      // Traps, keyed by trap key
+let twAllEvents = [];     // [{ txId, date }]
+let twAllTx = {};         // Transmitters, keyed by normalised transmitter ID
+let twKeysByTx = {};      // transmitter -> Set of trap keys
+let twLabels = {};        // transmitter -> trap number(s) to show
 
 async function loadData() {
     const [trapsSnap, eventsSnap, txSnap, linkSnap] = await Promise.all([
@@ -58,24 +65,51 @@ async function loadData() {
         rtdb.ref("TrapTransmitter").once("value"),
     ]);
 
-    const traps = trapsSnap.val() || {};
+    twAllTraps = trapsSnap.val() || {};
     const events = eventsSnap.val() || {};
     const transmitters = txSnap.val() || {};
-    const labels = twTrapLabels(traps, linkSnap.val() || {});
 
-    const txNorm = {};
-    Object.entries(transmitters).forEach(([k, v]) => (txNorm[twNorm(k)] = v));
-    twTotalTraps = Object.keys(txNorm).length;
 
-    const eventList = Object.values(events)
+
+    const index = twIndexTraps(twAllTraps, linkSnap.val() || {}, events);
+    twKeysByTx = index.keysByTx;
+    twLabels = index.labels;
+
+    twAllTx = {};
+    Object.entries(transmitters).forEach(([k, v]) => (twAllTx[twNorm(k)] = v));
+
+    twAllEvents = Object.values(events)
         .filter((e) => (e.transmitter_ID || e.trap_ID) != null && e.timeStamp)
         .map((e) => ({ txId: twNorm(e.transmitter_ID || e.trap_ID), date: twDate(e.timeStamp) }))
         .filter((e) => !isNaN(e.date));
-    
+
+    twRebuild();
+};
+
+/*Aaron F: Applies the selected group and calculates the 3 time periods */
+function twRebuild() {
+    const group = twCurrentGroup ? twGroups[twCurrentGroup] : null;
+    let events = twAllEvents;
+    let transmitters = twAllTx;
+
+    if (group) {
+        const wanted = new Set(Object.keys(group.traps || {}));
+        const inGroup = (txId) => {
+            const keys = twKeysByTx[txId];
+            return !!keys && [...keys].some((key) => wanted.has(key));
+        };
+        events = twAllEvents.filter((e) => inGroup(e.txId));
+        transmitters = {};
+        Object.entries(twAllTx).forEach(([id, tx]) => {
+            if (inGroup(id)) transmitters[id] = tx;
+        });
+    }
+
+    twTotalTraps = Object.keys(transmitters).length;
     twData["7d"] = buildRangeData(eventList, txNorm, labels, 7);
     twData["30d"] = buildRangeData(eventList, txNorm, labels, 30);
     twData["all"] = buildRangeData(eventList, txNorm, labels, null);
-};
+}
 
 function buildRangeData(eventList, transmitters, labels, days) {
     const now = Date.now();
@@ -154,6 +188,18 @@ function renderTriggered(range) {
     }
 }
 
+/*Aaron F: One complete full message row in the trap table */
+function twTableMessage(message) {
+    const tbody = document.getElementById("traps-tbody");
+    const row = document.createElement("tr");
+    row.className = "empty-row";
+    const cell = document.createElement("td");
+    cell.colSpan = 5;
+    cell.textContent = message;
+    row.appendChild(cell);
+    tbody.replaceChildren(row);
+}
+
 /* renderTable builds the table rows for the given date range, applies the current sort if any, and inserts them into the table body. This function will rerun every time the date range or the sort changes, so the table is always rebuilt from scratch rather than patching individual rows */
 function renderTable(range) {
     const traps = [...twData[range].traps];    /* copy the mock data array with [....] */
@@ -183,6 +229,12 @@ function renderTable(range) {
         }
     });
 
+    if (!traps.length) {
+        const group = twCurrentGroup ? twGroups[twCurrentGroup] : null;
+        twTableMessage(group ? `No catches for "${group.name}" in this period.` : "No catches in this period.");
+        return;
+    }
+
     const tbody = document.getElementById("traps-tbody");
     tbody.innerHTML = "";   //clears existing rows before rebuilding
 
@@ -208,8 +260,10 @@ function refreshDashboard() {
 
 /* builds a JSON file out of the current displayed data */
 function downloadJson() {
+    const group = twCurrentGroup ? twGroups[twCurrentGroup] : null;
     const payload = {
         dateRange: currentRange,
+        group: group ? { name: group.name, traps: twGroupTrapKeys(group).map((key) => twAllTraps[key].trap_num ?? key) } : null,
         generatedAt: new Date().toISOString(),
         kpis: twData[currentRange].kpis,
         traps: twData[currentRange].traps,
@@ -219,6 +273,7 @@ function downloadJson() {
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
+    const slug = group ? "-" + (String(group.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "group") : "";
     const link = document.createElement("a");
     link.href = url;
     link.download = `trapwatch-report-${currentRange}.json`;
@@ -228,7 +283,7 @@ function downloadJson() {
     URL.revokeObjectURL(url);   /* frees up memory for download */
 }
 
-/*Aaron F: The groups are saved per account Saved per account at trapGroups. The database rules only let the signed-in account read or write its own groups. */
+/*Aaron F: The groups are saved per account in trapGroups. The database rules only let the signed-in account read or write its own groups. */
 const TW_GROUP_LIMIT = 20;
 const TW_GROUP_NAME_MAX = 40;
 
@@ -280,7 +335,210 @@ function twRememberGroup() {
     }
 }
 
+function twRecallGroup() {
+    try {
+        return localStorage.getItem(`tw.dashboardGroup.${twUid}`) || "";
+    } catch (err) {
+        return "";
+    }
+}
 
+async function twLoadGroups() {
+    try {
+        const snap = await twGroupsRef().once("value");
+        twGroups = snap.val() || {};
+        return true;
+    } catch (err) {
+        console.error("Couldn't load your trap groups:", err);
+        twGroups = {};
+        return false;
+    }
+}
+
+function twRenderGroupBar() {
+    const select = document.getElementById("group-select");
+    select.replaceChildren(new Option("All traps", ""));
+    twSortedGroups().forEach(([id, group]) => {
+        select.appendChild(new Option(`${group.name} (${twCountLabel(twGroupTrapKeys(group).length)})`, id));
+    });
+
+    if (twCurrentGroup && !twGroups[twCurrentGroup]) twCurrentGroup = "";
+    select.value = twCurrentGroup;
+
+    const selected = twCurrentGroup ? twGroups[twCurrentGroup] : null;
+    document.getElementById("group-edit-btn").disabled = !selected;
+    document.getElementById("group-delete-btn").disabled = !selected;
+
+    const summary = document.getElementById("group-summary");
+    if (selected) {
+        summary.textContent = `Showing the ${twCountLabel(twGroupTrapKeys(selected).length)} in this group`;
+    } else {
+        const count = Object.keys(twGroups).length;
+        summary.textContent = count
+            ? `${count} of ${TW_GROUP_LIMIT} groups`
+            : "Make a group to see just the traps you look after";
+    }
+}
+
+function twSelectGroup(groupId) {
+    twCurrentGroup = groupId && twGroups[groupId] ? groupId : "";
+    twRememberGroup();
+    twRenderGroupBar();
+    twRebuild();
+    refreshDashboard();
+}
+
+const TW_PICKED_LIST_MAX = 12;
+function twUpdatePickerCount() {
+    const nums = twSortedTraps().filter(([key]) => twPickerSelection.has(key)).map(([key, trap]) => String(trap.trap_num ?? key));
+    document.getElementById("group-selected-count").textContent = `${twCountLabel(nums.length)} selected`;
+    const more = nums.length > TW_PICKED_LIST_MAX ? ` and ${nums.length - TW_PICKED_LIST_MAX} more` : "";
+    document.getElementById("group-selected-list").textContent = nums.length
+        ? `${nums.length === 1 ? "Trap" : "Traps"} ${nums.slice(0, TW_PICKED_LIST_MAX).join(", ")}${more}`
+        : "";
+}
+
+/*Aaron F: the list of traps inside the group has every value is set as text, never as HTML */
+function twRenderTrapPicker() {
+    const list = document.getElementById("group-trap-list");
+    const query = document.getElementById("group-trap-search").value.trim().toLowerCase().replace(/^trap\s*/, "");
+    list.replaceChildren();
+
+    let shown = 0;
+    twSortedTraps().forEach(([key, trap]) => {
+        const num = trap.trap_num ?? key;
+        const location = typeof trap.trap_location === "string" ? trap.trap_location : "";
+        if (query && !String(num).toLowerCase().startsWith(query) && !location.toLowerCase().includes(query)) return;
+        shown += 1;
+
+        const option = document.createElement("label");
+        option.className = "group-trap-option";
+
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = key;
+        box.checked = twPickerSelection.has(key);
+        box.addEventListener("change", () => {
+            if (box.checked) twPickerSelection.add(key);
+            else twPickerSelection.delete(key);
+            twUpdatePickerCount();
+        });
+
+        const numE1 = document.createElement("span");
+        numE1.className = "group-trap-num";
+        numE1.textContent = `Trap ${num}`;
+
+        const locationE1 = document.createElement("span");
+        locationE1.className = "group-trap-loc";
+        locationE1.textContent = location || "No location saved";
+
+        option.append(box, numE1, locationE1);
+
+        if ((trap.installed_status || trap.status) === "removed") {
+            const flag = document.createElement("span");
+            flag.className = "group-trap-flag";
+            flag.textContent = "Removed";
+            option.appendChild(flag);
+        }
+        list.appendChild(option);
+    });
+
+    if (!shown) {
+        const empty = document.createElement("p");
+        empty.className = "group-trap-empty";
+        empty.textContent = Object.keys(twAllTraps).length ? "No traps match that search." : "No traps have been added yet.";
+        list.appendChild(empty);
+    }
+    twUpdatePickerCount();
+}
+
+function twOpenGroupModal(groupId) {
+    const group = groupId ? twGroups[groupId] : null;
+    twEditingGroupId = group ? groupId : null;
+    twPickerSelection = new Set(group ? twGroupTrapKeys(group) : []);
+
+    document.getElementById("group-modal-title").textContent = group ? "Edit group" : "New group";
+    document.getElementById("group-save").textContent = group ? "Save changes" : "Create group";
+    document.getElementById("group-name").value = group ? group.name : "";
+    document.getElementById("group-trap-search").value = "";
+    document.getElementById("group-error").textContent = "";
+
+    twRenderTrapPicker();
+    twOpenModal("group-modal");
+    document.getElementById("group-name").focus();
+}
+
+async function twHandleGroupSubmit(e) {
+    e.preventDefault();
+    const errorE1 = document.getElementById("group-error");
+    const saveBtn = document.getElementById("group-save");
+
+    const name = document.getElementById("group-name").value.trim().replace(/\s+/g, " ");
+    const keys = [...twPickerSelection].filter((key) => twAllTraps[key]);
+    const nameTaken = Object.entries(twGroups).some(([id, g]) =>
+        id !== twEditingGroupId && g && String(g.name).toLowerCase() === name.toLowerCase());
+
+    let problem = "";
+    if (!name) problem = "Give the group a name.";
+    else if (name.length > TW_GROUP_NAME_MAX) problem = `Keep the name to ${TW_GROUP_NAME_MAX} characters or fewer.`;
+    else if (nameTaken) problem = `You already have a group called "${name}".`;
+    else if (!keys.length) problem = "Tick at least one trap.";
+    else if (!twEditingGroupId && Object.keys(twGroups).length >= TW_GROUP_LIMIT) problem = `You can have up to ${TW_GROUP_LIMIT} groups. Delete one first.`;
+    errorE1.textContent = problem;
+    if (problem) return;
+
+    const traps = {};
+    keys.forEach((key) => (traps[key] = true));
+
+    saveBtn.disabled = true;
+
+    try {
+        if (twEditingGroupId) {
+            await twGroupsRef(twEditingGroupId).update({ name, traps });   // replaces the group's trap list
+            twGroups[twEditingGroupId] = { ...twGroups[twEditingGroupId], name, traps };
+            twCurrentGroup = twEditingGroupId;
+        } else {
+            const ref = twGroupsRef().push();
+            await ref.set({ name, createdAt: firebase.database.ServerValue.TIMESTAMP, traps });
+            twGroups[ref.key] = { name, createdAt: Date.now(), traps };
+            twCurrentGroup = ref.key;
+        }
+        twCloseModal("group-modal");
+        twSelectGroup(twCurrentGroup);
+    } catch (err) {
+        console.error("Couldn't save the trap group:", err);
+        errorE1.textContent = "Couldn't save the group. Check your connection and try again.";
+    } finally {
+        saveBtn.disabled = false;
+    }
+}
+
+function twOpenDeleteGroup() {
+    const group = twCurrentGroup ? twGroups[twCurrentGroup] : null;
+    if (!group) return;
+    document.getElementById("group-delete-name").textContent = group.name;
+    document.getElementById("group-delete-error").textContent = "";
+    twOpenModal("group-delete-modal");
+}
+
+async function twHandleDeleteGroup() {
+    const groupId = twCurrentGroup;
+    const btn = document.getElementById("group-delete-confirm");
+    if (!groupId) return;
+
+    btn.disabled = true;
+    try {
+        await twGroupsRef(groupId).remove();
+        delete twGroups[groupId];
+        twCloseModal("group-delete-modal");
+        twSelectGroup("");
+    } catch (err) {
+        console.error("Couldn't delete the trap group:", err);
+        document.getElementById("group-delete-error").textContent = "Couldn't delete the group. Check your connection and try again.";
+    } finally {
+        btn.disabled = false;
+    }
+}
 
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
