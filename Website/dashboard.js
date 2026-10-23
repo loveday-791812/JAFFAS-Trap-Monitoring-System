@@ -228,31 +228,69 @@ function downloadJson() {
     URL.revokeObjectURL(url);   /* frees up memory for download */
 }
 
+
+
 /* Event listeners setup once page has loaded */
 document.addEventListener("DOMContentLoaded", async () => {
-    await window.twAuthReady; //Aaron F: wait for role check
+    const user = await window.twAuthReady; //Aaron F: wait for role check
+    twUid = user.uid;
     twHighlightNav();
-    const settings = await twGetSettings();
-    twOverdueDays = Number(settings.overdueThreshold) || 7;
-    currentRange = settings.defaultDateRange;
-    document.getElementById("date-range-select").value = currentRange;
-    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${settings.overdueThreshold} DAYS)`
-    await loadData();
-    refreshDashboard();     /* draw the "last 7 days" view */
 
+    /*Aaron F: controls that work before the data arrives, so a slow or failed load can't break them */
     document.getElementById("nav-toggle").addEventListener("click", (e) => {
         const nav = document.getElementById("tw-nav");
         const isOpen = nav.classList.toggle("open");
         e.target.setAttribute("aria-expanded", isOpen);
-    })
+    });
 
-    /* date range dropdown changed -> update which mock dataset is shown */
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
+
+    const modals = ["help-modal", "group-modal", "group-delete-modal"];
+    modals.forEach((id) => {
+        document.getElementById(id).addEventListener("click", (e) => {
+            if (e.target.id === id) twCloseModal(id);   // click on the dimmed background closes it
+        });
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") modals.forEach(twCloseModal);
+    });
+
+    const settings = await twGetSettings();
+    twOverdueDays = Number(settings.overdueThreshold) || 7;
+    currentRange = settings.defaultDateRange;
+    document.getElementById("date-range-select").value = currentRange;
+    document.getElementById("kpi-overdue-label").textContent = `TRAPS OVERDUE (>${settings.overdueThreshold} DAYS)`;
+
+    let groupsLoaded = false;
+    try {
+        [, groupsLoaded] = await Promise.all([loadData(), twLoadGroups()]);
+    } catch (err) {
+        console.error("Couldn't load the dashboard data:", err);
+        twTableMessage("Couldn't load the trap data. Refresh the page, and if it keeps happening contact the admin (details at the bottom of the page).");
+        ["group-new-btn", "group-select", "date-range-select", "download-json-btn", "kpi-triggered-toggle"].forEach((id) => {
+            document.getElementById(id).disabled = true;
+        });
+        return;
+    }
+
+    twCurrentGroup = twRecallGroup();
+    if (!twGroups[twCurrentGroup]) twCurrentGroup = "";
+    twRebuild();
+    twRenderGroupBar();
+    refreshDashboard();
+
+    if (!groupsLoaded) {
+        document.getElementById("group-summary").textContent = "Your groups couldn't be loaded. Refresh the page to try again.";
+        document.getElementById("group-new-btn").disabled = true;
+    }
+
     document.getElementById("date-range-select").addEventListener("change", (e) => {
         currentRange = e.target.value;
         refreshDashboard();
     });
 
-    /* togle Current Triggered Traps card between count adn % */
     document.getElementById("kpi-triggered-toggle").addEventListener("click", () => {
         showTriggeredPercentage = !showTriggeredPercentage;
         renderTriggered(currentRange);
@@ -262,21 +300,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         downloadJson();
     });
 
-    document.getElementById("help-btn").addEventListener("click", () => {
-        twOpenModal("help-modal");
+    /*Aaron F: trap groups listeners */
+    document.getElementById("group-select").addEventListener("change", (e) => twSelectGroup(e.target.value));
+    document.getElementById("group-new-btn").addEventListener("click", () => twOpenGroupModal(null));
+    document.getElementById("group-edit-btn").addEventListener("click", () => twOpenGroupModal(twCurrentGroup));
+    document.getElementById("group-delete-btn").addEventListener("click", twOpenDeleteGroup);
+    document.getElementById("group-form").addEventListener("submit", twHandleGroupSubmit);
+    document.getElementById("group-cancel").addEventListener("click", () => twCloseModal("group-modal"));
+    document.getElementById("group-trap-search").addEventListener("input", twRenderTrapPicker);
+    document.getElementById("group-trap-search").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") e.preventDefault();   // Enter in the search box shouldn't save the group
     });
 
-    /* every sortable column header gets a click listener. Clicking the same column twice flips the direction so from ascending to descending and vice versa */
+    document.getElementById("group-select-shown").addEventListener("click", () => {
+        document.querySelectorAll("#group-trap-list input[type=checkbox]").forEach((box) => {
+            box.checked = true;
+            twPickerSelection.add(box.value);
+        });
+        twUpdatePickerCount();
+    });
+    document.getElementById("group-clear").addEventListener("click", () => {
+        twPickerSelection.clear();
+        twRenderTrapPicker();
+    });
+
+    document.getElementById("group-delete-cancel").addEventListener("click", () => twCloseModal("group-delete-modal"));
+    document.getElementById("group-delete-confirm").addEventListener("click", twHandleDeleteGroup);
+
+    /*Aaron F:  clicking a column header sorts it,  clicking it again reverses the order */
     document.querySelectorAll("th[data-sort]").forEach((th) => {
         th.addEventListener("click", () => {
             const column = th.getAttribute("data-sort");
             if (currentSort.column === column) {
                 currentSort.direction *= -1;
             } else {
-              currentSort.column = column;
-              currentSort.direction = 1;
+                currentSort.column = column;
+                currentSort.direction = 1;
             }
             renderTable(currentRange);
         });
     });
 });
+
