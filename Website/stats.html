@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Stats</title>
+<title>Trap Network Catch Stats | TrapWatch</title>
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
 
-<body data-required-role="admin,manager,worker">
+<body data-required-role="admin,manager,worker" data-page-name="Catch Stats" data-page-purpose="How many catches each trap has recorded, all time">
 
 <!-- Help modal -->
 <div class="modal-overlay" id="help-modal">
@@ -28,18 +28,25 @@
     </div>
 </div>
 
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Catch Stats</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">How many catches each trap has recorded, all time</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+       </div>
+   </header>
 
 <div class="page">
-
-    <header  class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Stats</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-    </header>
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
