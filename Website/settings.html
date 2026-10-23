@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Settings</title>
+<title>Settings | TrapWatch</title>
 
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin,manager,worker">
+<body data-required-role="admin,manager,worker" data-page-name="Settings" data-page-purpose="Your report emails and your account" data-page-purpose-admin="Your report emails and account, plus the defaults and contact details everyone sees">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -29,18 +29,25 @@
     </div>
 </div>
 
-<div class="page">
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Settings</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Your report emails and your account</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+       </div>
+   </header>
 
-    <!-- header -->
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Settings</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-    </header>
+<div class="page">
 
     <!-- nav -->
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
