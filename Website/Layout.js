@@ -71,7 +71,7 @@
 
     async function loadContact() {
         try {
-            const snap = await rtdb.ref("Setttings/adminContact").once("value");
+            const snap = await rtdb.ref("Settings/adminContact").once("value");
             renderContact(snap.val());
         } catch (err) {
             renderContact(null); //Aaron F: not signed in or nott allowed, keep the default contact
@@ -79,7 +79,7 @@
 
     }
 
-    function renderSignedin(user, role) {
+    function renderSignedIn(user, role) {
         const userE1 = document.getElementById("tw-footer-user");
         if (!userE1) return;
         userE1.textContent = user && user.email ? `Signed in as ${user.email} (${roleLabel(role)})` : "";        
@@ -87,7 +87,7 @@
     window.twLayout = {roleLabel, applyPageIdentity, renderContact, loadContact, DEFAULT_CONTACT };
 
     document.addEventListener("DOMContentLoaded", async () => {
-        renderContatct(null);
+        renderContact(null);
         if (!window.twAuthReady) {
             // Aaron F: pages that don't run the role check like unauthorized.html
             // Aaron F: twAuth is a top-level const in firebase-config.js so it isn't on window
