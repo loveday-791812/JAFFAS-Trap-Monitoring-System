@@ -228,6 +228,58 @@ function downloadJson() {
     URL.revokeObjectURL(url);   /* frees up memory for download */
 }
 
+/*Aaron F: The groups are saved per account Saved per account at trapGroups. The database rules only let the signed-in account read or write its own groups. */
+const TW_GROUP_LIMIT = 20;
+const TW_GROUP_NAME_MAX = 40;
+
+let twUid = null;
+let twGroups = {};            // this account's groups
+let twCurrentGroup = "";      // "" = all traps
+let twEditingGroupId = null;  // null while making a new group
+let twPickerSelection = new Set();
+
+function twGroupsRef(groupId) {
+    return rtdb.ref(groupId ? `trapGroups/${twUid}/${groupId}` : `trapGroups/${twUid}`);
+}
+
+/*Aaron F: trap keys in a group that still exist in Traps and a trap removed from the inventory drops out from the group*/
+function twGroupTrapKeys(group) {
+    return Object.keys((group && group.traps) || {}).filter((key) => twAllTraps[key]);
+}
+
+function twCountLabel(n) {
+    return `${n} ${n === 1 ? "trap" : "traps"}`;
+}
+
+function twSortedGroups() {
+    return Object.entries(twGroups)
+        .filter(([, g]) => g && typeof g.name === "string")
+        .sort(([, a], [, b]) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+}
+
+/*Aaron F: traps are in order, traps without a number go last */
+function twSortedTraps() {
+    return Object.entries(twAllTraps)
+        .filter(([, t]) => t && typeof t === "object")
+        .sort(([keyA, a], [keyB, b]) => {
+            const numA = Number(a.trap_num);
+            const numB = Number(b.trap_num);
+            const isNumA = a.trap_num !== "" && a.trap_num != null && Number.isFinite(numA);
+            const isNumB = b.trap_num !== "" && b.trap_num != null && Number.isFinite(numB);
+            if (isNumA && isNumB && numA !== numB) return numA - numB;
+            if (isNumA !== isNumB) return isNumA ? -1 : 1;
+            return String(a.trap_num ?? keyA).localeCompare(String(b.trap_num ?? keyB), undefined, { numeric: true });
+        });
+}
+
+function twRememberGroup() {
+    try {
+        localStorage.setItem(`tw.dashboardGroup.${twUid}`, twCurrentGroup);
+    } catch (err) {
+        /*Aaron F: in case the storage can be blocked, the dashboard just opens on all the traps next time in no way should this feature impact the goal of the project*/
+    }
+}
+
 
 
 /* Event listeners setup once page has loaded */
