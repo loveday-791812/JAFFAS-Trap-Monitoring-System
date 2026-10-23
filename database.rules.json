@@ -75,7 +75,16 @@
       },
       "emailNotificationsEnabled": {
         ".validate": "newData.isBoolean()"
+      },
+      "adminContact": {
+        ".read": "auth != null",
+        ".validate": "newData.hasChildren(['email'])",
+        "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "email": { ".validate": "newData.isString() && newData.val().length <= 254 && newData.val().matches(/^[^@ ]+@[^@ ]+[.][^@ ]+$/)" },
+        "phone": { ".validate": "newData.isString() && newData.val().length <= 30 && newData.val().matches(/^[0-9 +()-]*$/)" },
+        "$other": { ".validate": false }
       }
+
     },
     "Recipients": {
       ".indexOn": [
@@ -119,6 +128,23 @@
     },
     "auditLogs": {
       ".read": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    },
+    "trapGroups": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker')",
+        ".write": "auth != null && auth.uid === $uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker')",
+        ".validate": "newData.hasChildren()",
+        "$groupId": {
+          ".validate": "newData.hasChildren(['name', 'createdAt', 'traps']) && $groupId.length <= 32",
+          "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "createdAt": { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "traps": {
+            ".validate": "newData.hasChildren()",
+            "$trapId": { ".validate": "newData.val() === true && $trapId.length <= 64 && root.child('Traps').child($trapId).exists()" }
+          },
+          "$other": { ".validate": false }
+        }
+      }
     }
   }
 }
