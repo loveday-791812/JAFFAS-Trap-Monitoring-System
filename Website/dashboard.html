@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Admin Dashboard</title>
+<title>Trap Dashboard | TrapWatch</title>
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin,manager,worker">
+<body data-required-role="admin,manager,worker" data-page-name="Trap Dashboard" data-page-purpose="Catches and reset status for every trap, with your own trap groups">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -28,32 +28,41 @@
     </div>
 </div>
 
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Trap Dashboard</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Catches and reset status for every trap, with your own trap groups</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+
+           <div class="tw-header-right">
+               <div class="filter-bar">
+                   <label for="date-range-select">Date Range:</label>
+                   <select id="date-range-select">
+                       <option value="7d">Last 7 days</option>
+                       <option value="30d">Last 30 days</option>
+                       <option value="all">All time</option>
+                   </select>
+               </div>
+
+               <button id="download-json-btn" class="btn btn-outline" type="button">
+                   ⬇ Download JSON
+               </button>
+           </div>
+       </div>
+   </header>
+
 <div class="page">
 
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Admin Dashboard</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-
-        <div class="tw-header-right">
-            <div class="filter-bar">
-                <label for="date-range-select">Date Range:</label>
-                <select id="date-range-select">
-                    <option value="7d">Last 7 days</option>
-                    <option value="30d">Last 30 days</option>
-                    <option value="all">All time</option>
-                </select>
-            </div>
-
-            <button id="download-json-btn" class="btn btn-outline" type="button">
-                ⬇ Download JSON
-            </button>
-        </div>
-    </header>
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
