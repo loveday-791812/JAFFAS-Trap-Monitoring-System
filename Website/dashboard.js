@@ -27,16 +27,56 @@ function twHighlightNav() {
 let twOverdueDays = 7;
 const RESET_GAP_MS = 90 * 60 * 1000;
 
-function twTrapLabels(traps, links) {
-    const out = {};
+/*Aaron F: Works out which traps each transmitter belongs to and the trap number(s) to show for it. Uses the TrapTransmitter links first, then the trap IDs the gateway puts on each event. */
+function twIndexTraps(traps, links, rawEvents) {
+    const keyByNum = {};
+    Object.entries(traps).forEach(([key, t]) => {
+        if (t && t.trap_num !== undefined && t.trap_num !== null) keyByNum[String(t.trap_num)] = key;
+    });
+
+    const split = (raw) => (raw === undefined || raw === null)
+        ? []
+        : String(raw).split("#")[0].split("/").map((s) => s.trim()).filter(Boolean);
+    const keyOf = (id) => (traps[id] ? id : keyByNum[id]);
+    const addOnce = (map, tx, value) => {
+        map[tx] ||= [];
+        if (!map[tx].includes(value)) map[tx].push(value);
+    };
+
+    const linkIds = {};   // transmitter => trap IDs written on its TrapTransmitter links
+    const eventKeys = {}; // transmitter => trap keys named on its events
     Object.values(links).forEach((l) => {
         if (!l || !l.transmitter_ID) return;
-        const t = traps[l.trap_ID] || Object.values(traps).find((x) => x && String(x.trap_num) === String(l.trap_ID));
-        (out[twNorm(l.transmitter_ID)] ||= []).push(t ? t.trap_num : l.trap_ID);
+        split(l.trap_ID).forEach((id) => addOnce(linkIds, twNorm(l.transmitter_ID), id));
     });
-    Object.keys(out).forEach((k) => (out[k] = out[k].join("/")));
-    return out;
+    
+    Object.values(rawEvents).forEach((e) => {
+        if (!e || (e.transmitter_ID == null && e.trap_ID == null)) return;
+        const tx = twNorm(e.transmitter_ID || e.trap_ID);
+        split(e.trap_ID).map(keyOf).filter(Boolean).forEach((key) => addOnce(eventKeys, tx, key));
+    });
+
+    const keysByTx = {};
+    const labels = {};
+    new Set([...Object.keys(linkIds), ...Object.keys(eventKeys)]).forEach((tx) => {
+        const fromLinks = (linkIds[tx] || []).map(keyOf).filter(Boolean);
+        const keys = [...new Set([...fromLinks, ...(eventKeys[tx] || [])])];
+        if (keys.length) keysByTx[tx] = new Set(keys);
+
+        const ids = (linkIds[tx] && linkIds[tx].length) ? linkIds[tx] : (eventKeys[tx] || []);
+        if (ids.length) {
+            const shown = ids.map((id) => {
+                const key = keyOf(id);
+                const num = key ? traps[key].trap_num : undefined;
+                return String(num !== undefined && num !== null ? num : id);
+            });
+            labels[tx] = [...new Set(shown)].join("/");   //Aaron F: traps that share a number are shown once
+        }
+    });
+    return { keysByTx, labels };
 }
+    
+    
 
 function twOpenModal(modalId) {
     document.getElementById(modalId).classList.add("open");
