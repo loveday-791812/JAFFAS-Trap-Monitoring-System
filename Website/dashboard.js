@@ -119,7 +119,7 @@ async function loadData() {
     Object.entries(transmitters).forEach(([k, v]) => (twAllTx[twNorm(k)] = v));
 
     twAllEvents = Object.values(events)
-        .filter((e) => (e.transmitter_ID || e.trap_ID) != null && e.timeStamp)
+        .filter((e) => e && (e.transmitter_ID || e.trap_ID) != null && e.timeStamp)
         .map((e) => ({ txId: twNorm(e.transmitter_ID || e.trap_ID), date: twDate(e.timeStamp) }))
         .filter((e) => !isNaN(e.date));
 
@@ -146,9 +146,9 @@ function twRebuild() {
     }
 
     twTotalTraps = Object.keys(transmitters).length;
-    twData["7d"] = buildRangeData(eventList, txNorm, labels, 7);
-    twData["30d"] = buildRangeData(eventList, txNorm, labels, 30);
-    twData["all"] = buildRangeData(eventList, txNorm, labels, null);
+    twData["7d"] = buildRangeData(eventList, transmitters, twLabels, 7);
+    twData["30d"] = buildRangeData(eventList, transmitters, twLabels, 30);
+    twData["all"] = buildRangeData(eventList, transmitters, twtLabels, null);
 }
 
 function buildRangeData(eventList, transmitters, labels, days) {
@@ -316,7 +316,7 @@ function downloadJson() {
     const slug = group ? "-" + (String(group.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "group") : "";
     const link = document.createElement("a");
     link.href = url;
-    link.download = `trapwatch-report-${currentRange}.json`;
+    link.download = `trapwatch-report-${currentRange}${slug}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
