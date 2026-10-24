@@ -146,9 +146,9 @@ function twRebuild() {
     }
 
     twTotalTraps = Object.keys(transmitters).length;
-    twData["7d"] = buildRangeData(eventList, transmitters, twLabels, 7);
-    twData["30d"] = buildRangeData(eventList, transmitters, twLabels, 30);
-    twData["all"] = buildRangeData(eventList, transmitters, twtLabels, null);
+    twData["7d"] = buildRangeData(events, transmitters, twLabels, 7);
+    twData["30d"] = buildRangeData(events, transmitters, twLabels, 30);
+    twData["all"] = buildRangeData(events, transmitters, twtLabels, null);
 }
 
 function buildRangeData(eventList, transmitters, labels, days) {

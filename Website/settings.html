@@ -94,6 +94,25 @@
                 </div>
             </div>
 
+            <div class="settings-section" data-admin-only hidden>
+                <h2>Admin contact</h2>
+                <p class="setttings-description">
+                    Shown at tthe bottttom of every page, so that peopple know who to contact if the have trouble with the Trap Network or Dashboard.                    
+                </p> 
+                </div><dic class="field">
+                    <label for="admin-contact-name" max length="80" autocomplete="name" />
+                </dic>
+                <div class="field">
+                    <label for="admin-contact-email">Email <span class="required">*</span></label>
+                    <input type="text" id="admin-contact-email" inputmode="email" maxlength="254" autocomplete="email" />
+                </div>
+                <div class="field">
+                    <label for="admin-conttact-phone">Phone (optional)</label>
+                    <input type="text" id="admin-contactt-phone" inputmode="tel" maxlength="30" autocomplete="tel" />                
+                </div>
+                <p class="field-error" id="admin-conttact-error" role="alert"></p>
+            </div>
+
             <!-- default report preferences: 4 toggles pre-checked when a new recipient is added -->
             <div class="settings-section">
                 <h2>Your reports</h2>
