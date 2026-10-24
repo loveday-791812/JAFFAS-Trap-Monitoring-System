@@ -169,27 +169,72 @@ async function twSaveMyPreferences() {
     twSetPersonalTogglesDisabled(!emailOn)
 }
 
+/*Aaron F: admin contact in footer parametization*/
+
+const TW_CONTACT_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const TW_CONTACT_PHONE = /^[0-9 +()-]*$/;
+
+function twFillAdminContact(saved) {
+    const fallback = (window.twLayout && window.twLayout.DEFAULT_CONTACT) || { name: "", email: "", phone: "" };
+    const contact = saved && typeof saved === "object" && typeof saved.email === "string" ? saved : fallback;  // nothing saved yet
+    document.getElementById("admin-contact-name").value = typeof contact.name === "string" ? contact.name : "";
+    document.getElementById("admin-contact-email").value = contact.email || "";
+    document.getElementById("admin-contact-phone").value = typeof contact.phone === "string" ? contact.phone : "";
+    document.getElementById("admin-contact-error").textContent = "";
+}
+
+function twReadAdminContact() {
+    const name = document.getElementById("admin-contact-name").value.trim();
+    const email = document.getElementById("admin-contact-email").value.trim();
+    const phone = document.getElementById("admin-contact-phone").value.trim();
+    if (!email) return { error: "Enter the email address people should contact for help.", field: "admin-contact-email" };
+    if (email.length > 254 || !TW_CONTACT_EMAIL.test(email)) return { error: "Enter a valid contact email, like name@example.com.", field: "admin-contact-email" };
+    if (name.length > 80) return { error: "Keep the contact name to 80 characters or fewer.", field: "admin-contact-name" };
+    if (phone.length > 30 || !TW_CONTACT_PHONE.test(phone)) {
+        return { error: "The phone number can only use digits, spaces, +, - and brackets, up to 30 characters.", field: "admin-contact-phone" };
+    }
+
+    const contact = { email };
+    if (name) contact.name = name;
+    if (phone) contact.phone = phone;
+    return { contact };
+}
+
 /* fills saved data */
 async function loadSettingsIntoForm() {
     const s = await twGetSettings();
     document.getElementById("overdue-threshold").value = s.overdueThreshold;
     document.getElementById("default-date-range").value = s.defaultDateRange;
+    twFillAdminContact(s.adminContact);
 }
 
-async function saveAdminSettings() {
+async function saveAdminSettings(contact) {
     await rtdb.ref("Settings").update({
         overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
         defaultDateRange: document.getElementById("default-date-range").value,
+        adminContact, //Aaron F: replaces contactt so a cleared name or phone is removed
     });
+    if (window.twLayout) window.twLayout.renderContact(contact); //Aaron F: updates field immediattely
 }
 
 /* runs when save settings button clicked */
 async function handleSettingsSubmit(e) {
     e.preventDefault();
 
+    let contact = null;
+    if (twIsAdmin) {
+        const checked = twtReadAdminContact();
+        document.getElementById("admin-contact-error").textContent = checked.error || "";
+        if (checked.error) {
+            document.getElementById(checked.field).focus();
+            return; //Aaron F:it isnt saved until the contact is fixed
+        }
+        contact = checked.contact;
+    }
+
     try {
         await twSaveMyPreferences();
-        if (twIsAdmin) await saveAdminSettings();
+        if (twIsAdmin) await saveAdminSettings(contact);
 
         const confirmation = document.getElementById("save-confirmation");
         confirmation.classList.add("show");
