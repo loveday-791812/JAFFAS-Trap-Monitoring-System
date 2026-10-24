@@ -212,7 +212,7 @@ async function saveAdminSettings(contact) {
     await rtdb.ref("Settings").update({
         overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
         defaultDateRange: document.getElementById("default-date-range").value,
-        adminContact, //Aaron F: replaces contactt so a cleared name or phone is removed
+        adminContact: contact, //Aaron F: replaces contact so a cleared name or phone is removed
     });
     if (window.twLayout) window.twLayout.renderContact(contact); //Aaron F: updates field immediattely
 }
@@ -223,7 +223,7 @@ async function handleSettingsSubmit(e) {
 
     let contact = null;
     if (twIsAdmin) {
-        const checked = twtReadAdminContact();
+        const checked = twReadAdminContact();
         document.getElementById("admin-contact-error").textContent = checked.error || "";
         if (checked.error) {
             document.getElementById(checked.field).focus();
