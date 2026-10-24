@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Manage Traps</title>
+<title>Trap Network | TrapWatch</title>
 
 <!-- using stylesheet -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin,manager">
+<body data-required-role="admin,manager" data-page-name="Trap Network" data-page-purpose="Add, edit and retire the trap units in the field">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -29,25 +29,33 @@
     </div>
 </div>
 
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Trap Network</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Add, edit and retire the trap units in the field</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+
+           <div class="tw-header-right">
+               <!-- add trap button -->
+               <button id="add-trap-btn" class="btn btn-primary" type="button">
+                   + Add Trap
+               </button>
+           </div>
+       </div>
+   </header>
+
+
 <div class="page">
-
-    <!-- header -->
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Admin</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-
-        <div class="tw-header-right">
-            <!-- add trap button -->
-            <button id="add-trap-btn" class="btn btn-primary" type="button">
-                + Add Trap
-            </button>
-        </div>
-    </header>
 
     <!-- nav for the 4 pages -->
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
@@ -200,12 +208,23 @@
         </div>
     </div>
 </div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
 <script src="traps.js"></script>
 </body>
 </html>

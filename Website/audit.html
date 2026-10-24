@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Audit Log</title> <!-- Aaron F: I changed the Audit Log to reflect the purpose of this page. -->
+<title>Audit Log | TrapWatch</title> <!-- Aaron F: I changed the Audit Log to reflect the purpose of this page. -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin">
+<body data-required-role="admin" data-page-name="Audit Log" data-page-purpose="Who did what and when, recorded by the server">
 
 <!--Aaron F: Help about the ? to tell the user about whatt each part of the page means-->
 
@@ -30,20 +30,28 @@
     </div>
 </div>
 
-<div class="page">
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Audit Log</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Who did what and when, recorded by the server</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+           <div class="tw-header-right">
+               <button id="audit-refresh" class="btn btn-primary" type="button">Refresh</button>
+           </div>
+       </div>
+   </header>
 
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Audit Log</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-        <div class="tw-header-right">
-            <button id="audit-refresh" class="btn btn-primary" type="button">Refresh</button>
-        </div>
-    </header>
+<div class="page">
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
@@ -99,6 +107,16 @@
     </div>
 
 </div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -106,6 +124,7 @@
 
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
 <script src="audit.js"></script>
    </body>
    </html>

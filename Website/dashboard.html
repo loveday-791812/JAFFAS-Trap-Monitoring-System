@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Admin Dashboard</title>
+<title>Trap Dashboard | TrapWatch</title>
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin,manager,worker">
+<body data-required-role="admin,manager,worker" data-page-name="Trap Dashboard" data-page-purpose="Catches and reset status for every trap, with your own trap groups">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -20,6 +20,7 @@
                 <li><strong>KPI cards</strong> — quick totals for the selected range. </li>
                 <li><strong>Table headers</strong> — click any column (Trap no, catch date, etc.) to sort by it. Click again to reverse the order.</li>
                 <li><strong>Download JSON</strong> — saves the currently shown data as a file.</li>
+                <li><strong>Groups</strong> — use <strong>+ New group</strong> to put traps you look after together, then pick the group to see only those traps. Your groups are saved to your account and only you can see them.</li>
             </ul>
         </div>
         <div class="modal-footer">
@@ -28,32 +29,95 @@
     </div>
 </div>
 
+<!-- Aaron F: edit and create trap group here. Groups are saved per account and only that account can read them. -->
+<div class="modal-overlay" id="group-modal">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="group-modal-title">
+        <div class="modal-header">
+            <h2 id="group-modal-title">New group</h2>
+        </div>
+        <form id="group-form" novalidate>
+            <div class="modal-body">
+                <p class="settings-description">Only you can see your groups. They don't change the traps or anyone else's dashboard.</p>
+                <div class="field">
+                    <label for="group-name">Group name <span class="required">*</span></label>
+                    <input type="text" id="group-name" maxlength="40" autocomplete="off" placeholder="e.g. River flats" />
+                </div>
+                <div class="field">
+                    <label for="group-trap-search">Traps in this group <span class="required">*</span></label>
+                    <input type="text" id="group-trap-search" autocomplete="off" placeholder="Search by trap number or location" />
+                </div>
+                <div class="group-trap-tools">
+                    <span id="group-selected-count" aria-live="polite">0 traps selected</span>
+                    <button type="button" class="link-btn" id="group-select-shown">Select all shown</button>
+                    <button type="button" class="link-btn" id="group-clear">Clear</button>
+                </div>
+                <p class="group-selected-list" id="group-selected-list"></p>
+                <div class="group-trap-list" id="group-trap-list" role="group" aria-label="Traps"></div>
+                <p class="field-error" id="group-error" role="alert"></p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="group-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="group-save">Create group</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Aaron F: Deletes a trap group the group only traps and catch history are untouched by this -->
+<div class="modal-overlay" id="group-delete-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="group-delete-title">
+        <div class="modal-header">
+            <h2 id="group-delete-title">Delete group</h2>
+        </div>
+        <div class="modal-body">
+            <div class="warning-box">
+                <span aria-hidden="true">!</span>
+                <span>Delete the group <strong id="group-delete-name"></strong>? The traps and their catch history are not changed.</span>
+            </div>
+            <p class="field-error" id="group-delete-error" role="alert"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" id="group-delete-cancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="group-delete-confirm">Delete group</button>
+        </div>
+    </div>
+</div>
+
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Trap Dashboard</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Catches and reset status for every trap, with your own trap groups</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+
+           <div class="tw-header-right">
+               <div class="filter-bar">
+                   <label for="date-range-select">Date Range:</label>
+                   <select id="date-range-select">
+                       <option value="7d">Last 7 days</option>
+                       <option value="30d">Last 30 days</option>
+                       <option value="all">All time</option>
+                   </select>
+               </div>
+
+               <button id="download-json-btn" class="btn btn-outline" type="button">
+                   ⬇ Download JSON
+               </button>
+           </div>
+       </div>
+   </header>
+
 <div class="page">
 
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Admin Dashboard</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-
-        <div class="tw-header-right">
-            <div class="filter-bar">
-                <label for="date-range-select">Date Range:</label>
-                <select id="date-range-select">
-                    <option value="7d">Last 7 days</option>
-                    <option value="30d">Last 30 days</option>
-                    <option value="all">All time</option>
-                </select>
-            </div>
-
-            <button id="download-json-btn" class="btn btn-outline" type="button">
-                ⬇ Download JSON
-            </button>
-        </div>
-    </header>
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
@@ -66,6 +130,22 @@
         <a href="audit.html">Audit</a>
         <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
     </nav>
+
+    <!--Aaron F: Trap groups saved for own account -->
+    <section class="card group-bar" aria-label="Your trap groups">
+        <div class="group-bar-left">
+            <label for="group-select">Group</label>
+            <select id="group-select">
+                <option value="">All traps</option>
+            </select>
+            <span class="group-summary" id="group-summary" role="status" aria-live="polite"></span>
+        </div>
+        <div class="group-bar-actions">
+            <button type="button" class="btn btn-outline" id="group-new-btn">+ New group</button>
+            <button type="button" class="btn btn-outline" id="group-edit-btn" disabled>Edit group</button>
+            <button type="button" class="btn btn-danger-outline" id="group-delete-btn" disabled>Delete group</button>
+        </div>
+    </section>
 
     <section class="kpi-grid">
         <div class="card kpi-card">
@@ -107,12 +187,23 @@
         </table>
     </section>
 </div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
 <script src="settings.js"></script>
 <script src="dashboard.js"></script>
 </body>
