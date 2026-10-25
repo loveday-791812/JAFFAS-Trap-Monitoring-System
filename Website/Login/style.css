@@ -222,7 +222,7 @@ input::placeholder {
 /*- Roles -*/
 .roles {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
@@ -237,7 +237,7 @@ input::placeholder {
 }
 
 .role-content {
-    min-height: 92px;
+    min-height: 0px;
     padding: 14px 12px;
     border: 1.5px solid rgba(53, 94, 59, 0.4);
     border-radius: 9px;
@@ -271,6 +271,12 @@ input::placeholder {
 
 .role-option input:checked + .role-content .radio-circle {
     border: 5px solid var(--dark-green);
+}
+
+/*Aaron F: outlines the card instead of the radio button for easy navigation via keyboard*/
+.role-option input:focus-visable + .role-content {
+    outline: 3px solid var(--dark-green);
+    outline-offset: 2px;
 }
 
 .role-content strong {

@@ -39,6 +39,7 @@
      document.getElementById("deny-logout").addEventListener("click", async (e) => { // Aaron: I added an event listener to the "Log in as someone else" button that signs the user out and redirects them to the login page. This allows users to log in as a different user if they don't have access to the current page.
        e.preventDefault();
        const target = e.currentTarget.href;
+       await twRecordSession("signOut"); //Aaron F: records the sign out on the Audit page
        await twAuth.signOut();
        window.location.href = target;
      });

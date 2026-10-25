@@ -15,6 +15,7 @@
             const href = link.getAttribute("href") || "";
             if (href.includes("recipients.html") && role !== "admin") link.style.display = "none"; //Aaron: hide the recipients link if the user is not an admin
             if (href.includes("traps.html") && role !== "admin" && role !== "manager") link.style.display = "none"; //Aaron: hide the traps link if the user is not an admin or manager
+            if (href.includes("audit.html") && role !== "admin") link.style.display = "none"; //Aaron F: The Auditt page is for admins only
         });
         const nav = document.querySelector(".tw-nav");
         if (nav) { nav.classList.add("ready"); nav.style.visibility = "visible"; } //Aaron: show the navigation links after filtering
@@ -24,8 +25,32 @@
     window.location.href = `${DENIED_URL}?reason=${reason}`;
     }
 
+    /* Aaron F: Records the sign-out for the Audit page, ends the Firebase session, then opens the login page. location.replace() swaps this page out of the history, so Back doesn't return to it. */
+    let signingOut = false;
+    async function twSignOut(event) {
+        event.preventDefault();
+        if (signingOut) return;               //Aaron F: ignore a double click so the record isnt duplicated
+        signingOut = true;
+        try {
+            await twRecordSession("signOut");  // Aaron F: must run before signOut(): the server checks the ID token
+            await twAuth.signOut();
+            window.location.replace(`${LOGIN_URL}?signedout=1`);
+        } catch (err) {
+            signingOut = false;
+            console.error("Sign-out failed:", err);
+            alert("Couldn't sign you out. Please try again.");
+        }
+    }
+
+    document.querySelectorAll("[data-signout]").forEach((link) => link.addEventListener("click", twSignOut));
+
+    /*Aaron F: If the browser shows this page again from its back and forward cache after signing out, reload it so the sign-in check runs again. */
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) window.location.reload();
+    });
+
     let __resolveReady;
-    const twAuthReady = new Promise((r) => { __resolveReady = r; });
+    window.twAuthReady = new Promise((r) => { __resolveReady = r; }); //Aaron.F changed, was causing an error
     function resolveReady(user) { __resolveReady(user); }
 
     async function afterLogin(user) { //Aaron: after the user is logged in, check if they have the required role and filter the navigation links
@@ -81,7 +106,7 @@ if (token) {
 } else {
     twAuth.onAuthStateChanged(async (user) => {
         if (!user) {
-            goToLogin();
+            if (!signingOut) goToLogin(); // Aaron F: twSignOut opens the login page itself
             return;
         }
         await afterLogin(user);

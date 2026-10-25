@@ -240,6 +240,12 @@ async function handleDeleteAccountSubmit(e) {
     }
 }
 
+//Aaron F: reverts back to original settings within the window so that nothing is saved and they can compare what thier settings were like when it wasnt saved
+async function handleDiscardChanges() {
+    await twLoadMyPreferences(twAuth.currentUser);
+    if (twIsAdmin) await loadSettingsIntoForm();
+}
+
 //Set up even listeners
 document.addEventListener("DOMContentLoaded", async () => {
     await window.twAuthReady; //Aaron F: wait for role check
@@ -258,6 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit);
+    document.getElementById("discard-settings-btn").addEventListener("click", handleDiscardChanges);
     document.getElementById("delete-account-btn").addEventListener("click", twStartDeleteAccount);
     document.getElementById("delete-account-form").addEventListener("submit", handleDeleteAccountSubmit);
     document.getElementById("delete-account-cancel").addEventListener("click", () => twCloseModal("delete-account-modal"));

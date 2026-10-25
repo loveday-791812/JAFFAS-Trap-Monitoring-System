@@ -194,6 +194,17 @@ if (resendCodeLink) {
     });
 }
 
+/*Aaron F: After the user deletes thier account the associated information within the settings will be deleted*/
+
+if (new URLSearchParams(window.location.search).get("deleted") === "1") {
+    showTwAlert("Account deleted", "Your TrapWatch account and its data have been deleted.", "success");
+}
+
+/* Aaron F: After signing out of dashboard-auth.js opens this page with signedout=1 */
+if (new URLSearchParams(window.location.search).get("signedout") === "1") {
+    showTwAlert("Signed out", "You've signed out of TrapWatch.", "success");
+}
+
 /*- Login Form -*/
 //Aaron: everything below this point is for the login page. It handles the login form submission, forgot password flow, and reset password flow. It uses the twPost function to call the cloud functions for login, password reset request, and password reset confirmation.
 //Aaron: every 5 failed atttepts the reset atttempts along witth firebase protections
@@ -230,6 +241,7 @@ if(loginForm) {
 
         try {
             await twAuth.signInWithEmailAndPassword(email, password);
+            await twRecordSession("signIn"); // Aaron F: records the sign-in on the Audit page, elapses after 3 seconds
             window.location.href = "/dashboard.html";
         }   catch (err) {
             showTwAlert(
