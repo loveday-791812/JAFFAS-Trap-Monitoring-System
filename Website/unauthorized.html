@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TrapWatch - Access Denied</title> <!-- Aaron: I changed the title to "Access Denied" to reflect the purpose of this page. -->
 <link rel="stylesheet" href="dashboard-style.css" />
+<link rel="stylesheet" href="tw-alert.css" />
 </head>
 <body>
 <main class="page" style="max-width:480px;margin:80px auto;text-align:center;">
@@ -23,6 +24,7 @@
    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script> <!-- Aaron: Creates a global Firebase auth capability-->
    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script> <!-- Aaron: Creates a global Firebase realtime database capability -->
    <script src="Website-backEnd/firebase-config.js"></script> <!-- Aaron: This script contains the Firebase configuration and initialization code. -->
+   <script src="tw-alert.js"></script>
    <script>
     const reason = new URLSearchParams(location.search).get("reason");// Aaron: I added a check to get the reason for the access denial from the URL query parameters. This allows us to display different messages based on the reason for the denial.
      const messages = {

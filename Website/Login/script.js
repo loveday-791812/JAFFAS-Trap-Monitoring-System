@@ -31,21 +31,10 @@ function showTwAlert(title, message, type="error") {
     twAlertButton.focus();
 }
 
-let twAfterAlert = null; // Aaron F: The page opens after the alert is closed
-
 function closeTwAlert() {
     twAlertOverlay.classList.remove("show");
     twAlertOverlay.setAttribute("aria-hidden", "true");
-    if (twAfterAlert) {
-        const next = twAfterAlert;
-        twAfterAlert = null;
-        window.location.href = next;
-    }
 }
-/*function closeTwAlert() {
-    twAlertOverlay.classList.remove("show");
-    twAlertOverlay.setAttribute("aria-hidden", "true");
-}*/
 
 
 twAlertButton.addEventListener("click", closeTwAlert);
@@ -170,14 +159,8 @@ if (verifyForm) {
         submitBtn.textContent = "Confirming...";
 
         try {
-            await twPost("verifyCode", {uid, code});
-            verifyForm.style.display = "none";
-            showTwAlert(
-                "Email verified",
-                "Thank you, An admin will now review your Account request. You will be able to sign in once your account has been approved.",
-                "success"
-            );
-            twAfterAlert = "/Login/login.html";
+            const data = await twPost("verifyCode", {uid, code});
+            window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
         } catch (err) {
             showTwAlert(
                 "Verification failed",
@@ -209,12 +192,6 @@ if (resendCodeLink) {
             );
         }
     });
-}
-
-/*Aaron F: After the user deletes thier account the associated information within the settings will be deleted*/
-
-if (new URLSearchParams(window.location.search).get("deleted") === "1") {
-    showTwAlert("Account deleted", "Your TrapWatch account and its data have been deleted.", "success");
 }
 
 /*- Login Form -*/

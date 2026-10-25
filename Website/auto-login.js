@@ -4,7 +4,7 @@
     const next = params.get("next") || "dashboard.html";
     const statusEl = document.getElementById("status");
 
-    const LOGIN_PAGE = "/login/login.html";
+    const LOGIN_PAGE = "/Login/login.html";
 
     function goToLogin(message) {
         if (statusEl) statusEl.textContent = message || "Redirecting to login...";
