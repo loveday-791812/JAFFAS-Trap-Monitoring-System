@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Access Denied</title> <!-- Aaron: I changed the title to "Access Denied" to reflect the purpose of this page. -->
+<title>Access Denied | TrapWatch</title> <!-- Aaron: I changed the title to Access Denied to reflect the purpose of this page. -->
 <link rel="stylesheet" href="dashboard-style.css" />
 <link rel="stylesheet" href="tw-alert.css" />
 </head>
@@ -20,11 +20,22 @@
        </div>
      </section>
 </main> 
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script> <!-- Aaron: Creates a global Firebase app capability -->
    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script> <!-- Aaron: Creates a global Firebase auth capability-->
    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script> <!-- Aaron: Creates a global Firebase realtime database capability -->
    <script src="Website-backEnd/firebase-config.js"></script> <!-- Aaron: This script contains the Firebase configuration and initialization code. -->
    <script src="tw-alert.js"></script>
+   <script src="layout.js"></script>
    <script>
     const reason = new URLSearchParams(location.search).get("reason");// Aaron: I added a check to get the reason for the access denial from the URL query parameters. This allows us to display different messages based on the reason for the denial.
      const messages = {
