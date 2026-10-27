@@ -20,6 +20,73 @@ const AUDIT_TRIGGER_REGION = process.env.FUNCTIONS_EMULATOR === "true" ? "us-cen
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 
+const ADMIN_NOTIFY_EMAIL = "jacobdf@outlook.com";
+const SITE_URL = "https://trapwatch.fft.kiwi"
+
+const ROLE_LABELS = {worker: "Farmer", manager: "Farm Manager" };
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function newSignupEmailHtml(email, requestedRole) {
+    return `
+    <div style="font-family:Arial, Helvetica, sans-serif; background:#1a1a1a; padding:30px;">
+        <div style="max-width:420px; margin:0 auto; background:#000; border:2px solid #fff; border-radius:16px; padding:28px; text-align:center;">
+            <h2 style="color:#fff; margin-bottom:4px;">TrapWatch</h2>
+            <p style="color:#ccc; font-size:14px; margin-top:0;">A new user is waiting for your approval</p>
+            <div style="color:#fff; background:rgba(255,255,255,0.08); padding:16px; border-radius:10px; margin:20px 0;">
+                <div style="font-size:16px; font-weight:bold;">${escapeHtml(email)}</div>
+                <div style="font-size:13px; color:#ccc; margin-top:6px;">Requested role: ${escapeHtml(ROLE_LABELS[requestedRole] || requestedRole)}</div>
+            </div>
+            <a href="${SITE_URL}/recipients.html"
+               style="display:inline-block; color:#fff; text-decoration:none; background:rgba(255,255,255,0.15); border:1px solid #fff; border-radius:20px; padding:10px 22px; font-size:14px;">
+                Review &amp; approve
+            </a>
+            <p style="color:#999; font-size:12px; margin-top:20px;">Log in as an admin, then scroll to "Access requests" on the Recipients page.</p>
+        </div>
+    </div>`;
+}
+
+async function getAdminEmails() {
+    const snap = await rtdb.ref("users").orderByChild("role").equalTo("admin").get();
+    if (!snap.exists()) return [];
+    const emails = Object.values(snap.val())
+        .map((u) => u && u.email)
+        .filter(Boolean);
+    return [...new Set(emails)];
+}
+
+async function notifyAdminOfSignup(email, requestedRole) {
+    let recipients = await getAdminEmails();
+    if (recipients.length === 0) recipients = [ADMIN_NOTIFY_EMAIL];
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const html = newSignupEmailHtml(email, requestedRole);
+
+    const results = await Promise.allSettled(
+        recipients.map((to) =>
+            resend.emails.send({
+                from: "TrapWatch <no-reply@trapwatch.fft.kiwi>",
+                to: [to],
+                subject: "TrapWatch: new sign-up waiting for approval",
+                html,
+            })
+        )
+    );
+    console.log("Notifying admins:", recipients);
+    results.forEach((r, i) => {
+        if (r.status === "rejected") {
+            console.error("Admin email threw for", recipients[i], r.reason);
+        } else if (r.value && r.value.error) {
+            console.error("Resend rejected email for", recipients[i], JSON.stringify(r.value.error));
+        } else {
+            console.log("Admin email sent to", recipients[i]);
+        }
+    });
+}
+
+
 /*Password Logic:Aaron F
 1. User requests a password reset by providing their email.
 2. A random 6-digit code is generated and hashed, then stored in the database with an expiration timestamp and attempt counter.*/
@@ -29,6 +96,7 @@ const MAX_SENDS_PER_HOUR = 5; // Maximum number of sends per hour
 const HOUR_MS = 60 * 60 * 1000; // 1 hour in milliseconds
 const { REQUESTABLE_ROLES } = require("./rolePolicy");// Aaron.F: Roles that can adhere to a role policy whiich is approved by the admin.  Admin can only be granted to already approved roles and those roles can be changed by the admin
 const { createUserAdmin } = require("./userAdmin"); // Aaron.F: Functions to create request handlers for admin user management and the self deletet account. This function is used to create users with specific roles and permissions in the system. It ensures that only authorized users can be granted admin access, maintaining the security and integrity of the application.
+
 
 function generateCode() {
     return crypto.randomInt(100000, 1000000).toString(); // Generates a random 6-digit code thatt can be used for email verification or password reset. The code is generated using the crypto module's randomInt function, which provides a secure way to generate random numbers. The range is set from 100000 to 999999 to ensure that the code is always 6 digits long.
@@ -174,8 +242,7 @@ exports.resendCode = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
 }));
 
 
-exports.verifyCode = onRequest((req, res) => {
-    cors(req, res, async () => {
+exports.verifyCode = onRequest({ secrets: ["RESEND_API_KEY"] }, (req, res) => {    cors(req, res, async () => {
         try {
             const { uid, code } = req.body || {};
             if (!uid || !code) return res.status(400).json({ error: "Missing uid or code."});
@@ -229,19 +296,24 @@ exports.verifyCode = onRequest((req, res) => {
                 magicTokenHash: null,//Aaron: clear the stored magic token hash after successful login to prevent reuse. This ensures that the magic token can only be used once and enhances security by removing sensitive information from the database.
                 magicTokenExpiresAt: null, // Aaron F: security measure is now implemented in role policy
             });
-
+           
             await admin.auth().updateUser(uid, { emailVerified: true });
-            await auditLog.record({ action: "account.verify", actorUid: uid, actorEmail: user.email || null });
-            //Aaron F: This approves the user when an admin grants approval through the use of userAdmin.js so tthat access and the recipients row will be approved after tthe admin grants approval.
-            return res.status(200).json({ verified: true});
+            await auditLog.record({ action: "account.verify", actorUid: uid, actorEmail: user.email || null});
 
+            try {
+                await notifyAdminOfSignup(user.email, user.requestedRole);
+            } catch (mailErr) {
+                console.error("notifyAdminOfSignup failed:", mailErr);
+            }
+
+            return res.status(200).json({ verified: true });
+          
         } catch (err) {
             console.error("verifyCode error:", err);
             return res.status(500).json({ error: "Could not verify code. Please try again." });
         }
     });
 });
-
 
 exports.magicLogin = onRequest((req, res) => {
     cors(req, res, async() => {

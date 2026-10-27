@@ -59,7 +59,7 @@
             role = await getRole(user);
         } catch (err) {
             console.error("Failed to validate user role:", err);
-            alert("Could not verify your role.");
+            showTwAlert("Could not verify your role.");
             return goToDenied("error");
         }
         if (role === "pending") return goToDenied("pending"); //Aaron F: The user at this satge has signed up and is waiting for the admin to approve tthe account
@@ -70,7 +70,6 @@
         if (required) {
             const allowed = required.split(",").map((r) => r.trim().toLowerCase()); //Aaron: split the required roles by comma and trim whitespace and convert to lowercase
             if (!allowed.includes(role)) {
-                alert("You don't have permission to view that page.");
                 return goToDenied("role"); //Aaron F: The role is known but the page doesnt allow it.
             }
         }
@@ -97,7 +96,7 @@ async function signInWithToken(tok) {
         const user = twAuth.currentUser;
         if (user) await afterLogin(user);
     } catch (err) {
-        alert(err.message);
+        showTwAlert("Link problem",err.message);
         goToLogin();
     }
 }
