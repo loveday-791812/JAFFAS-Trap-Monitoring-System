@@ -68,7 +68,6 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 
-.env
-.env.*
-*-firebase-adminsdk-*.json
-*-debug.log
+#ESP login
+ESP-program/login_info.py
+__pycache__/

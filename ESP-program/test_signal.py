@@ -1,3 +1,4 @@
+#Used for testing only
 #generates bytes not hex
 import os
 from trap_dictionary import trap_ids
