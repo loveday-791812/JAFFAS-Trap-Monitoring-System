@@ -4,13 +4,12 @@ import gc
 from machine import UART
 from machine import Pin
 from trap_dictionary import trap_ids   
+from login_info import FIREBASE_EMAIL, FIREBASE_PASSWORD #login details are kept in a separate file
 
 #Firebase login info
 FIREBASE_URL = "https://trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app/"
 FIREBASE_HOST = "trap-watch-default-rtdb.asia-southeast1.firebasedatabase.app"
 FIREBASE_API_KEY = "AIzaSyClXxRuzYNSg54oPuM5V-ONfqqK3vE2TWs"
-FIREBASE_EMAIL = "trapwatchesp32@gmail.com"
-FIREBASE_PASSWORD = "Esp32Test!2026"
 
 firebase_id_token = "" #will hold token after loggin in to firebase
 token_time = 0
@@ -39,7 +38,7 @@ last_reply = b'' #holds the most recent reply from the module
 duplicate_window = 90 * 60  #if signal sent in 90 minutes of same hex code, ignore
 last_signal_at = {} #adds last signal to this for later
 #Packet gap
-packet_gap_ms = 30 #how many milliseconds of silence means the packet has finished
+packet_gap_ms = 50 #how many milliseconds of silence means the packet has finished
 last_byte_at = 0 #the time the last byte arrived, in milliseconds
 
 ##MP version of powerOnModule function
@@ -56,8 +55,8 @@ def power_on_module():
     powerkey.value(0) #acts as release of power button
 
 #4G Module UART setup
-power_on_module() #calls above function 
-time.sleep(3) #lets module time to start
+"""power_on_module() #calls above function 
+time.sleep(3) #lets module time to start"""
 module_uart = UART(1, MODULE_BAUD) #UART 1 is line to the module
 module_uart.init(MODULE_BAUD, rx=MODULE_RX_PIN, tx=MODULE_TX_PIN, bits=8, parity=None, stop=1, rxbuf=4096) #rxbuf = big enough for the 1.4KB replies from Firebase
 
@@ -142,7 +141,7 @@ def clean_http_read(data):
 
 ##timestamp
 def get_timestamp():
-    send_AT('AT+CCLK?') #reply looks like +CCLK: "26/09/17,11:00:00+00"
+    send_AT('AT+CCLK?') #reply looks like +CCLK: "26/09/17,11:00:00"
     stamp = last_reply.split(b'+CCLK: "')[1][:17].decode() #takes first 17 characters
     return '20' + stamp [0:2] + '-' + stamp [3:5] + '-' + stamp [6:8] + 'T' + stamp[9:17] #rearranges to 2026-09-17T11:00:00
 
@@ -332,6 +331,13 @@ def raw_connect_request(method, path, body): #method = POST or PATCH, path = add
     return status, response_text #gives back status and reply text
 
 #runs at startup
+module_ready = False #becomes True once the module answers OK
+for attempt in range(3): #tries up to 3 times
+    if send_AT('AT', 'OK', 3): #asks the module if it is awake
+        module_ready = True #module answered, so it is on
+        break #leaves the loop, no button press needed
+    power_on_module() #no answer, so presses the power button, which toggles the module
+    time.sleep(10) #gives the module time to switch on or off
 send_AT('AT') #basic check, should end with OK
 send_AT('AT+CPIN?', 'READY') #SIM check
 send_AT('AT+CSQ') #signal strength
