@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trap Network Catch Stats | TrapWatch</title>
+<link rel="stylesheet" href="dashboard-style.css" />
+<link rel="stylesheet" href="tw-alert.css" />
+</head>
+
+<body data-required-role="admin,manager,worker" data-page-name="Trap Network Catch Stats" data-page-purpose="How many catches each trap has recorded, all time">
+
+<!-- Help modal -->
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Stats Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">This page shows catch activity aggregated across every trap, all time.</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>Catches per trap</strong> - a bar for every trap, tallest bar = most catches recoreded</li>
+                <li><strong>Summary cards</strong> - quick totals across the whole trap network.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
+
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Trap Network Catch Stats</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">How many catches each trap has recorded, all time</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+       </div>
+   </header>
+
+<div class="page">
+
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+        <a href="traps.html">Traps</a>
+        <a href="stats.html">Stats</a>
+        <a href="settings.html">Settings</a>
+        <a href="audit.html">Audit</a>
+        <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
+    </nav>
+
+    <!-- Summary numbers -->
+    <section class="kpi-grid">
+        <div class="card kpi-card">
+            <div class="kpi-label">TOTAL CATCHES [ALL TIME]</div>
+            <div class="kpi-value" id="stat-total-catches">-</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-label">MOST ACTIVE TRAP</div>
+            <div class="kpi-value" id="stat-top-trap">-</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-label">AVG CATCHES PER TRAP</div>
+            <div class="kpi-value" id="stat-avg-per-trap">-</div>
+        </div>
+    </section>
+
+    <!-- Bar chart -->
+    <section class="card chart-card">
+        <h2 class="chart-title">Catches per trap (all time)</h2>
+        <canvas id="catches-per-trap-chart"></canvas>
+    </section>
+
+
+</div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
+
+<!-- Firebase scripts - for reading trap/events data as well as role check -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Chart.js, for drawing the bar chart -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="Website-backEnd/firebase-config.js"></script>
+<script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
+<script src="stats.js"></script>
+<script src="tw-alert.js"></script>
+</body>
+</html>

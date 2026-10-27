@@ -14,13 +14,13 @@
 
     <main class="page">
 
-        <!- Background elements ->
+        <!-- Background elements -->
         <div class="leaf-decoration leaf-top"></div>
         <div class="leaf-decoration leaf-bottom"></div>
 
         <section class="signup-card">
 
-            <!- Brand ->
+            <!-- Brand -->
             <header class="brand">
 
                 <div class="logo">
@@ -40,7 +40,7 @@
             <div class="divider"></div>
 
 
-            <!- Heading ->
+            <!-- Heading -->
             <div class="heading">
 
                 <h2>Create your account</h2>
@@ -53,10 +53,10 @@
 
 
 
-            <!- Signup Form ->
+            <!-- Signup Form -->
             <form id="signupForm">
 
-                <!- Email ->
+                <!-- Email -->
                 <div class="form-group">
 
                     <label for="email">
@@ -78,7 +78,7 @@
 
                 </div>
 
-                <!- Password ->
+                <!-- Password -->
                 <div class="form-group">
 
                     <label for="password">
@@ -94,12 +94,15 @@
                             id="password"
                             placeholder="Enter your password"
                             required
+                            minlength="8"
                         >
 
                         <button
                             type="button"
                             class="password-toggle"
                             onclick="togglePassword('password', this)"
+                            tabindex="-1"
+                            aria-label="Show or hide password"
                         >
                             ◉
                         </button>
@@ -108,7 +111,7 @@
 
                 </div>
 
-                <!- Confirm Password ->
+                <!-- Confirm Password -->
                 <div class="form-group">
 
                     <label for="confirmPassword">
@@ -130,6 +133,8 @@
                             type="button"
                             class="password-toggle"
                             onclick="togglePassword('confirmPassword', this)"
+                            tabindex="-1"
+                            aria-label="Show or hide password"
                         >
                             ◉
                         </button>
@@ -139,21 +144,21 @@
                 </div>
 
 
-                <!- Role ->
+                <!-- Role -->
                 <div class="form-group">
 
                     <label>
                         Select Role
                     </label>
 
-                    <div class="roles">
+                    <div class="roles" role="radiogroup" aria-labelledby="role-label">
 
                         <label class="role-option">
 
                             <input
                                 type="radio"
                                 name="role"
-                                value="manager"
+                                value="worker"
                                 required
                             >
 
@@ -162,32 +167,7 @@
                                 <span class="radio-circle"></span>
 
                                 <div>
-                                    <strong>Trap Manager</strong>
-
-                                    <small>
-                                        Manage traps and monitor activity
-                                    </small>
-                                </div>
-
-                            </div>
-
-                        </label>
-
-
-                        <label class="role-option">
-
-                            <input
-                                type="radio"
-                                name="role"
-                                value="worker"
-                            >
-
-                            <div class="role-content">
-
-                                <span class="radio-circle"></span>
-
-                                <div>
-                                    <strong>Field Worker</strong>
+                                    <strong>Farmer</strong>
 
                                     <small>
                                         Check and reset traps in the field
@@ -202,9 +182,9 @@
                         <label class="role-option">
 
                             <input
-                            type="radio"
-                            name="role"
-                            value="admin"
+                                type="radio"
+                                name="role"
+                                value="manager"
                             >
 
                             <div class="role-content">
@@ -212,10 +192,10 @@
                                 <span class="radio-circle"></span>
 
                                 <div>
-                                    <strong>Admin</strong>
+                                    <strong>Farm Manager</strong>
 
                                     <small>
-                                        Full system access and management
+                                        Manages and monitors trap activity
                                     </small>
                                 </div>
 
@@ -223,12 +203,14 @@
 
                         </label>
 
+
+
                     </div>
 
                 </div>
 
 
-                <!- Terms ->
+                <!-- Terms -->
                 <label class="terms">
 
                     <input
@@ -239,25 +221,24 @@
 
                     <span>
                         I agree to the
-                        <a href="#">Terms of Service</a>
-                        and
-                        <a href="#">Privacy Policy</a>
+                        <a href="#" id="termsLink">Terms &amp; Conditions</a>
                     </span>
 
                 </label>
 
 
-                <!- Submit ->
+                <!-- Submit -->
                 <button
                     type="submit"
                     class="create-button"
+                    id="signupSubmitBtn"
                 >
                     Create Account
                     <span>→</span>
                 </button>
 
 
-                <!- Login ->
+                <!-- Login -->
                 <p class="login-link">
                     Already have an account?
                     <a href="login.html">Log in</a>
@@ -265,11 +246,95 @@
 
             </form>
 
+                <form id="verifyForm" style="display:none;">
+
+            <input type="hidden" id="verifyUid">
+
+            <div class="form-group">
+
+                <label for="verifyCode">
+                    We emailed you a verification code
+                </label>
+
+                <div class="input-wrapper">
+                    
+                    <span class="input-icon">✉</span>
+
+                    <input 
+                    type="text"
+                    id="verifyCode"
+                    placeholder="Enter 6-digit code"
+                    required
+                    inputmode="numeric"
+                    maxlength="6"
+                    autocomplete="one-time-code"
+                    >
+
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                class="create-button"
+                id="verifySubmitBtn"
+            >
+                Confirm
+                <span>→</span>
+            </button>
+
+        <p class="login-link">
+            Didn't get a code?
+            <a href="#" id="resendCodeLink">Resend</a>
+        </p>
+
+
+    </form>
+
+
+
         </section>
 
     </main>
 
+    <div class="terms-overlay" id="termsModal" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+        <div class="terms-modal">
+            <h2 id="termsModalTitle">Terms &amp; Conditions</h2>
+            <p>
+                TrapWatch is solely for use with wireless systems supplied by Farm &amp; Forest Telemetry.
+                As physical and atmospheric conditions may interfere with transmission, there is no guarantee
+                that all signals will be recorded on the system. Contact
+                <a href="mailto:fftelemetry1@gmail.com">fftelemetry1@gmail.com</a>
+                if you have any questions.
+            </p>
+            <button type="button" class="create-button" id="termsCloseBtn">Close</button>
+        </div>
+    </div>
 
+    <div class="tw-alert-overlay" id="twAlertOverlay" aria-hidden="true">
+        <div class="tw-alert-modal"
+            id="twAlertModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="twAlertTitle"
+            aria-describedby="twAlertMessage">
+            
+            <div class="tw-alert-icon" id="twAlertIcon">!</div>
+
+            <div class="tw-alert-content">
+                <h2 id="twAlertTitle">Something went wrong</h2>
+                <p id="twAlertMessage">Please try again</p>
+            </div>
+
+            <button type="button" class="tw-alert-button" id="twAlertButton">Ok</button>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <script src="../Website-backEnd/firebase-config.js"></script>
     <script src="script.js"></script>
 
 </body>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Settings | TrapWatch</title>
+
+<link rel="stylesheet" href="dashboard-style.css" />
+<link rel="stylesheet" href="tw-alert.css" />
+</head>
+<body data-required-role="admin,manager,worker" data-page-name="Settings" data-page-purpose="Your report emails and your account" data-page-purpose-admin="Your report emails and account, plus the defaults and contact details everyone sees">
+
+<div class="modal-overlay" id="help-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Settings Help</h2>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px;">Control default behaviour across the dashboard</p>
+            <ul style="padding-left:18px; line-height:1.6;">
+                <li><strong>Overdue threshold</strong> — how many days a trap can go without a reset before it's flagged overdue.</li>
+                <li><strong>Default dashboard view</strong> — which date range the Dashboard opens to when you visit it. </li>
+                <li><strong>Default report frequency</strong> — which report types are pre-selected when adding a new recipient.</li>
+                <li><strong>Email notifications</strong> — a master switch for all outgoing report emails.</li>
+                <li><strong>Contact Admin Info</strong> — admins only: the name, email and phone shown at the bottom of every page for anyone who needs help.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="twCloseModal('help-modal')">Got it</button>
+        </div>
+    </div>
+</div>
+
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Settings</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Your report emails and your account</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+       </div>
+   </header>
+
+<div class="page">
+
+    <!-- nav -->
+    <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+    <nav class="tw-nav role-gated" id="tw-nav" style="visibility:hidden;">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="recipients.html">Recipients</a>
+        <a href="traps.html">Traps</a>
+        <a href="stats.html">Stats</a>
+        <a href="settings.html">Settings</a>
+        <a href="audit.html">Audit</a>
+        <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
+    </nav>
+
+    <!-- setting form -->
+    <form id="settings-form">
+        <section class="card">
+
+            <!-- overdue threshold -->
+            <div class="settings-section">
+                <h2>Overdue threshold</h2>
+                <p class="settings-description">
+                    How many days without a reset before a trap counts as "overdue" on the dashboard.
+                </p>
+                <div class="field">
+                    <label for="overdue-threshold">Days</label>
+                    <input type="text" id="overdue-threshold" inputmode="numeric" />
+                </div>
+            </div>
+
+            <!-- default dashboard view -->
+            <div class="settings-section">
+                <h2>Default dashboard view</h2>
+                <p class="settings-description">
+                    Which date range the Admin Dashboard opens to by default.
+                </p>
+                <div class="field">
+                    <label for="default-date-range">Date range</label>
+                    <select id="default-date-range">
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section" data-admin-only hidden>
+                <h2>Admin contact</h2>
+                <p class="settings-description">
+                    Shown at the bottom of every page, so that people know who to contact if they have trouble with the Trap Network or Dashboard.                    
+                </p> 
+                <div class="field">
+                    <label for="admin-contact-name">Name (optional)</label>
+                     <input type="text" id="admin-contact-name" maxlength="80" autocomplete="name" />
+                </div>
+                <div class="field">
+                    <label for="admin-contact-email">Email <span class="required">*</span></label>
+                    <input type="text" id="admin-contact-email" inputmode="email" maxlength="254" autocomplete="email" />
+                </div>
+                <div class="field">
+                    <label for="admin-contact-phone">Phone (optional)</label>
+                    <input type="text" id="admin-contact-phone" inputmode="tel" maxlength="30" autocomplete="tel" />                
+                </div>
+                <p class="field-error" id="admin-contact-error" role="alert"></p>
+            </div>
+
+            <!-- default report preferences: 4 toggles pre-checked when a new recipient is added -->
+            <div class="settings-section">
+                <h2>Your reports</h2>
+                <p class="settings-description">
+                    Choose which emails you recieve.
+                </p>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Instant Reports</div>
+                        <div class="toggle-row-description">You will be notified as soon as a trap is triggered</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-instant" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Daily Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each day</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-daily" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Weekly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each week</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-weekly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Monthly Reports</div>
+                        <div class="toggle-row-description">You will be sent a catch summary each month</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="my-report-monthly" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Email notifications</h2>
+                <p class="settings-description">
+                    Turn all outgoing report emails on or off.
+                </p>
+                <div class="radio-row">
+                    <label class="radio-option">
+                        <input type="radio" name="email-notifications" value="on" /> On
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="email-notifications" value="off" /> Off
+                    </label>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- save and discard changes button -->
+        <section class="card settings-actions-card">
+            <div class="settings-footer">
+                <span id="save-confirmation" class="save-confirmation">Settings saved</span>
+                <button type="button" id="discard-settings-btn" class="btn btn-outline">Discard changes</button> <!--Aaron F: added discard changes in case they wanted to revert to what they have saved as thier settings -->
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </section> 
+    </form>
+
+<!-- Aaron F: Delete account: open to every role. settings.js asks for confirmation, then the password to delette account. -->
+<section class="card danger-card" aria-labelledby="delete-heading">
+    <div class="settings-section">
+        <h2 id="delete-heading">Delete my account</h2>
+        <p class="settings-description">Permanently deletes your sign-in, your profile and your email report settings. This can't be undone.</p>
+        <button type="button" id="delete-account-btn" class="btn btn-danger">Delete my account</button>
+    </div>
+</section>
+
+</div>
+
+<!-- Aaron F: Password check before deleting (Firebase needs a recent sign-in for this to validate) -->
+<div class="modal-overlay" id="delete-account-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div class="modal-header">
+            <h2 id="delete-account-title">Enter your password to delete your account</h2>
+        </div>
+        <form id="delete-account-form">
+            <div class="modal-body">
+                <div class="warning-box">
+                    <span aria-hidden="true">⚠️</span>
+                    <span>Your account and its data will be deleted straight away. This can't be undone.</span>
+                </div>
+                <div class="field">
+                    <label for="delete-password">Password</label>
+                    <input type="password" id="delete-password" autocomplete="current-password" required />
+                </div>
+                <p id="delete-account-error" class="field-error" role="alert"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="delete-account-cancel">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="delete-account-submit">Delete account</button>
+            </div>
+        </form>
+    </div>
+</div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
+
+<!-- settings script -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script src="Website-backEnd/firebase-config.js"></script>
+<script src="dashboard-auth.js"></script>
+<script src="tw-alert.js"></script>
+<script src="layout.js"></script>
+<script src="settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+function twHighlightNav() {
+    const current = window.location.pathname.split("/").pop() || "settings.html";
+    document.querySelectorAll(".tw-nav a").forEach((link) => {
+        const href = link.getAttribute("href");
+        if (href === current) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+function twOpenModal(modalId) {
+    document.getElementById(modalId).classList.add("open");
+}
+
+// hides modal overlay
+function twCloseModal(modalId) {
+    document.getElementById(modalId).classList.remove("open");
+}
+
+
+
+/* default settings for before anything starts
+   defaultReportFrequency is now replace with 4 independent booleans since a recipient can now choose more that one report type at once. Daily defaults to "true" */
+const DEFAULT_SETTINGS = {
+    overdueThreshold: 7,    //matches 7 days
+    defaultDateRange: "7d",
+    defaultReportInstant: false,
+    defaultReportDaily: true,    //default recipients type
+    defaultReportWeekly: false,
+    defaultReportMonthly: false,
+    emailNotificationsEnabled: true,
+};
+
+async function twGetSettings() {
+    try {
+        const snap = await rtdb.ref("Settings").once("value");
+        const saved = snap.val();
+        if (!saved) return { ...DEFAULT_SETTINGS}; //keeps default state if nothing is saved
+        
+        if (saved.defaultReportDaily === undefined && saved.defautReportDaily !== undefined) {
+            saved.defaultReportDaily = saved.defautReportDaily;
+        }
+        return { ...DEFAULT_SETTINGS, ...saved };
+    }   catch (err) {
+        console.error("Couldn't read settings, using defaults:", err);
+        return { ...DEFAULT_SETTINGS };
+    }
+}
+window.twGetSettings = twGetSettings //makes this page callable from other pages' JS files
+
+const MY_REPORT_FIELDS = {
+    instant: "reportInstant",
+    daily: "reportDaily",
+    weekly: "reportWeekly",
+    monthly: "reportMonthly",
+};
+
+let twMyRecipientId = null;
+let twMyRecipient = null;
+let twMyEmail = "";
+let twIsAdmin = false;
+
+function twWaitForUser() {
+    return new Promise((resolve) => {
+        const unsub = twAuth.onAuthStateChanged((user) => {
+            if (user) {
+                unsub();
+                resolve(user);
+            }
+        });
+    });
+}
+
+function twMyFlag(recipient, type) {
+    if (!recipient) return null;
+    const field = MY_REPORT_FIELDS[type];
+    if (recipient[field] !== undefined) return !!recipient[field];
+    return recipient.report === type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+async function twFindMyRecipient(email) {
+    const candidates = [...new Set([email, email.toLowerCase()])];
+    for (const candidate of candidates) {
+        const snap = await rtdb.ref("Recipients").orderByChild("email").equalTo(candidate).once("value");
+        if (snap.exists()) {
+            const found = snap.val();
+            const id = Object.keys(found)[0];
+            return { id, record: found[id] };
+        }
+    }
+    return null;
+}
+
+async function twLoadMyPreferences(user) {
+    const profileSnap = await rtdb.ref(`users/${user.uid}`).get();
+    const profile = profileSnap.val() || {};
+    twIsAdmin = (profile.role || "").toLowerCase() === "admin";
+    twMyEmail = (profile.email || user.email || "").trim().toLowerCase();
+
+    const emailLabel = document.getElementById("my-email-label");
+    if (emailLabel) emailLabel.textContent = twMyEmail;
+
+    if (!twMyEmail) return;
+
+    const found = await twFindMyRecipient(twMyEmail);
+    if (found) {
+        twMyRecipientId = found.id;
+        twMyRecipient = found.record;
+    }
+    const emailOn = !twMyRecipient || twMyRecipient.emailEnabled !== false;
+
+    ["instant", "daily", "weekly", "monthly"].forEach((type) => {
+        const box = document.getElementById(`my-report-${type}`);
+        box.checked = (emailOn && twMyRecipient) ? !!twMyFlag(twMyRecipient, type) : false;
+    });
+
+    const note = document.getElementById("my-paused-note");
+    if (note) note.style.display = (twMyRecipient && twMyRecipient.status === "paused") ? "block" : "none";
+
+    document.querySelector(`input[name="email-notifications"][value="${emailOn ? "on" : "off"}"]`).checked = true;
+    twSetPersonalTogglesDisabled(!emailOn);
+}
+
+function twSetPersonalTogglesDisabled(disabled) {
+    ["instant", "daily", "weekly", "monthly"].forEach((type) => {
+        const box = document.getElementById(`my-report-${type}`);
+        if (!box) return;
+        box.disabled = disabled;
+        if (disabled) box.checked = false;
+        const row = box.closest(".toggle-row");
+        if (row) {
+            row.style.opacity = disabled ? "0.45" : "1";
+            row.style.pointerEvents = disabled ? "none" : "";
+        }
+    });
+}
+
+async function twSaveMyPreferences() {
+    if (!twMyEmail) throw new Error("No email found for this account");
+
+    const emailOn = document.querySelector('input[name="email-notifications"]:checked').value === "on";
+   
+    const flags = {
+        reportInstant: emailOn && document.getElementById("my-report-instant").checked,
+        reportDaily: emailOn && document.getElementById("my-report-daily").checked,
+        reportWeekly: emailOn && document.getElementById("my-report-weekly").checked,
+        reportMonthly: emailOn && document.getElementById("my-report-monthly").checked,
+        emailEnabled: emailOn,
+    };
+
+    if (twMyRecipientId) {
+        await rtdb.ref(`Recipients/${twMyRecipientId}`).update(flags);
+        twMyRecipient = { ...twMyRecipient, ...flags };
+    } else {
+        const newRef = rtdb.ref("Recipients").push();
+        const record = {
+            name: twMyEmail.split("@")[0],
+            email: twMyEmail,
+            status: "active",
+            ...flags,
+        };
+        await newRef.set(record);
+        twMyRecipientId = newRef.key;
+        twMyRecipient = record;
+    }
+
+    twSetPersonalTogglesDisabled(!emailOn)
+}
+
+/*Aaron F: admin contact in footer parametization*/
+
+const TW_CONTACT_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const TW_CONTACT_PHONE = /^[0-9 +()-]*$/;
+
+function twFillAdminContact(saved) {
+    const fallback = (window.twLayout && window.twLayout.DEFAULT_CONTACT) || { name: "", email: "", phone: "" };
+    const contact = saved && typeof saved === "object" && typeof saved.email === "string" ? saved : fallback;  // nothing saved yet
+    document.getElementById("admin-contact-name").value = typeof contact.name === "string" ? contact.name : "";
+    document.getElementById("admin-contact-email").value = contact.email || "";
+    document.getElementById("admin-contact-phone").value = typeof contact.phone === "string" ? contact.phone : "";
+    document.getElementById("admin-contact-error").textContent = "";
+}
+
+function twReadAdminContact() {
+    const name = document.getElementById("admin-contact-name").value.trim();
+    const email = document.getElementById("admin-contact-email").value.trim();
+    const phone = document.getElementById("admin-contact-phone").value.trim();
+    if (!email) return { error: "Enter the email address people should contact for help.", field: "admin-contact-email" };
+    if (email.length > 254 || !TW_CONTACT_EMAIL.test(email)) return { error: "Enter a valid contact email, like name@example.com.", field: "admin-contact-email" };
+    if (name.length > 80) return { error: "Keep the contact name to 80 characters or fewer.", field: "admin-contact-name" };
+    if (phone.length > 30 || !TW_CONTACT_PHONE.test(phone)) {
+        return { error: "The phone number can only use digits, spaces, +, - and brackets, up to 30 characters.", field: "admin-contact-phone" };
+    }
+
+    const contact = { email };
+    if (name) contact.name = name;
+    if (phone) contact.phone = phone;
+    return { contact };
+}
+
+/* fills saved data */
+async function loadSettingsIntoForm() {
+    const s = await twGetSettings();
+    document.getElementById("overdue-threshold").value = s.overdueThreshold;
+    document.getElementById("default-date-range").value = s.defaultDateRange;
+    twFillAdminContact(s.adminContact);
+}
+
+async function saveAdminSettings(contact) {
+    await rtdb.ref("Settings").update({
+        overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
+        defaultDateRange: document.getElementById("default-date-range").value,
+        adminContact: contact, //Aaron F: replaces contact so a cleared name or phone is removed
+    });
+    if (window.twLayout) window.twLayout.renderContact(contact); //Aaron F: updates field immediattely
+}
+
+/* runs when save settings button clicked */
+async function handleSettingsSubmit(e) {
+    e.preventDefault();
+
+    let contact = null;
+    if (twIsAdmin) {
+        const checked = twReadAdminContact();
+        document.getElementById("admin-contact-error").textContent = checked.error || "";
+        if (checked.error) {
+            document.getElementById(checked.field).focus();
+            return; //Aaron F:it isnt saved until the contact is fixed
+        }
+        contact = checked.contact;
+    }
+
+    try {
+        await twSaveMyPreferences();
+        if (twIsAdmin) await saveAdminSettings(contact);
+
+        const confirmation = document.getElementById("save-confirmation");
+        confirmation.classList.add("show");
+        setTimeout(() => confirmation.classList.remove("show"), 2000);
+    } catch (err) {
+        console.error("Couldn't save settings:", err);
+        showTwAlert("Settings not saved","Something went wrong while saving. Please try again");
+    }
+}
+
+/* Aaron F: Delete own account logic = confirm, re-enter the password (Firebase requires a recent sign-in for this),
+   then the server deletes the profile, recipient rows and the sign-in (cloud-functions/userAdmin.js). */
+function twStartDeleteAccount() {
+    if (!confirm("Are you sure that you want to delete your account?")) return;
+    document.getElementById("delete-account-error").textContent = "";
+    document.getElementById("delete-password").value = "";
+    twOpenModal("delete-account-modal");
+    document.getElementById("delete-password").focus();
+}
+
+async function handleDeleteAccountSubmit(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById("delete-account-error");
+    const submitBtn = document.getElementById("delete-account-submit");
+    const user = twAuth.currentUser;
+    if (!user) return window.location.replace("/Login/login.html");
+
+    errorEl.textContent = "";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Deleting…";
+    try {
+        const password = document.getElementById("delete-password").value;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+        await user.getIdToken(true);              // a fresh token carries the new sign-in time
+        await twAuthPost("deleteMyAccount");
+        await twAuth.signOut().catch(() => {});
+        window.location.replace("/Login/login.html?deleted=1");
+    } catch (err) {
+        const wrongPassword = ["auth/wrong-password", "auth/invalid-credential", "auth/invalid-login-credentials"].includes(err.code);
+        errorEl.textContent = wrongPassword
+            ? "That password is incorrect. Try again."
+            : err.code === "auth/too-many-requests"
+                ? "Too many attempts. Wait a few minutes, then try again."
+                : err.message;
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Delete account";
+    }
+}
+
+//Aaron F: reverts back to original settings within the window so that nothing is saved and they can compare what thier settings were like when it wasnt saved
+async function handleDiscardChanges() {
+    await twLoadMyPreferences(twAuth.currentUser);
+    if (twIsAdmin) await loadSettingsIntoForm();
+}
+
+//Set up even listeners
+document.addEventListener("DOMContentLoaded", async () => {
+    await window.twAuthReady; //Aaron F: wait for role check
+    if (!document.getElementById("settings-form")) return;
+
+    twHighlightNav();
+
+    document.getElementById("nav-toggle").addEventListener("click", (e) => {
+        const nav = document.getElementById("tw-nav");
+        const isOpen = nav.classList.toggle("open");
+        e.target.setAttribute("aria-expanded", isOpen);
+    });
+
+    document.getElementById("help-btn").addEventListener("click", () => {
+        twOpenModal("help-modal");
+    });
+
+    document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit);
+    document.getElementById("discard-settings-btn").addEventListener("click", handleDiscardChanges);
+    document.getElementById("delete-account-btn").addEventListener("click", twStartDeleteAccount);
+    document.getElementById("delete-account-form").addEventListener("submit", handleDeleteAccountSubmit);
+    document.getElementById("delete-account-cancel").addEventListener("click", () => twCloseModal("delete-account-modal"));
+    document.getElementById("delete-account-modal").addEventListener("click", (e) => {
+        if (e.target.id === "delete-account-modal") twCloseModal("delete-account-modal");
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") twCloseModal("delete-account-modal");
+    });    
+
+    const user = await twWaitForUser();
+    await twLoadMyPreferences(user);
+
+    if (twIsAdmin) {
+        document.querySelectorAll("[data-admin-only]").forEach((el) => el.removeAttribute("hidden"));
+        await loadSettingsIntoForm();
+    }
+});

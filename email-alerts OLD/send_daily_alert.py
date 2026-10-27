@@ -190,7 +190,7 @@ resend.Emails.send({
     "html": html,
     "attachments": [
         {"filename" : "trapwatch_logo.png", "content": logo_bytes, "content_id": "logo"},
-        {"filename" : "background.jpg", "content": bg_bytes, "content_id": "background"},
+        {"filename" : "background.jpg", "content": bg_bytes, "content_id": "background"}, #type: ignore
     ],
 })
 

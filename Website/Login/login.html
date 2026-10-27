@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TrapWatch | Login</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="page">
+
+        <!-- Decorative Background -->
+        <div class="leaf-decoration leaf-top"></div>
+        <div class="leaf-decoration leaf-bottom"></div>
+
+        <section class="login-card">
+
+            <!-- Brand -->
+            <header class="brand">
+
+                <div class="logo">
+                    <img src="logo.png" alt="TrapWatch logo">
+                </div>
+
+                <h1>TrapWatch</h1>
+
+                <p>
+                    Smarter trap monitoring. Healthier environments.
+                </p>
+
+            </header>
+
+            <div class="divider"></div>
+
+            <!-- Login Heading -->
+            <div class="heading">
+
+                <h2>Welcome back</h2>
+
+                <p>
+                    Sign in to continue to your TrapWatch account.
+                </p>
+
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+
+
+                <!-- Email -->
+                <div class="form-group">
+
+                    <label for="loginEmail">
+                        Email
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">✉</span>
+
+                        <input
+                            type="email"
+                            id="loginEmail"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+            
+            
+
+
+                <!-- Password -->
+                <div class="form-group">
+
+                    <label for="loginPassword">
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">🔒</span>
+
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('loginPassword', this)"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Remember me / forgot password -->
+                <div class="login-options">
+
+                    <a href="#" class="forgot-password" id="forgotLink">Forgot password?</a>
+
+                </div>
+
+
+                <!-- Login Button -->
+                <button
+                    type="submit"
+                    class="create-button login-button"
+                >
+                    Log in
+                    <span>→</span>
+                </button>
+
+
+                <!-- Signup -->
+                <p class="login-link">
+                    Don't have an account?
+                    <a href="index.html">Create one</a>
+                </p>
+
+            </form>
+                        <!-- Forgot password form (hidden by default) -->
+            <form id="forgotForm" style="display:none;">
+                <div class="form-group">
+                    <label for="forgotEmail">Enter your account email</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✉</span>
+                        <input type="email" id="forgotEmail" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <button type="submit" class="create-button" id="forgotSubmitBtn">
+                    Send code <span>→</span>
+                </button>
+                <p class="login-link">
+                    <a href="#" id="backToLogin1">Back to login</a>
+                </p>
+            </form>
+
+            <!-- Reset password form (hidden by default) -->
+            <form id="resetForm" style="display:none;">
+                <div class="form-group">
+                    <label for="resetCode">6-digit code</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✉</span>
+                        <input type="text" id="resetCode" inputmode="numeric" maxlength="6" required autocomplete="one-time-code">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resetPassword">New password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="resetPassword" minlength="8" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resetConfirm">Confirm new password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="resetConfirm" required>
+                    </div>
+                </div>
+                <button type="submit" class="create-button" id="resetSubmitBtn">
+                    Reset password <span>→</span>
+                </button>
+                <p class="login-link">
+                    <a href="#" id="backToLogin2">Back to login</a>
+                </p>
+            </form>
+
+
+        </section>
+
+    </main>
+    <div class="tw-alert-overlay" id="twAlertOverlay" aria-hidden="true">
+        <div class="tw-alert-modal"
+            id="twAlertModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="twAlertTitle"
+            aria-describedby="twAlertMessage">
+            
+            <div class="tw-alert-icon" id="twAlertIcon">!</div>
+
+            <div class="tw-alert-content">
+                <h2 id="twAlertTitle">Something went wrong</h2>
+                <p id="twAlertMessage">Please try again</p>
+            </div>
+
+            <button type="button" class="tw-alert-button" id="twAlertButton">Ok</button>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <script src="../Website-backEnd/firebase-config.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>

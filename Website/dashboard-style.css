@@ -1,0 +1,910 @@
+/* Dashboard style CSS for dashboard.html and recipients.html */
+
+/* Colors are centralized here. Changing the colors here updates it everywhere */
+:root {
+    --tw-bg: #b9dc9e;       /* light green page background */
+    --tw-surface: #ffffff;  /* white card background */
+    --tw-surface-alt: #e7f0df; /* table/modal headers */
+    --tw-text: #1f2a1f;     /* text color */
+    --tw-text-muted: #5b6b5b;   /* label text color */
+    --tw-green-dark: #2d4a2b;   /* primary green (buttons) */
+    --tw-green-darker: #223a20; /* hover state green */
+    --tw-green-mid: #3f6b3a;    /* input focus/hover on recipients page */
+    --tw-border: #d5e3ca;       /* border color */
+    --tw-status-pending: #6b6b6b;   /* grey badge */
+    --tw-status-overdue: #a3352b;   /* red badge */
+    --tw-status-active: #2d4a2b;    /* green reset status badge */
+    --tw-status-paused: #9aa39a;    /* green badge for pause recipients */
+    --tw-danger: #a3352b;           /* red used for remove + warning box */
+    --tw-danger-dark: #832a22;      /* hover state for red remove button */
+    --tw-radius: 10px;                /* corner rounding on cards */
+    --tw-radius-sm: 6px;        /* corner rounding on buttons */
+    --tw-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* shadow */
+    --tw-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif; /*font*/
+    --tw-header-bg: #a3cc84; /*Aaron F: Header and footer darker sharde to differentiate it*/
+    --tw-header-border: #8db96c;
+    --tw-header-text-muted: #2d4a2b; /*Aaron F: readable on the band*/
+
+}
+
+/* makes width and heigh calculations includes padding + border on buttons */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--tw-font);
+    background: var(--tw-bg);
+    color: var(--tw-text);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+
+}
+
+/* .page wraps all page content with 1100px max width */
+.page {
+    max-width: 1100px; 
+    margin: 0 auto;    /* automatically keeps it at 0 margin */
+    padding: 20px 12px 40px;
+    width: 100%; flex: 1 0 auto; /*Aaron F: makes it so that footer sttays at tthe botttom of the page even if the page is small*/
+}
+
+/* header */
+.tw-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;  /* for responsive web changing */
+}
+
+/* left header */
+.tw-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* logo */
+.tw-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f6ecc9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0; /* stops logo from squashing */
+}
+
+/* logo image properties */
+.tw-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;  /* keeps logo aspect ratio */
+}
+
+/* title */
+.tw-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--tw-text);
+}
+
+/* right header */
+.tw-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* nav bar */
+.tw-nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+
+.tw-nav a {
+    text-decoration: none;
+    color: var(--tw-green-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border-radius: var(--tw-radius-sm);
+    background: var(--tw-surface);
+    border: 1px solid var(--tw-border);
+}
+
+.tw-nav a:hover {
+    background: var(--tw-surface-alt);
+    background-color: var(--tw-green-mid);
+}
+
+/* this is added or removed in dashbaord.js for automatically matching whatever page you are on */
+.tw-nav a.active {
+    background: var(--tw-green-dark);
+    color: #fff;
+    border-color: var(--tw-green-dark);
+}
+
+/* buttons */
+.btn {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: var(--tw-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/*  primary button - overrides colors */
+.btn-primary {
+    background: var(--tw-green-dark);
+    color: #fff;
+}
+
+/* button color when hover mouse */
+.btn-primary:hover {
+    background: var(--tw-green-darker);
+}
+
+/* button outline */
+.btn-outline {
+    background: var(--tw-surface);
+    color: var(--tw-text);
+    border-color: var(--tw-border);
+}
+
+.btn-outline:hover {
+    background: var(--tw-surface-alt);
+}
+
+/* used only by the rmove button inside the remove recipient modal */
+.btn-danger {
+    background: var(--tw-danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: var(--tw-danger-dark);
+}
+
+/* visible outline when tabbing */
+ .btn:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 3px solid #1a5fb4;
+    outline-offset: 2px;
+ }
+
+ /* KPI card backgound/table wrapper */
+ .card {
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius);
+    box-shadow: var(--tw-shadow);
+ }
+
+/* 4 KPI cards */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.kpi-card {
+    padding: 20px;
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--tw-text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--tw-text);
+}
+
+/* trap table */
+.table-card {
+    padding: 0;
+    overflow: hidden; /*keeps corners rounded*/
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* removes gaps between cell borders */
+}
+
+thead th {
+    background: var(--tw-surface-alt);
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer; /* headers are clickable */
+    user-select: none;
+    white-space: nowrap;
+}
+
+/* arrow sort */
+.sort-arrow {
+    color: var(--tw-text-muted);
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+thead th[data-sort]:hover {
+    background: var(--tw-border);
+}
+
+/* data row of the table */
+tbody td {
+    padding: 14px 20px;
+    border-top: 1px solid var(--tw-border);
+    font-size: 0.92rem;
+}
+
+/* highlight over hover */
+tbody tr:hover {
+    background: #f7fbf3;
+}
+
+/* status badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px; /* makes it as round as possible */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+/* colored dot added */
+.badge::before {
+    display: none;
+}
+
+/* pending badge */
+.badge-pending {
+    background: var(--tw-status-pending);
+}
+
+/* overdue badge */
+.badge-overdue {
+    background-color: var(--tw-status-overdue);
+}
+
+/* reset badge */
+.badge-reset {
+    background: var(--tw-status-active);
+}
+
+/* used on recipients page onlt */
+.badge-active {
+    background: var(--tw-status-active)
+}
+
+.badge-paused {
+    background: var(--tw-status-paused);
+    color: #2a2a2a;
+}
+
+/* Recipients table - dropdown sits inside a table cell from recipient.html letting staff change it without opening the edit modal */
+.report-select {
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 8px 12px;
+    border-radius: var(--tw-radius-sm);
+    border: 1p solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text);
+    min-width: 140px;
+    cursor: pointer;
+}
+
+/* mid green for hover */
+.report-select:hover {
+    border-color: var(--tw-green-mid);
+}
+
+.action-link {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 14px;
+}
+
+.action-link.edit {
+    color: var(--tw-green-dark);
+}
+
+.action-link.remove {
+    color: var(--tw-danger);
+}
+
+.action-link.edit:hover {
+    color: var(--tw-green-dark);
+    text-decoration: underline;
+}
+
+.action-link.remove:hover {
+    color: var(--tw-danger-dark);
+    text-decoration: underline;
+}
+
+/* Add/Edit/Remove modals */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 35, 20, 0.45);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    z-index: 100; /* sits above all else on page */
+    overflow-y: auto;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal {
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    background: var(--tw-surface-alt);
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.modal-body {
+    padding: 22px 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    background: var(--tw-surface-alt);
+    border-top: 1px solid var(--tw-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.field .required {
+    color: var(--tw-danger);    /* ;ittle red asterisk for required fields */
+}
+
+.field input[type="text"],
+.field input[type="email"],
+.field select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.92rem;
+    padding: 10px 12px;
+    border-radius: var(--tw-radius-sm);
+    border: 1px solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text);
+}
+
+.field input:hover,
+.field select:hover {
+    border-color: var(--tw-green-mid);
+}
+
+/* active/paused radio buttons in the edit modal */
+.radio-row{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+/* red warning banner in the remove recipient modal */
+.warning-box {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fbe9e7;
+    border: 1px solid #f0c4bd;
+    border-radius: var(--tw-radius-sm);
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    color: #6e2018;
+    margin-bottom: 16px;
+}
+
+.hint-text {
+    font-size: 0.0rem;
+    color:  var(--tw-text-muted);
+    margin-top: 10px;
+}
+
+/* filter bar/ date range dropdown */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--tw-surface);
+    border-radius: var(--tw-radius-sm);
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--tw-text-muted);
+    box-shadow: var(--tw-shadow);
+}
+
+.filter-bar select {
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--tw-text);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.filter-bar select:hover {
+    color: var(--tw-green-dark);
+}
+
+/* Repsonsive tweaks - Adjust KPI grid column as screen gets narrower and let table scroll sideways instead of squashing on mobile */
+@media (max-width: 780px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .tw-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tw-header {
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .filter-bar {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .tw-header-right {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
+
+.settings-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h2 {
+    font-size: 0.88rem;
+    margin: 0 0 6px;
+    color: var(--tw-text);
+}
+
+.settings-description {
+    font-size: 0.88rem;
+    color: var(--tw-text-muted);
+    margin: 0 0 14px;
+}
+
+.settings-actions-card {
+    margin-top: 20px;
+}
+
+/*Aaron F: fixing the settings button so that its more neat and lines up correctly*/
+.settings-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+}
+.settings-footer .btn { order: -1; white-space: nowrap } /*Aaron F: there is a hidden artifact so by putting the button earlier in order there isnt a gap that makes the dashboard look unprofessional*/
+.danger-card { margin-top: 20px; } /*Aaron F: there is now a gap between the settings button and the delete btn */
+
+.save-confirmation {
+    font-size: 0.88rem;
+    color: var(--tw-green-dark);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.save-confirmation.show {
+    opacity: 1;
+}
+
+.table-card {
+    position: relative;
+}
+
+.tw-nav-toggle {
+    display: none;
+    font-size: 1.4rem;
+    background: var(--tw-surface);
+    border: 1px solid var(--tw-border);
+    border-radius: var(--tw-radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.tw-nav-toggle:hover {
+    background: var(--tw-surface-alt);
+    border-color: var(--tw-green-mid);
+}
+
+@media (max-width: 480px) {
+    .settings-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    #download-json-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-card::after {
+        content: "→ scroll for more";
+        display: block;
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--tw-text-muted);
+        padding: 6px;
+    }
+
+    .tw-nav-toggle {
+        display: block;
+        width: 100%;
+    }
+
+    .tw-nav {
+        display:none;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .tw-nav.open {
+        display: flex;
+    }
+
+    .tw-nav a {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+.tw-help-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--tw-border);
+    background: var(--tw-surface);
+    color: var(--tw-green-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+}
+
+.tw-help-btn:hover {
+    background: var(--tw-surface-alt);
+    border-color: var(--tw-green-mid);
+}
+
+.tw-nav.role-gated {
+    visibility: hidden;
+}
+
+.tw-nav.role-gated.ready {
+    visibility: visible;
+}
+
+/* stats page chart card (white round card) */
+.chart-card {
+    padding: 24px;
+    margin-top: 16px;
+}
+
+/* heading above bar chart */
+.chart-title {
+    font-size: 1rem;
+    margin: 0 0 16px;
+    color: var(--tw-text);
+}
+
+/* max chart height for responsivenes */
+#catches-per-trap-chart {
+    max-height: 360px;
+}
+
+/* toggle switches used on setting and in add/edit recipient modals */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+/* checkbox */
+.toggle-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* pill slider */
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #c7d2c5;
+    border-radius: 999px;
+    pointer-events: none;
+    transition: backgournd-color 0.15s ease;
+}
+
+/* sliding knob */
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* slide knob to right when checked and turn green */
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--tw-green-dark);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* keyboard focus ring */
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: 3px solid #1a5fb4;
+    outline-offset: 2px;
+}
+
+/* full row used in setting and add/edit recipient modals. toggle on right, description on left */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.toggle-row:last-child {
+    border-bottom: none;
+}
+
+.toggle-row-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--tw-text);
+}
+
+.toggle-row-description {
+    font-size: 0.8rem;
+    color: var(--tw-text-muted);
+    margin-top: 2px;
+}
+
+/* toggle pills used in recipients table */
+.report-toggles {
+    display: flex;
+    gap: 6px;
+}
+
+.report-toggle-btn {
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--tw-border);
+    background: #fff;
+    color: var(--tw-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.report-toggle-btn:hover {
+    border-color: var(--tw-green-mid)
+}
+
+/* "on" is added/removed by JS depending on that recipient's saved flags */
+.report-toggle-btn.on {
+    background: var(--tw-green-dark);
+    border-color: var(--tw-green-dark);
+    color: #fff;
+}
+
+.badge-removed { background: var(--tw-status-paused); color: #2a2a2a; }
+/*Aaron hide functtionality for dashbooard until it is auuthenticated*/
+body[data-required-role] .page { visibility: hidden; } /*Aaron: hide the page until the user is authenticated and has the required role*/
+body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the user is authenticated and has the required role*/
+
+/*Aaron F: Users and access links to recipients.html and delete account settings.html*/
+.users-status { min-height: 1.4em; margin: 12px 4px; font-weight: 600; color: var(--tw-green-dark); }
+.users-status.is-error, .field-error { color: var(--tw-danger); }
+.users-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.users-table select { font-family: inherit; font-size: 0.9rem; padding: 8px 10px; border-radius: var(--tw-radius-sm); border: 1px solid var(--tw-border); background: #fff; color: var(--tw-text); }
+.users-table button:disabled { opacity: 0.55; cursor: not-allowed; }
+.users-table select:focus-visible, .users-table button:focus-visible, .danger-card button:focus-visible { outline: 3px solid var(--tw-green-mid); outline-offset: 2px; }
+.danger-card .settings-section { border-left: 4px solid var(--tw-danger); border-bottom: none; }
+.field-error { min-height: 1.2em; margin: 8px 0 0; font-size: 0.9rem; }
+
+/*Aaron F: Sign out link at the end of nav*/
+.tw-nav a.tw-signout {color: var(--tw-danger); }
+.tw-nav a.tw-signout:hover { background: var(--tw-danger); border-color: var(--tw-danger); color: #fff; }
+
+/*Aaron F: Audit page (audit.html)*/
+.audit-filters { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px 20px; margin-bottom: 8px; }
+.audit-filters .field { flex: 1 1 220px; margin-bottom: 0; }
+.audit-table thead th { cursor: default; }
+.audit-table td { vertical-align: top; }
+.audit-table td:first-child { white-space: nowrap; }
+.audit-table tr.audit-security td:nth-child(2) { color: var(--tw-danger); font-weight: 700 }
+.audit-more { display: flex; justify-content: center; margin-top: 16px; }
+
+[hidden] { display: none !important; }
+
+/*Aaron F: header and footer style*/
+.tw-site-header { background: var(--tw-header-bg); border-bottom: 1px solid var(--tw-header-border); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.tw-site-header .tw-header { max-width: 1100px; margin: 0 auto; padding: 14px 12px; }
+.tw-title-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tw-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.tw-role-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--tw-green-dark); color: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
+.tw-subtitle { margin: 0; font-size: 0.88rem; color: var(--tw-header-text-muted); }
+
+/*Aaron F: role, help and header controls appear once the role check has passed */
+body[data-required-role]:not(.tw-auth-ok) .tw-header-right,
+body[data-required-role]:not(.tw-auth-ok) .tw-role-pill,
+body[data-required-role]:not(.tw-auth-ok) .tw-help-btn { visibility: hidden}
+
+.tw-site-footer { background: var(--tw-header-bg); border-top: 1px solid var(--tw-header-border); }
+.tw-footer { max-width: 1100px; margin: 0 auto; padding: 16px 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; font-size: 0.88rem; color: var(--tw-text); }
+.tw-footer p { margin: 0; }
+.tw-footer a { color: var(--tw-green-dark); font-weight: 600; }
+.tw-footer a:hover { color: var(--tw-green-darker); }
+.tw-footer-meta { color: var(--tw-header-text-muted); }
+
+@media (max-width: 480px) { .tw-footer { flex-direction: column; } }
+
+/*Aaron F: the trap groups layout code */
+.group-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 20px; margin-bottom: 20px; }
+.group-bar-left { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.group-bar label { font-size: 0.85rem; font-weight: 700; color: var(--tw-text-muted); }
+.group-bar select { font-family: inherit; font-size: 0.92rem; padding: 8px 12px; border-radius: var(--tw-radius-sm); border: 1px solid var(--tw-border); background: #fff; color: var(--tw-text); min-width: 220px; }
+.group-bar select:hover { border-color: var(--tw-green-mid); }
+.group-summary { font-size: 0.85rem; color: var(--tw-text-muted); }
+.group-bar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/*Aaron F: The trap groups have a opaque edit and delete button until a group is deleted, it is outlined in red*/
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-danger-outline { background: var(--tw-surface); color: var(--tw-danger); border-color: #e3b7b1; }
+.btn-danger-outline:hover:not(:disabled) { background: #fbe9e7; }
+
+/*Aaron F:  new and edit group window*/
+.modal-wide { max-width: 560px; }
+.group-trap-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin: -4px 0 8px; font-size: 0.85rem; color: var(--tw-text-muted); }
+.group-selected-list { margin: -2px 0 8px; font-size: 0.85rem; font-weight: 600; color: var(--tw-text); }
+.group-selected-list:empty { display: none; }
+.link-btn { background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--tw-green-dark); text-decoration: underline; cursor: pointer; }
+
+/*Aaron Frawley: tick list format inside the window linked to dashboard.js*/
+.group-trap-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--tw-border); border-radius: var(--tw-radius-sm); }
+.group-trap-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--tw-border); font-size: 0.9rem; cursor: pointer; }
+.group-trap-option:last-child { border-bottom: none; }
+.group-trap-option:hover { background: #f7fbf3; }
+.group-trap-option input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--tw-green-dark); }
+.group-trap-num { font-weight: 700; min-width: 72px; }
+.group-trap-loc { flex: 1; color: var(--tw-text-muted); }
+.group-trap-flag { font-size: 0.75rem; font-weight: 700; color: var(--tw-text-muted); background: var(--tw-surface-alt); border-radius: 999px; padding: 2px 8px; }
+.group-trap-empty { padding: 14px 12px; font-size: 0.9rem; color: var(--tw-text-muted); }
+
+/*Aaron F: The message row in the trap table when there's nothing to show in the group */
+.empty-row td { text-align: center; color: var(--tw-text-muted); padding: 28px 20px; }
+tbody tr.empty-row:hover { background: transparent; }
+
+@media (max-width: 480px) {
+    .group-bar-left, .group-bar-actions { width: 100%; }
+    .group-bar select { min-width: 0; width: 100%; }
+    .group-bar-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
