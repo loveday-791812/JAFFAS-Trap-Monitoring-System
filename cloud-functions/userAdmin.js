@@ -77,6 +77,7 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
             [`users/${uid}`]: null,
             [`Recipients/${uid}`]: null,
             [`passwordResets/${uid}`]: null,
+            [`trapGroups/${uid}`]: null, //Aaron F: stores the dashboard trap groups
         };
         if (email) {
             const wanted = email.trim().toLowerCase();

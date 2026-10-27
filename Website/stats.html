@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Stats</title>
+<title>Trap Network Catch Stats | TrapWatch</title>
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
 
-<body data-required-role="admin,manager,worker">
+<body data-required-role="admin,manager,worker" data-page-name="Trap Network Catch Stats" data-page-purpose="How many catches each trap has recorded, all time">
 
 <!-- Help modal -->
 <div class="modal-overlay" id="help-modal">
@@ -28,18 +28,25 @@
     </div>
 </div>
 
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Trap Network Catch Stats</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">How many catches each trap has recorded, all time</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+       </div>
+   </header>
 
 <div class="page">
-
-    <header  class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Stats</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-    </header>
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
@@ -77,6 +84,16 @@
 
 
 </div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
 
 <!-- Firebase scripts - for reading trap/events data as well as role check -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -87,6 +104,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
 <script src="stats.js"></script>
 </body>
 </html>

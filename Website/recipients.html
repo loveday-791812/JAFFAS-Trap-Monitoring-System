@@ -4,14 +4,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TrapWatch - Recipient Management</title>
+<title>Recipients &amp; Users | TrapWatch</title>
 
 
 
 <!--using dashboard-style.css stylesheet -->
 <link rel="stylesheet" href="dashboard-style.css" />
 </head>
-<body data-required-role="admin">
+<body data-required-role="admin" data-page-name="Recipients &amp; Users" data-page-purpose="Who receives report emails, and who can use TrapWatch">
 
 <div class="modal-overlay" id="help-modal">
     <div class="modal">
@@ -33,25 +33,32 @@
     </div>
 </div>
 
+   <header class="tw-site-header">
+       <div class="tw-header">
+           <div class="tw-header-left">
+               <div class="tw-logo">
+                   <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
+               </div>
+               <div class="tw-title-block">
+                   <div class="tw-title-row">
+                       <h1 class="tw-title" id="tw-page-name">Recipients &amp; Users</h1>
+                       <span class="tw-role-pill" id="tw-role-pill" hidden></span>
+                   </div>
+                   <p class="tw-subtitle" id="tw-page-purpose">Who receives report emails, and who can use TrapWatch</p>
+               </div>
+               <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
+           </div>
+
+           <div class="tw-header-right">
+               <!--opens add recipient box - openAddModal() in recipients.js -->
+               <button id="add-recipient-btn" class="btn btn-primary" type="button">
+                   + Add Recipient
+               </button>
+           </div>
+       </div>
+   </header>
+
 <div class="page">
-
-    <!--header -->
-    <header class="tw-header">
-        <div class="tw-header-left">
-            <div class="tw-logo">
-                <img src="assets/trapwatch_logo.png" alt="TrapWatch logo">
-            </div>
-            <h1 class="tw-title">Admin</h1>
-            <button class="tw-help-btn" id="help-btn" aria-label="Help" type="button">?</button>
-        </div>
-
-        <div class="tw-header-right">
-            <!--opens add recipient box - openAddModal() in recipients.js -->
-            <button id="add-recipient-btn" class="btn btn-primary" type="button">
-                + Add Recipient
-            </button>
-        </div>
-    </header>
 
     <button class="tw-nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
 
@@ -291,6 +298,16 @@
         </div>
     </div>
 </div>
+<footer class="tw-site-footer">
+    <div class="tw-footer">
+        <p class="tw-footer-contact">
+            <strong>Need help?</strong> Contact the TrapWatch admin:
+            <span id="tw-admin-name-wrap"><span id="tw-admin-name"></span> ·</span>
+            <a id="tw-admin-email" href="#"></a><span id="tw-admin-phone-wrap" hidden> · <a id="tw-admin-phone" href="#"></a></span>
+        </p>
+        <p class="tw-footer-meta" id="tw-footer-user"></p>
+    </div>
+</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -298,6 +315,7 @@
 
 <script src="Website-backEnd/firebase-config.js"></script>
 <script src="dashboard-auth.js"></script>
+<script src="layout.js"></script>
 <script src="settings.js"></script>
 <script src="recipients.js"></script>
 <script src="users-admin.js"></script>

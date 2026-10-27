@@ -21,6 +21,10 @@
     --tw-radius-sm: 6px;        /* corner rounding on buttons */
     --tw-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* shadow */
     --tw-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif; /*font*/
+    --tw-header-bg: #a3cc84; /*Aaron F: Header and footer darker sharde to differentiate it*/
+    --tw-header-border: #8db96c;
+    --tw-header-text-muted: #2d4a2b; /*Aaron F: readable on the band*/
+
 }
 
 /* makes width and heigh calculations includes padding + border on buttons */
@@ -34,6 +38,8 @@ body {
     background: var(--tw-bg);
     color: var(--tw-text);
     min-height: 100vh;
+    display: flex; flex-direction: column;
+
 }
 
 /* .page wraps all page content with 1100px max width */
@@ -41,6 +47,7 @@ body {
     max-width: 1100px; 
     margin: 0 auto;    /* automatically keeps it at 0 margin */
     padding: 20px 12px 40px;
+    width: 100%; flex: 1 0 auto; /*Aaron F: makes it so that footer sttays at tthe botttom of the page even if the page is small*/
 }
 
 /* header */
@@ -359,6 +366,7 @@ tbody tr:hover {
     justify-content: center;
     padding: 60px 20px;
     z-index: 100; /* sits above all else on page */
+    overflow-y: auto;
 }
 
 .modal-overlay.open {
@@ -832,5 +840,71 @@ body.tw-auth-ok .page { visibility: visible; } /*Aaron: show the page when the u
 .audit-table thead th { cursor: default; }
 .audit-table td { vertical-align: top; }
 .audit-table td:first-child { white-space: nowrap; }
-.audit-table tr.audit-security td:nth-child(2) { color: car(--tw-danger); font-weight: 700 }
+.audit-table tr.audit-security td:nth-child(2) { color: var(--tw-danger); font-weight: 700 }
 .audit-more { display: flex; justify-content: center; margin-top: 16px; }
+
+[hidden] { display: none !important; }
+
+/*Aaron F: header and footer style*/
+.tw-site-header { background: var(--tw-header-bg); border-bottom: 1px solid var(--tw-header-border); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.tw-site-header .tw-header { max-width: 1100px; margin: 0 auto; padding: 14px 12px; }
+.tw-title-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tw-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.tw-role-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--tw-green-dark); color: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
+.tw-subtitle { margin: 0; font-size: 0.88rem; color: var(--tw-header-text-muted); }
+
+/*Aaron F: role, help and header controls appear once the role check has passed */
+body[data-required-role]:not(.tw-auth-ok) .tw-header-right,
+body[data-required-role]:not(.tw-auth-ok) .tw-role-pill,
+body[data-required-role]:not(.tw-auth-ok) .tw-help-btn { visibility: hidden}
+
+.tw-site-footer { background: var(--tw-header-bg); border-top: 1px solid var(--tw-header-border); }
+.tw-footer { max-width: 1100px; margin: 0 auto; padding: 16px 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; font-size: 0.88rem; color: var(--tw-text); }
+.tw-footer p { margin: 0; }
+.tw-footer a { color: var(--tw-green-dark); font-weight: 600; }
+.tw-footer a:hover { color: var(--tw-green-darker); }
+.tw-footer-meta { color: var(--tw-header-text-muted); }
+
+@media (max-width: 480px) { .tw-footer { flex-direction: column; } }
+
+/*Aaron F: the trap groups layout code */
+.group-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 20px; margin-bottom: 20px; }
+.group-bar-left { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.group-bar label { font-size: 0.85rem; font-weight: 700; color: var(--tw-text-muted); }
+.group-bar select { font-family: inherit; font-size: 0.92rem; padding: 8px 12px; border-radius: var(--tw-radius-sm); border: 1px solid var(--tw-border); background: #fff; color: var(--tw-text); min-width: 220px; }
+.group-bar select:hover { border-color: var(--tw-green-mid); }
+.group-summary { font-size: 0.85rem; color: var(--tw-text-muted); }
+.group-bar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/*Aaron F: The trap groups have a opaque edit and delete button until a group is deleted, it is outlined in red*/
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-danger-outline { background: var(--tw-surface); color: var(--tw-danger); border-color: #e3b7b1; }
+.btn-danger-outline:hover:not(:disabled) { background: #fbe9e7; }
+
+/*Aaron F:  new and edit group window*/
+.modal-wide { max-width: 560px; }
+.group-trap-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin: -4px 0 8px; font-size: 0.85rem; color: var(--tw-text-muted); }
+.group-selected-list { margin: -2px 0 8px; font-size: 0.85rem; font-weight: 600; color: var(--tw-text); }
+.group-selected-list:empty { display: none; }
+.link-btn { background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--tw-green-dark); text-decoration: underline; cursor: pointer; }
+
+/*Aaron Frawley: tick list format inside the window linked to dashboard.js*/
+.group-trap-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--tw-border); border-radius: var(--tw-radius-sm); }
+.group-trap-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--tw-border); font-size: 0.9rem; cursor: pointer; }
+.group-trap-option:last-child { border-bottom: none; }
+.group-trap-option:hover { background: #f7fbf3; }
+.group-trap-option input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--tw-green-dark); }
+.group-trap-num { font-weight: 700; min-width: 72px; }
+.group-trap-loc { flex: 1; color: var(--tw-text-muted); }
+.group-trap-flag { font-size: 0.75rem; font-weight: 700; color: var(--tw-text-muted); background: var(--tw-surface-alt); border-radius: 999px; padding: 2px 8px; }
+.group-trap-empty { padding: 14px 12px; font-size: 0.9rem; color: var(--tw-text-muted); }
+
+/*Aaron F: The message row in the trap table when there's nothing to show in the group */
+.empty-row td { text-align: center; color: var(--tw-text-muted); padding: 28px 20px; }
+tbody tr.empty-row:hover { background: transparent; }
+
+@media (max-width: 480px) {
+    .group-bar-left, .group-bar-actions { width: 100%; }
+    .group-bar select { min-width: 0; width: 100%; }
+    .group-bar-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
