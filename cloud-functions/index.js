@@ -4,7 +4,7 @@ const { createAuditLog, createSessionAudit, createAuditTriggers } = require("./a
 const admin = require("firebase-admin");
 const { ServerValue } = require("firebase-admin/database"); //Aaron F: testing with an emulator logic: server timestamp; the emulator hides admin.database.ServerValue
 const { Resend } = require("resend");
-const cors = require("cors")({ origin: true});
+const cors = require("cors")({ origin: ["https://trapwatch.fft.kiwi", "https://trap-watch.web.app", "https://trap-watch.firebaseapp.com"] }); //Aaron F: found the security head er so that other websites can no longer call these from a browser
 const crypto = require("crypto");
 const MAGIC_TOKEN_TTL_MS = 3 * 60 * 60 * 1000; //Aaron: 3 hours expiration for magic login links
 
@@ -397,12 +397,22 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req,
                 throw err;
             }
 
+            const resetRef = rtdb.ref(`passwordResets/${userRecord.uid}`);
+
+            const previous = (await resetRef.get()).val() || {};
+            const now = Date.now();
+            const sameHour = previous.windowStart && now - previous.windowStart < HOUR_MS;
+            const sends = sameHour ? (previous.sends || 0) + 1 : 1;
+            if (sends > 3) return res.status(200).json({ success: true }); //Aaron F: sends 3 codes an hour limit for one account, so new codes can't be used to keep guessing
+
             const code = crypto.randomInt(100000, 1000000).toString();
 
-            await rtdb.ref(`passwordResets/${userRecord.uid}`).set({
+            await resetRef.set({
                 codeHash: hashCode(code),
-                expiresAt: Date.now() + CODE_TTL_MS,
+                expiresAt: now + CODE_TTL_MS,
                 attempts: 0,
+                windowSttart: sameHour ? previous.windowStartt : now,
+                sends,
             });
 
             const resend = new Resend(process.env.RESEND_API_KEY);
@@ -447,17 +457,18 @@ exports.resetPassword = onRequest((req, res) => {
         if (!snap.exists()) return res.status(400).json(genericError);
 
         const reset = snap.val();
+        if (!reset.codeHash || Date.now() > reset.expiresAt) return res.status(400).json(genericError); // Aaron F: The record stays until the hour is up, so the request limit keeps incrementing
 
-        if (Date.now() > reset.expiresAt || reset.attempts >= MAX_ATTEMPTS) {
-            await ref.remove();
-            if (reset.attempts >= MAX_ATTEMPTS) await auditLog.record({ action: "security.lockout", targetUid: userRecord.uid, targetEmail: userRecord.email || null, detail: { endpoint: "resetPassword" } });
+        const tx = await ref.child("attempts").transaction((cur) => (cur || 0) + 1); // Aaron F: it is counted before checking so guesses sent at the same moment can't slip past the bypass the limit set
+        const attempts = tx.snapshot.val();
+        if (attempts > MAX_ATTEMPTS) {
+            if (attempts === MAX_ATTEMPTS + 1) await auditLog.record({ action: "security.lockout", targetUid: userRecord.uid, targetEmail: userRecord.email || null, detail: { endpoint: "resetPassword" } });
             return res.status(400).json(genericError);
         }
 
         const given = Buffer.from(hashCode(String(code)));
         const stored = Buffer.from(reset.codeHash);
         if (given.length !== stored.length || !crypto.timingSafeEqual(given, stored)){
-            await ref.update({ attempts: reset.attempts + 1 });
             return res.status(400).json(genericError);
         }
 
