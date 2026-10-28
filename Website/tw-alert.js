@@ -1,6 +1,10 @@
+// shared alert/confirm popup used across the dashboard pages.
+// uses showTwAlert(), closeTwAlert(), twConfirm(), twSetAfterAlert()
+
+
 (function() {
     "use strict";
-
+    // Builds the popup HTML and adds it to the page 
     function injectModal(){
         if (document.getElementById("twAlertOverlay")) return;
 
@@ -30,9 +34,10 @@
 document.body.appendChild(wrap.firstElementChild);
 }
 
-let afterClose = null;
-let confirmResolve = null;
+let afterClose = null; // function to run once the alert is closed
+let confirmResolve = null; // resolves the twConfirm() promise
 
+// SHows a simple alert with an OK button 
 window.showTwAlert = function (title, message, type = "error") {
     injectModal();
 
@@ -46,6 +51,7 @@ window.showTwAlert = function (title, message, type = "error") {
     ttl.textContent = title;
     msg.textContent = message;
 
+    // Pick the icon and color for the alert type
     modal.classList.remove("success", "warning");
     if (type === "success") {
         modal.classList.add("success");
@@ -59,6 +65,7 @@ window.showTwAlert = function (title, message, type = "error") {
 
     buttons.className = "";
 
+    // Reset the buttons to a single OK
     buttons.innerHTML = `<button type="button" class="tw-alert-button" id="twAlertButton">Ok</button>`;
     document.getElementById("twAlertButton").addEventListener("click", closeTwAlert);
     document.getElementById("twAlertButton").focus();
@@ -67,6 +74,7 @@ window.showTwAlert = function (title, message, type = "error") {
     overlay.setAttribute("aria-hidden", "false");
 };
 
+// Hides the alert, then runs any function registered with twSetAfterAlert()
 window.closeTwAlert = function () {
     const overlay = document.getElementById("twAlertOverlay");
     if (!overlay) return;
@@ -80,6 +88,7 @@ window.closeTwAlert = function () {
     }
 };
 
+// shows a Cancel / COnfirm popup. Returns a promise
 window.twConfirm = function (title, message) {
     injectModal();
 
@@ -116,6 +125,7 @@ window.twConfirm = function (title, message) {
     });
 };
 
+// Closes the confirm popup and returns the user's choice to twConfirm()
 function finishConfirm(result) {
     const overlay = document.getElementById("twAlertOverlay");
     overlay.classList.remove("show");
@@ -128,6 +138,7 @@ function finishConfirm(result) {
     }
 }
 
+// Clicking the dark background closes the popup
 document.addEventListener("click", (e) => {
     const overlay = document.getElementById("twAlertOverlay");
     if (overlay && e.target === overlay) {
@@ -136,6 +147,7 @@ document.addEventListener("click", (e) => {
     }
 });
 
+// Pressing Escape closes the popup the same way
 document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     const overlay = document.getElementById("twAlertOverlay");
@@ -144,6 +156,7 @@ document.addEventListener("keydown", (e) => {
     else closeTwAlert();
 });
 
+// Registers a function to run after the next alert is closed 
 window.twSetAfterAlert = function (fn) {
     afterClose = fn;
 };
