@@ -118,6 +118,10 @@ def connect_mobile_data():
 
     send_AT('AT+CNTP="pool.ntp.org",0') #sets the time server, 0 = UTC
     send_AT('AT+CNTP', '+CNTP: 0', 20) #syncs the module clock, +CNTP: 0 means success on this module
+    for attempt in range(3):
+        if send_AT('AT+CNTP', '+CNTP: 0', 20):
+            break
+        time.sleep(3)
 
     print('Mobile data connected') #connected
     return True
@@ -143,6 +147,10 @@ def clean_http_read(data):
 def get_timestamp():
     send_AT('AT+CCLK?') #reply looks like +CCLK: "26/09/17,11:00:00"
     stamp = last_reply.split(b'+CCLK: "')[1][:17].decode() #takes first 17 characters
+    if stamp[0:2] == '70': #70 means the clock was never set, it starts at 1970
+        send_AT('AT+CNTP', '+CNTP: 0', 20) #tries the sync again
+        send_AT('AT+CCLK?') #reads the clock again
+        stamp = last_reply.split(b'+CCLK: "')[1][:17].decode() #takes the first 17 characters again
     return '20' + stamp [0:2] + '-' + stamp [3:5] + '-' + stamp [6:8] + 'T' + stamp[9:17] #rearranges to 2026-09-17T11:00:00
 
 ##MP version of sendOnce function
