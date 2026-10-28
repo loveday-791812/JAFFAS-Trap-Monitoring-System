@@ -383,6 +383,9 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req,
         try {
             const { email } = req.body || {};
             if (!email) return res.status(400).json({ error: "Missing email."});
+            if (await tooManyFromIp(req, "resetRequest", 10, HOUR_MS)) { //Aaron F: limits password reset codes for at most 10 reset emails an hour from one address
+                return res.status(429).json({ error: "Too many reset requests. Please try again later." });
+            }
 
             let userRecord;
             try {
