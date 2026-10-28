@@ -1,3 +1,5 @@
+// TrapWatch Cloud Functions (node.js) signup, email verfication, magic-link login, password reset, user admin and audit logging
+
 const { onRequest } = require("firebase-functions/v2/https");
 const { onValueWritten } = require("firebase-functions/v2/database");
 const { createAuditLog, createSessionAudit, createAuditTriggers } = require("./auditLog");

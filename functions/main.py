@@ -8,15 +8,20 @@ import os
 import hashlib
 import time
 
+# -- Setup: limit cocurrent instances, connect to Firebase, load the resend email API key ---
 set_global_options(max_instances=10)
 initialize_app()
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
+# Base URL of the dashboard, used to build the links inside emails
 DASHBOARD_BASE_URL = "https://trapwatch.fft.kiwi"
 
-
+# Link to the Trap.NZ site shown as the second button in every email
 TRAPNZ_URL = "https://trap.nz"
+
+# Page each role is sent to when they click the email link.
+# Roles not listed here eg penidng are sent to the login page instead
 
 ROLE_LANDING_PAGE = {
     "manager": "dashboard.html",
@@ -24,6 +29,8 @@ ROLE_LANDING_PAGE = {
 }
 
 
+#---------- Email templates ----------
+# Build the HTML for the instant alert email (one trap triggered)
 def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
     return f"""
 <!DOCTYPE html>    
@@ -145,7 +152,7 @@ def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
                                 style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                           color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                           border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                          View TrapWatch.com
+                          use trapwatch.fft.kiwi
                     </a>
                 </td>
             </tr>
@@ -175,6 +182,7 @@ def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
     </html>
 """
 
+# Maps eahc report type to the checkbox field stored on a recipient in /Recipients
 REPORT_FLAGS = {
     "Instant": "reportInstant",
     "Daily": "reportDaily",
@@ -182,9 +190,11 @@ REPORT_FLAGS = {
     "Monthly": "reportMonthly",
 }
 
+# Master on/off switch for all emails (settings page) emails are on unless set to false
 def emails_enabled():
     return db.reference("/Settings/emailNotificationsEnabled").get() is not False
 
+# Returns the email adresses that should recieve a given report type 
 def get_recipients(report_type):
     if not emails_enabled():
         print("Email notifications disabled in Settings - skipping")
@@ -197,6 +207,7 @@ def get_recipients(report_type):
             continue
         if r.get("emailEnabled") is False:
             continue
+        # Use the per-report checkbox if present
         if flag in r:
             opted_in = r[flag] is True
         else:
@@ -205,6 +216,7 @@ def get_recipients(report_type):
             out.append(r["email"])
     return out
 
+# Looks up a user in /users by email 
 def find_user_by_email(email):
     all_users = db.reference("/users").get() or {}
 
@@ -216,12 +228,15 @@ def find_user_by_email(email):
             return uid, data.get("role")
     return None, None
 
+# Builds the "View TrapWatch" link Known users get a one time login link
+# token only valid for three hours 
 def build_trapwatch_link(email):
     uid, role = find_user_by_email(email)
 
     if not uid or role not in ROLE_LANDING_PAGE:
         return f"{DASHBOARD_BASE_URL}/Login/login.html"
 
+    # Create a random token and save only its SHA-256 hash and expiry against the user 
     token = secrets.token_hex(32)
     db.reference(f"users/{uid}").update({
         "magicTokenHash": hashlib.sha256(token.encode()).hexdigest(),
@@ -232,53 +247,72 @@ def build_trapwatch_link(email):
 
     return f"{DASHBOARD_BASE_URL}/{landing_page}?token={token}"
 
+# Converts an ISO timestamp string to a database (timezone removed). Returns none if it cant be read 
 def parse_iso(s):
     try:
         return datetime.fromisoformat(str(s).replace("Z", "+00:00")).replace(tzinfo=None)
     except (ValueError, TypeError):
         return None
 
-def get_trap_labels():
-    traps = db.reference("/Traps").get() or {}
-    links = db.reference("/TrapTransmitter").get() or {}
-    tvals = traps.values() if isinstance(traps, dict) else [t for t in traps if t]
-    by_tx = {}
-    for l in (links.values() if isinstance(links, dict) else links):
-        if not isinstance(l, dict):
-            continue
-        tid = str(l.get("trap_ID"))
-        t = traps.get(tid) if isinstance(traps, dict) else None
-        if not t:
-            t = next((x for x in tvals if isinstance(x, dict) and str(x.get("trap_num")) == tid), None)
-            by_tx.setdefault(str(l.get("transmitter_ID")).upper(), []).append(str(t.get("trap_num")) if t else tid)
-    return {k: " / ".join(v) for k, v in by_tx.items()}
     
-
+# Returns the traps triggered in the last 24 hours
 def get_events_today():
     now = datetime.now()
     start = now - timedelta(hours=24)
-
-    events_ref = db.reference("/Events")
-    all_events = events_ref.get() or {}
+    all_events = db.reference("/Events").get() or {}
+    labels = get_trap_labels()
 
     seen = {}
     for event_id, data in all_events.items(): # type: ignore
         if not isinstance(data, dict):
             continue
-        trap_id = str(data.get("transmitter_ID") or data.get("trap_ID") or "").upper()
-        if not trap_id:
-            continue
+        raw_id = data.get("transmitter_ID") or data.get("trap_ID")
         timestamp = data.get("timeStamp")
-        if not trap_id or not timestamp:
+        if not raw_id or not timestamp:
             continue
-        dt = parse_iso(timestamp)
-        if dt is None:
+        try:
+            dt = datetime.fromisoformat(timestamp)
+        except (ValueError, TypeError):
             continue
         if start <= dt <= now:
+            trap_id = labels.get(str(raw_id).strip().upper(), str(raw_id))
             if trap_id not in seen or dt < seen[trap_id]:
                 seen[trap_id] = dt
     return seen
 
+# Realtime DB sometimes returns a list instead of dict
+def _as_dict(node):
+    if isinstance(node, dict):
+        return node
+    if isinstance(node, list):
+        return {str(i): v for i, v in enumerate(node) if v}
+    return {}
+
+# Maps a raw transmitter/event ID to the trao numbers
+def get_trap_labels():
+    traps = _as_dict(db.reference("/Traps").get())
+    links = _as_dict(db.reference("/TrapTransmitter").get())
+
+    num_by_key = {k: str(t.get("trap_num", k)) for k, t in traps.items() if isinstance(t,dict)}
+
+    labels = {}
+    for link in links.values():
+        if not isinstance(link, dict) or not link.get("transmitter_ID"):
+            continue
+        tx = str(link["transmitter_ID"]).strip().upper()
+        for raw in str(link.get("trap_ID", "")).split("#")[0].split("/"):
+            raw = raw.strip()
+            if not raw:
+                continue
+            num = num_by_key.get(raw, raw)
+            nums = labels.setdefault(tx, [])
+            if num not in nums:
+                nums.append(num)
+    return {tx: " / ".join(nums) for tx, nums in labels.items()}
+
+
+
+# Runs automatically each time a new trap event is written to /Events
 @db_fn.on_value_created(
     reference="/Events/{event_id}",
     region="asia-southeast1"
@@ -289,7 +323,7 @@ def send_trap_alert(event: db_fn.Event) -> None:
     """
     data = event.data
     raw_id = data.get("transmitter_ID") or data.get("trap_ID", "Unknown")
-    trap_id = get_trap_labels().get(str(raw_id).upper(), raw_id)
+    trap_id = get_trap_labels().get(str(raw_id).strip().upper(), str(raw_id))
     timestamp = data.get("timeStamp")
 
     dt = parse_iso(timestamp) if timestamp else None
@@ -321,7 +355,7 @@ def send_trap_alert(event: db_fn.Event) -> None:
 
     print(f"Alert emails sent to recipients")
 
-
+# One stat tile used in weekly report
 def stat_box(number, label):
     return f"""
     <td class="stat-box" width="33%" style="padding:6px; vertical-align:top;">
@@ -337,6 +371,7 @@ def stat_box(number, label):
 </td>
     """
 
+# Builds the HTML for the weekly report
 def build_weekly_html(date_range, traps_triggered, pending_reset, avg_time_to_reset, trapwatch_url, trapnz_url):
     return f"""
 <html>
@@ -465,7 +500,7 @@ def build_weekly_html(date_range, traps_triggered, pending_reset, avg_time_to_re
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      View TrapWatch.com
+                      Use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -495,6 +530,7 @@ def build_weekly_html(date_range, traps_triggered, pending_reset, avg_time_to_re
 </html>
 """
 
+# Builds the HTML for the monthly report
 def build_monthly_html(date_range, traps_triggered, trapwatch_url, trapnz_url):
     return f"""
 <!DOCTYPE html>
@@ -613,7 +649,7 @@ def build_monthly_html(date_range, traps_triggered, trapwatch_url, trapnz_url):
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      View TrapWatch.com
+                      use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -644,6 +680,7 @@ def build_monthly_html(date_range, traps_triggered, trapwatch_url, trapnz_url):
 
 """
 
+# builds the HTML for the daily trap summary
 def build_daily_summary_html(date_str, triggered_traps, trapwatch_url, trapnz_url):
     if triggered_traps:
         header_status = f'<span style="color:#e74c3c; font-weight:bold;">{len(triggered_traps)} Triggered Today</span>'
@@ -789,7 +826,7 @@ def build_daily_summary_html(date_str, triggered_traps, trapwatch_url, trapnz_ur
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      View TrapWatch.com
+                      use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -820,7 +857,8 @@ def build_daily_summary_html(date_str, triggered_traps, trapwatch_url, trapnz_ur
 
 """
                           
-
+# ---------- Sending and scheduled reports ----------
+# Sends one emial through Resend attaching the logo and background images used by the templates
 def _send_single_email(recipient_email, html_body, subject):
     with open("assets/trapwatch_logo.png", "rb") as f:
         logo_bytes = list(f.read())
@@ -838,6 +876,7 @@ def _send_single_email(recipient_email, html_body, subject):
         ],
     })
 
+# Weekly report: runs every Thursday 6am (nz time) and covers the last seven days
 @scheduler_fn.on_schedule(
     schedule="every thursday 06:00",
     timezone=options.Timezone("Pacific/Auckland"),
@@ -868,6 +907,7 @@ def send_weekly_report(event: scheduler_fn.ScheduledEvent) -> None:
 
     print(f"Weekly report sent - {traps_triggered} triggered, {pending_reset} pending ({overdue_count} overdue)")
 
+# Montlhy report: runs on the 1st of each month at 9am and covers the last 30 days
 @scheduler_fn.on_schedule(
     schedule="1 of month 09:00",
     region="asia-southeast1"
@@ -895,6 +935,7 @@ def send_monthly_report(event: scheduler_fn.ScheduledEvent) -> None:
 
     print(f"Monthly report sent {len(recipients)} recipient - {traps_triggered} traps triggered")
 
+# Daily Summary: runs everyday at 6am and lists traps triggered in the last 24 hours 
 @scheduler_fn.on_schedule(
     schedule="every day 06:00",
     region="asia-southeast1"
@@ -929,6 +970,9 @@ def send_daily_summary(event: scheduler_fn.ScheduledEvent) -> None:
 
     print(f"Daily summary sent to {len(recipients)} recipient - {len(triggered_traps)} traps triggered")
 
+#---------- Statistics ----------
+# Group trap events into streaks per trap, a trap triggereing repeatdly with gaps under 90 minutes counts as one trigger, a longer gap means it was reset and triggered again
+# A streak is ongoing (still waiting to be reset) if its latest activity was within 90 minutes
 def get_trap_streaks():
     events_ref = db.reference("/Events")
     all_events = events_ref.get() or {}
@@ -979,6 +1023,8 @@ def get_trap_streaks():
         })
     return streaks
 
+# Calculates the report numbers for a date range: traps triggered, traps still pending reset
+# average time to reset ( completed streaks only ) and how many pending traps are over 24 hours old.
 def compute_stats(start_dt: datetime, end_dt: datetime):
     streaks = get_trap_streaks()
     now = datetime.now()
