@@ -184,7 +184,7 @@ exports.signup = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req, res) => {
                 html: codeEmailHtml(code),
             });
 
-            await auditLog.record({ action: "accountt.signup", actorUid: userRecord.uid, actorEmail: email, detail: { requestableRole: role } });
+            await auditLog.record({ action: "account.signup", actorUid: userRecord.uid, actorEmail: email, detail: { requestedRole: role } });
             return res.status(200).json({ uid: userRecord.uid });
 
         } catch (err) {

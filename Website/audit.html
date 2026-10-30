@@ -65,16 +65,16 @@
         <a href="/Login/login.html" class="tw-signout" data-signout>Sign out</a>
     </nav>
 
-    <!--Aaron F: filters for event so that they are already loaded-->
+    <!--Aaron F: filters for event so that they are already loaded, labels for filter audit category-->
     <section class="card audit-filters" aria-label="Filter the audit log">
         <div class="field">
             <label for="audit-category">Show</label>
             <select id="audit-category">
                 <option value="all">All events</option>
-                <option value="all">Accounts and Roles</option>
-                <option value="all">Sign ins and Sign outs</option>
-                <option value="all">Traps, recipients and settings</option>
-                <option value="all">Security</option>
+                <option value="account">Accounts and Roles</option>
+                <option value="session">Sign ins and Sign outs</option>
+                <option value="data">Traps, recipients and settings</option>
+                <option value="security">Security</option>
             </select>
         </div>
         <div class="field">

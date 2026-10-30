@@ -72,5 +72,5 @@ node_modules/
 ESP-program/login_info.py
 __pycache__/
 
-#Security to Preventt key leakage
+#Security to Prevent key leakage
 *adminsdk*.json
