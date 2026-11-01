@@ -443,7 +443,7 @@ exports.resetPassword = onRequest((req, res) => {
             return res.status(400).json({ error: "Missing Email, code, or new password"});
         }
         if (newPassword.length < 8) {
-            return res.status(400).json({ error: "Password must be atleast 8 charcters."});
+            return res.status(400).json({ error: "Password must be at least 8 characters."});
         } //Aaron F: if you want to increase the password complexity change this part
 
         const genericError = { error: "Invalid or expired."};

@@ -159,7 +159,7 @@ def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
                                 style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                           color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                           border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                          use trapwatch.fft.kiwi
+                          Use trapwatch.fft.kiwi
                     </a>
                 </td>
             </tr>
@@ -657,7 +657,7 @@ def build_monthly_html(date_range, traps_triggered, trapwatch_url, trapnz_url):
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      use trapwatch.fft.kiwi
+                      Use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -834,7 +834,7 @@ def build_daily_summary_html(date_str, triggered_traps, trapwatch_url, trapnz_ur
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      use trapwatch.fft.kiwi
+                      Use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>

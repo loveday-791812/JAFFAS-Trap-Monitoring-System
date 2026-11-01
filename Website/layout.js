@@ -7,7 +7,7 @@
     const ROLE_LABELS = { worker: "Farmer", manager: "Farm Manager", admin: "Admin", pending: "Waiting for Approval" };
 
     // Aaron F: varible used until admin saves a contact in Settings Page, or when it cant be read
-    const DEFAULT_CONTACT = { name: "Farm and Forest Telemetry", email: "insert actual email later in layout.js", phone: "insert contact number can delete later if its not needed" };
+    const DEFAULT_CONTACT = { name: "Farm and Forest Telemetry", email: "insert contact email later", phone: "insert contact number later" };
     // Aaron F: applying parametization
     const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
