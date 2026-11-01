@@ -955,8 +955,7 @@ def send_daily_summary(event: scheduler_fn.ScheduledEvent) -> None:
     day_num = now.day
     suffix = "th" if 11 <= day_num <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day_num % 10, "th")
     date_str = now.strftime("%a") + f" {day_num}{suffix} " + now.strftime("%b")
-
-    triggered_traps = get_events_today()
+    triggered_traps = {trap: nz_time(dt) for trap, dt in get_events_today().items()} # Aaron F: first catch of each trap, in NZ time
 
     recipients = get_recipients("Daily")
     if not recipients:
