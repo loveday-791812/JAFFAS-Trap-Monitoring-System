@@ -413,7 +413,7 @@ exports.requestPasswordReset = onRequest({ secrets: ["RESEND_API_KEY"] }, ((req,
                 codeHash: hashCode(code),
                 expiresAt: now + CODE_TTL_MS,
                 attempts: 0,
-                windowSttart: sameHour ? previous.windowStartt : now,
+                windowStart: sameHour ? previous.windowStart : now,
                 sends,
             });
 
