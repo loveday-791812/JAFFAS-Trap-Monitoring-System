@@ -507,3 +507,11 @@ exports.auditTraps = onValueWritten({ ref: "/Traps/{trapId}", region: AUDIT_TRIG
 exports.auditRecipients = onValueWritten({ ref: "/Recipients/{recipientId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("recipient"));
 exports.auditSettings = onValueWritten({ ref: "/Settings", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("settings"));
 exports.auditRoles = onValueWritten({ ref: "/users/{uid}", region: AUDIT_TRIGGER_REGION }, auditTriggers.roleChange);
+// Aaron F: Changes made outside TrapWatch to transmitter links and transmitters and catch records. New catches and last_seen updates are normal, so they aren't logged
+exports.auditLinks = onValueWritten({ ref: "/TrapTransmitter/{linkId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("link"));
+exports.auditTransmitters = onValueWritten({ ref: "/Transmitters/{txId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("transmitter", {
+    skip: (before, after, changes) => before !== null && after !== null && changes.every((c) => c.field === "last_seen"),
+}));
+exports.auditEvents = onValueWritten({ ref: "/Events/{eventId}", region: AUDIT_TRIGGER_REGION }, auditTriggers.dataChange("event", {
+    skip: (before) => before === null,
+}));

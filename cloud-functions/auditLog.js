@@ -109,6 +109,9 @@ const DATA_KINDS = {
     trap: (row, id) => `Trap ${row && row.trap_num !== undefined && row.trap_num !== null ? row.trap_num : id}`,
     recipient: (row, id) => (row && (row.email || row.name)) || id,
     settings: () => "Settings",
+    link: (row, id) => `Link ${id}${row && row.transmitter_ID ? ` (${row.transmitter_ID})` : ""}`,
+    transmitter: (row, id) => `Transmitter ${id}`,
+    event: (row, id) => `Catch record ${id}`,
 };
 
 //Aaron F: handlers for database trtiggers, recording changes made in tthe browser which functiions currently dont see
@@ -126,12 +129,13 @@ function createAuditTriggers({ record, lookupEmail }) {
 
 
     //Aaron F: traps, recipients and setttings add, edit and remove (crud) with new and old vlaues
-    function dataChange(kind) {
+    function dataChange(kind, { skip } = {}) {
         return async (event) => {
             const before = event.data.before.val();
             const after = event.data.after.val();
             const changes = describeChange(before, after);
             if (!changes.length) return null;
+            if (skip && skip(before, after, changes)) return null; //Aaron F: normal traffic like  new catchs or a last_seen update isn't logged so updated so it is not spammy
             const action = before === null ? `${kind}.create` : after === null ? `${kind}.delete` : `${kind}.update`;
             const id = Object.values(event.params || {})[0] || "";
             return record({
