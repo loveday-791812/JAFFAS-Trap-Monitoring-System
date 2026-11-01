@@ -88,12 +88,13 @@ function createUserAdmin({ auth, db, serverTimestamp, nowMs = () => Date.now()})
                 }
             });
         }
-        await db.ref().update(updates);
-        try {
-            await auth.deleteUser(uid);
-        } catch (err) {
-            if (err.code !== "auth/user-not-found") throw err;
-        }
+           try {
+               await auth.deleteUser(uid); // Aaron F: the sign-in goes first, so if this fails the account is left whole and the person can try again
+           } catch (err) {
+               if (err.code !== "auth/user-not-found") throw err;
+           }
+           await db.ref().update(updates);
+
     }
 
     const fail = (res, decision) => res.status(decision.status).json({ error: decision.reason });

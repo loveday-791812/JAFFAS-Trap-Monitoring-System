@@ -21,8 +21,8 @@ function decideSignupRole(role) { // Aaron.F: This function determines whether a
 
 /*Aaron F: Logic approving pending sign up admin cannot be granted here it will be promoted afterwards by existing admin*/
 function decideApproval({ targetRole, emailVerified, newRole}) {
-    if (targetRole !== PENDING) return deny(409, "This Account is not waiting for appproval.");
-    if(!emailVerified) return deny(409, "Account has not verrified thier email yet.");
+    if (targetRole !== PENDING) return deny(409, "This Account is not waiting for approval.");
+    if(!emailVerified) return deny(409, "Account has not verified their email yet.");
     if (!REQUESTABLE_ROLES.includes(newRole)){
         return deny(400, "Approve as Field worker or Manager, only Admins can promote Admins.")
     }

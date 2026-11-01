@@ -41,7 +41,7 @@
      const messages = {
        role: "Your role doesn't include access to that page.",
        norole: "Your account hasn't been given a role yet.",
-       pending: "Thanks for signing up. An Admin is nottified and will be review your sign up and approve your use of TrapWatch",
+       pending: "Thanks for signing up. An Admin will be notified and will review your sign up and approve your use of TrapWatch, you can sign in once your account has been approved.",
        error: "We couldn't check your permissions right now.",
      };
      document.getElementById("deny-reason").textContent = messages[reason] || messages.role;// Aaron: I added a check to hide the "Go to dashboard" button if the reason is not "role". This is because if the user doesn't have a role, they shouldn't be able to go to the dashboard.

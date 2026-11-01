@@ -31,11 +31,17 @@ function showTwAlert(title, message, type="error") {
     twAlertButton.focus();
 }
 
+let twAfterAlert = null; // Aaron F: The page opens after the alert is closed
+
 function closeTwAlert() {
     twAlertOverlay.classList.remove("show");
     twAlertOverlay.setAttribute("aria-hidden", "true");
+    if (twAfterAlert) {
+        const next = twAfterAlert;
+        twAfterAlert = null;
+        window.location.href = next;
+    }
 }
-
 
 twAlertButton.addEventListener("click", closeTwAlert);
 
@@ -159,8 +165,14 @@ if (verifyForm) {
         submitBtn.textContent = "Confirming...";
 
         try {
-            const data = await twPost("verifyCode", {uid, code});
-            window.location.href = `/dashboard.html?token=${encodeURIComponent(data.token)}`;
+            await twPost("verifyCode", {uid, code});
+            verifyForm.style.display = "none";
+            showTwAlert(
+                "Email verified",
+                "Thank you. An Admin will now review your account request. You will be able to sign in once it has been approved.",
+                "success"
+            );
+            twAfterAlert = "/Login/login.html";
         } catch (err) {
             showTwAlert(
                 "Verification failed",

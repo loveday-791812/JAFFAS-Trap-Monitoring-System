@@ -39,7 +39,7 @@ function twEscape(value) {
 /*Aaron F: POSTS to functions as the signed in users, the server will check ID tooken and role for verification*/
 async function twAuthPost(functionName, body = {}) {
     const user = twAuth.currentUser;
-    if (!user) throw new Error("Your are currently signed out. Sign in and then retry");
+    if (!user) throw new Error("You are currently signed out. Sign in and then retry");
     const idToken = await user.getIdToken();
     const res = await fetch(TW_FUNCTIONS[functionName], {
         method: "POST",

@@ -1,7 +1,8 @@
 from firebase_functions import db_fn, scheduler_fn, options
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app, db, auth
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import resend
 import secrets
 import os
@@ -19,6 +20,12 @@ DASHBOARD_BASE_URL = "https://trapwatch.fft.kiwi"
 
 # Link to the Trap.NZ site shown as the second button in every email
 TRAPNZ_URL = "https://trap.nz"
+
+NZ_TIME = ZoneInfo("Pacific/Auckland")
+
+def nz_time(dt):
+    """Times are stored and compared in UTC; this turns one into New Zealand time for printing in an email."""
+    return dt.replace(tzinfo=timezone.utc).astimezone(NZ_TIME) #Aaron F: settting ttimezone to UTC then converting to NZ time
 
 # Page each role is sent to when they click the email link.
 # Roles not listed here eg penidng are sent to the login page instead
@@ -152,7 +159,7 @@ def build_email_html(trap_id, time_str, date_str, trapwatch_url, trapnz_url):
                                 style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                           color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                           border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                          use trapwatch.fft.kiwi
+                          Use trapwatch.fft.kiwi
                     </a>
                 </td>
             </tr>
@@ -329,6 +336,7 @@ def send_trap_alert(event: db_fn.Event) -> None:
     dt = parse_iso(timestamp) if timestamp else None
     if dt is None:
         dt = datetime.now()
+    dt = nz_time(dt) #Aaron F: convert to NZ time for email
 
     # cross platform dafe time formatting
     time_str = dt.strftime("%I:%M%p").lstrip("0").lower()
@@ -649,7 +657,7 @@ def build_monthly_html(date_range, traps_triggered, trapwatch_url, trapnz_url):
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      use trapwatch.fft.kiwi
+                      Use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -826,7 +834,7 @@ def build_daily_summary_html(date_str, triggered_traps, trapwatch_url, trapnz_ur
                             style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px;
                                       color:#ffffff; text-decoration:none; background:rgba(0,0,0,0.65);
                                       border:1px solid #ffffff; border-radius:20px; padding:10px 22px;">
-                      use trapwatch.fft.kiwi
+                      Use trapwatch.fft.kiwi
                 </a>
             </td>
         </tr>
@@ -885,7 +893,7 @@ def _send_single_email(recipient_email, html_body, subject):
 def send_weekly_report(event: scheduler_fn.ScheduledEvent) -> None:
     now = datetime.now()
     start_of_week = now - timedelta(days=7)
-    date_range = f"{start_of_week.strftime('%d/%m/%y')} - {now.strftime('%d/%m/%y')}"
+    date_range = f"{nz_time(start_of_week).strftime('%d/%m/%y')} - {nz_time(now).strftime('%d/%m/%y')}"
     traps_triggered, pending_reset, avg_time_to_reset, overdue_count = compute_stats(start_of_week, now)
 
     recipients = get_recipients("Weekly")
@@ -910,12 +918,13 @@ def send_weekly_report(event: scheduler_fn.ScheduledEvent) -> None:
 # Montlhy report: runs on the 1st of each month at 9am and covers the last 30 days
 @scheduler_fn.on_schedule(
     schedule="1 of month 09:00",
+    timezone=options.Timezone("Pacific/Auckland"),
     region="asia-southeast1"
 )
 def send_monthly_report(event: scheduler_fn.ScheduledEvent) -> None:
     now  = datetime.now()
     start_of_month = now - timedelta(days=30)
-    date_range = f"{start_of_month.strftime('%d/%m/%y')} - {now.strftime('%d/%m/%y')}"
+    date_range = f"{nz_time(start_of_month).strftime('%d/%m/%y')} - {nz_time(now).strftime('%d/%m/%y')}"
     traps_triggered, _, _, _ = compute_stats(start_of_month, now)
 
     recipients = get_recipients("Monthly")
@@ -938,15 +947,15 @@ def send_monthly_report(event: scheduler_fn.ScheduledEvent) -> None:
 # Daily Summary: runs everyday at 6am and lists traps triggered in the last 24 hours 
 @scheduler_fn.on_schedule(
     schedule="every day 06:00",
+    timezone=options.Timezone("Pacific/Auckland"),
     region="asia-southeast1"
 )
 def send_daily_summary(event: scheduler_fn.ScheduledEvent) -> None:
-    now = datetime.now()
+    now = nz_time(datetime.now())
     day_num = now.day
     suffix = "th" if 11 <= day_num <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day_num % 10, "th")
     date_str = now.strftime("%a") + f" {day_num}{suffix} " + now.strftime("%b")
-
-    triggered_traps = get_events_today()
+    triggered_traps = {trap: nz_time(dt) for trap, dt in get_events_today().items()} # Aaron F: first catch of each trap, in NZ time
 
     recipients = get_recipients("Daily")
     if not recipients:
@@ -1007,6 +1016,7 @@ def get_trap_streaks():
                     "start": streak_start,
                     "end": streak_end,
                     "is_ongoing": False,
+                    "end_known": False, #Aaron F: testing found that reset time wasn't recorded
                 })
                 streak_start = ts
             streak_end = ts
@@ -1020,6 +1030,7 @@ def get_trap_streaks():
             "start": streak_start,
             "end": streak_end,
             "is_ongoing": is_ongoing,
+            "end_known": bool(ls and ls >= streak_end), # Aaron F: end comes from the transmitter's last_seen
         })
     return streaks
 
@@ -1034,7 +1045,7 @@ def compute_stats(start_dt: datetime, end_dt: datetime):
     pending_reset = len(pending)
     overdue = [s for s in pending if (now - s["start"]) >= timedelta(hours=24)]
     overdue_count = len(overdue)
-    completed_in_period = [s for s in triggered_in_period if not s["is_ongoing"]]
+    completed_in_period = [s for s in triggered_in_period if not s["is_ongoing"] and s.get("end_known")] #Aaron F: catches whose reset time is known
     if completed_in_period:
         durations = [(s["end"] - s["start"]) for s in completed_in_period]
         avg_seconds = sum(d.total_seconds() for d in durations) / len(durations)

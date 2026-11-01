@@ -157,9 +157,10 @@ function buildRangeData(eventList, transmitters, labels, days) {
     const filtered = cutoff ? eventList.filter((e) => e.date >= cutoff) : eventList;
 
     const latestByTx = {};
-    filtered.forEach((e) => {
+    eventList.forEach((e) => { //Aaron : latest catch of all time, so a trap still sprung from before the period stays listed overedue logic
         if (!latestByTx[e.txId] || e.date > latestByTx[e.txId].date) latestByTx[e.txId] = e;
     });
+    const caughtInPeriod = new Set(filtered.map((e) => e.txId));
 
     const trapRows = Object.entries(latestByTx).map(([txId, ev]) => {
         const ls = transmitters[txId] && transmitters[txId].last_seen ? twDate(transmitters[txId].last_seen) : null;
@@ -173,8 +174,9 @@ function buildRangeData(eventList, transmitters, labels, days) {
             resetDate: pending ? "-" : new Date(lastSeen).toLocaleString(),
             daysToReset: pending ? "-" : Number(((lastSeen - ev.date.getTime()) / 86400000).toFixed(1)),
             status,
+            listed: caughtInPeriod.has(txId) || status !== "reset", //Aaron F: catches caught in the trap network or still sprung
         };
-    });
+    }).filter((t) => t.listed).map(({ listed, ...row }) => row);
 
     const resetTimes = trapRows.map((t) => t.daysToReset).filter((d) => typeof d === "number");
     const  avg = resetTimes.length
