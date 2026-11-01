@@ -1016,6 +1016,7 @@ def get_trap_streaks():
                     "start": streak_start,
                     "end": streak_end,
                     "is_ongoing": False,
+                    "end_known": False, #Aaron F: testing found that reset time wasn't recorded
                 })
                 streak_start = ts
             streak_end = ts
@@ -1029,6 +1030,7 @@ def get_trap_streaks():
             "start": streak_start,
             "end": streak_end,
             "is_ongoing": is_ongoing,
+            "end_known": bool(ls and ls >= streak_end), # Aaron F: end comes from the transmitter's last_seen
         })
     return streaks
 
@@ -1043,7 +1045,7 @@ def compute_stats(start_dt: datetime, end_dt: datetime):
     pending_reset = len(pending)
     overdue = [s for s in pending if (now - s["start"]) >= timedelta(hours=24)]
     overdue_count = len(overdue)
-    completed_in_period = [s for s in triggered_in_period if not s["is_ongoing"]]
+    completed_in_period = [s for s in triggered_in_period if not s["is_ongoing"] and s.get("end_known")] #Aaron F: catches whose reset time is known
     if completed_in_period:
         durations = [(s["end"] - s["start"]) for s in completed_in_period]
         avg_seconds = sum(d.total_seconds() for d in durations) / len(durations)
