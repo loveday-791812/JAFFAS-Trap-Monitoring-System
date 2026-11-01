@@ -246,7 +246,7 @@ async function handleSettingsSubmit(e) {
         setTimeout(() => confirmation.classList.remove("show"), 2000);
     } catch (err) {
         console.error("Couldn't save settings:", err);
-        alert("Couldn't save settings. Please try again");
+           showTwAlert("Settings not saved","Something went wrong while saving. Please try again");
     }
 }
 
@@ -293,7 +293,7 @@ async function handleDeleteAccountSubmit(e) {
 //Aaron F: reverts back to original settings within the window so that nothing is saved and they can compare what thier settings were like when it wasnt saved
 async function handleDiscardChanges() {
     await twLoadMyPreferences(twAuth.currentUser);
-    if (twIsAdmin) await loadSettingsIntoForm();
+    await loadSettingsIntoForm();
 }
 
 //Set up even listeners
