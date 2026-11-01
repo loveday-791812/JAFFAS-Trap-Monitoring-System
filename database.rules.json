@@ -68,10 +68,12 @@
       ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'worker'))",
       ".write": "(auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin')",
       "overdueThreshold": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'manager'",
         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3650"
       },
       "defaultDateRange": {
-        ".validate": "newData.isString() && newData.val().length <= 10"
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'manager'",
+        ".validate": "newData.isString() && newData.val().matches(/^(7d|30d|all)$/)"
       },
       "emailNotificationsEnabled": {
         ".validate": "newData.isBoolean()"
