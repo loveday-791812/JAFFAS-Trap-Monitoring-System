@@ -61,6 +61,7 @@ let twMyRecipientId = null;
 let twMyRecipient = null;
 let twMyEmail = "";
 let twIsAdmin = false;
+let twCanEditDefaults = false;
 
 function twWaitForUser() {
     return new Promise((resolve) => {
@@ -96,7 +97,9 @@ async function twFindMyRecipient(email) {
 async function twLoadMyPreferences(user) {
     const profileSnap = await rtdb.ref(`users/${user.uid}`).get();
     const profile = profileSnap.val() || {};
-    twIsAdmin = (profile.role || "").toLowerCase() === "admin";
+    const role = (profile.role || "").toLowerCase();
+    twIsAdmin = role === "admin";
+    twCanEditDefaults = role === "admin" || role === "manager"; //Aaron F: Farm Managers can change the overdue threshold and default view too as it makes more sense
     twMyEmail = (profile.email || user.email || "").trim().toLowerCase();
 
     const emailLabel = document.getElementById("my-email-label");
@@ -208,14 +211,16 @@ async function loadSettingsIntoForm() {
     twFillAdminContact(s.adminContact);
 }
 
-async function saveAdminSettings(contact) {
-    await rtdb.ref("Settings").update({
+async function saveSharedSettings(contact) {
+    const changes = {
         overdueThreshold: Number(document.getElementById("overdue-threshold").value) || DEFAULT_SETTINGS.overdueThreshold,
         defaultDateRange: document.getElementById("default-date-range").value,
-        adminContact: contact, //Aaron F: replaces contact so a cleared name or phone is removed
-    });
-    if (window.twLayout) window.twLayout.renderContact(contact); //Aaron F: updates field immediattely
+    };
+    if (contact) changes.adminContact = contact; //Aaron F: admins only; replaces contact so a cleared name or phone is removed
+    await rtdb.ref("Settings").update(changes);
+    if (contact && window.twLayout) window.twLayout.renderContact(contact); //Aaron F: updates field immediattely
 }
+
 
 /* runs when save settings button clicked */
 async function handleSettingsSubmit(e) {
@@ -234,14 +239,14 @@ async function handleSettingsSubmit(e) {
 
     try {
         await twSaveMyPreferences();
-        if (twIsAdmin) await saveAdminSettings(contact);
+        if (twCanEditDefaults) await saveSharedSettings(contact);
 
         const confirmation = document.getElementById("save-confirmation");
         confirmation.classList.add("show");
         setTimeout(() => confirmation.classList.remove("show"), 2000);
     } catch (err) {
         console.error("Couldn't save settings:", err);
-        showTwAlert("Settings not saved","Something went wrong while saving. Please try again");
+        alert("Couldn't save settings. Please try again");
     }
 }
 
@@ -325,6 +330,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (twIsAdmin) {
         document.querySelectorAll("[data-admin-only]").forEach((el) => el.removeAttribute("hidden"));
-        await loadSettingsIntoForm();
     }
+    if (!twCanEditDefaults) {
+        // only Farm Managers and Admins can change these, so Farmers see them locked
+        ["overdue-threshold", "default-date-range"].forEach((id) => { document.getElementById(id).disabled = true; });
+    }
+    await loadSettingsIntoForm();
 });
